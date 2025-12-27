@@ -1,12 +1,16 @@
 from flask import Flask         
 from .config import Config
 from .extensions import jwt
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)                      
+    app.config.from_object(Config)    
+
+    CORS(app, supports_credentials=True)                  
 
     jwt.init_app(app)
+
 
     from app.auth.routes import auth_bp
     from app.users.routes import users_bp

@@ -13,7 +13,7 @@ def login():
 
     data = request.json
     db = get_db()
-
+    print(data["email"])
     res = db.table("users").select("*").eq("email", data["email"]).execute()
     if not res.data:
         return {"msg": "Invalid credentials"}, 401
@@ -26,5 +26,6 @@ def login():
     token = create_access_token(identity=user["id"])
     return {
         "access_token": token,
-        "role": user["role"]
+        "role": user["role"],
+        "constituency_id": user["constituency_id"]
     }
