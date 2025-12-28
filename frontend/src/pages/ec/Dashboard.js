@@ -13,25 +13,51 @@ function Dashboard() {
   }, []);
 
   return (
-    <div>
-      <h1>Election Commission Dashboard</h1>
+    <div className="container">
 
+      {/* Header */}
+      <div className="mb-4 text-center">
+        <h3>Election Commission Dashboard</h3>
+        <p className="text-muted">
+          Manage constituencies, elections, and complaints
+        </p>
+      </div>
+
+      {/* Empty State */}
       {constituencies.length === 0 && (
-        <p>No constituencies found</p>
+        <div className="alert alert-info">
+          No constituencies found
+        </div>
       )}
 
-      <ul>
+      {/* Constituency Cards */}
+      <div className="row">
         {constituencies.map(c => (
-          <li key={c.id}>
-            <b>{c.name}</b> ({c.state})
-            <button
-              onClick={() => navigate(`/ec/constituency/${c.id}`)}
-            >
-              View
-            </button>
-          </li>
+          <div className="col-md-4 mb-3" key={c.id}>
+            <div className="card h-100 shadow-sm">
+              <div className="card-body d-flex flex-column">
+
+                <h5 className="card-title">
+                  {c.name}
+                </h5>
+
+                <p className="card-text text-muted mb-4">
+                  State: {c.state}
+                </p>
+
+                <button
+                  className="btn btn-primary mt-auto"
+                  onClick={() => navigate(`/ec/constituency/${c.id}`)}
+                >
+                  Manage Constituency
+                </button>
+
+              </div>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
+
     </div>
   );
 }
