@@ -5,3 +5,11 @@ export const createElection = (data) =>
 
 export const getElections = () =>
   api.get("/elections");
+
+export const getConstituencies = () =>
+  api.get("/elections/constituencies");
+
+export const getECComplaints = (constituencyId) =>
+  api.get(`/elections/complaints/${constituencyId}`);
+
+

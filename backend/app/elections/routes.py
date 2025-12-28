@@ -17,3 +17,27 @@ def create_election():
     }).execute()
 
     return {"msg": "Election created"}
+
+
+@elections_bp.route("/constituencies", methods=["GET"])
+@role_required("EC")
+def get_constituencies():
+    db = get_db()
+    res = db.table("constituencies").select("*").execute()
+    return res.data
+
+@elections_bp.route("/complaints/<constituency_id>", methods=["GET"])
+@role_required("EC")
+def get_ec_complaints(constituency_id):
+    db = get_db()
+
+    res = (
+        db.table("ec_complaints")
+        .select("id, message, status, created_at")
+        .eq("constituency_id", constituency_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return res.data
+
