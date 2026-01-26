@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% set title = "Create Election" %}
+
+{% block content %}
+<div class="ec-create-election">
+
+    <h2>Create New Election</h2>
+
+    <!-- =========================
+         Navigation
+    ========================== -->
+    <div class="action-bar">
+        <a href="{{ url_for('election_commission.ceo_dashboard') }}" class="btn-secondary">
+            ← Back to CEO Dashboard
+        </a>
+    </div>
+
+    <!-- =========================
+         Create Election Form
+    ========================== -->
+    <form method="POST" class="form-card">
+
+        <div class="form-group">
+            <label for="name">Election Name</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Eg: Karnataka Assembly Election 2026"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="type">Election Type</label>
+            <select id="type" name="type" required>
+                <option value="">Select Type</option>
+                <option value="VIDHAN_SABHA">Vidhan Sabha</option>
+                <option value="LOK_SABHA">Lok Sabha</option>
+                <option value="LOCAL_BODY">Local Body</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="start_time">Start Date & Time</label>
+            <input
+                type="datetime-local"
+                id="start_time"
+                name="start_time"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="end_time">End Date & Time</label>
+            <input
+                type="datetime-local"
+                id="end_time"
+                name="end_time"
+                required
+            >
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                Create Election
+            </button>
+        </div>
+
+    </form>
+
+    <!-- =========================
+         Info Note
+    ========================== -->
+    <div class="info-note">
+        <p>
+            <strong>Note:</strong>
+            The election will remain in <em>Draft</em> status
+            until approved by the Chief Election Commissioner (CEC).
+        </p>
+    </div>
+
+</div>
+{% endblock %}

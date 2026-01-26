@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% set title = "CEO Dashboard" %}
+
+{% block content %}
+<div class="ec-dashboard">
+
+    <h2>Chief Electoral Officer (State) Dashboard</h2>
+
+    <!-- =========================
+         Quick Actions
+    ========================== -->
+    <div class="action-bar">
+        <a href="{{ url_for('election_commission.create_election') }}" class="btn-primary">
+            Create New Election
+        </a>
+
+        <a href="{{ url_for('election_commission.manage_deo') }}" class="btn-secondary">
+            Manage DEOs
+        </a>
+    </div>
+
+    <!-- =========================
+         State Elections Overview
+    ========================== -->
+    <section class="table-section">
+        <h3>State Elections</h3>
+
+        {% if elections and elections|length > 0 %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Election Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for election in elections %}
+                        <tr>
+                            <td>{{ election.election_name }}</td>
+                            <td>{{ election.election_type }}</td>
+                            <td>
+                                <span class="status {{ election.status|lower }}">
+                                    {{ election.status }}
+                                </span>
+                            </td>
+                            <td>{{ election.start_time }}</td>
+                            <td>{{ election.end_time }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No elections created for this state.</p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set title = "Vote Submitted" %}
+
+{% block content %}
+<div class="vote-success">
+    <h2>Vote Submitted Successfully</h2>
+
+    <p>
+        Thank you for participating in the democratic process.
+        Your vote has been securely recorded.
+    </p>
+
+    <div class="transaction-details">
+        <h4>Vote Verification Details</h4>
+        <p>
+            <strong>Transaction ID:</strong>
+            <span class="tx-id">{{ result.transaction_id }}</span>
+        </p>
+        <p>
+            <strong>Vote Hash:</strong>
+            <span class="vote-hash">{{ result.vote_hash }}</span>
+        </p>
+    </div>
+
+    <div class="action-bar">
+        <a href="{{ url_for('ledger.explorer') }}" class="btn-secondary">
+            Verify on Ledger
+        </a>
+        <a href="{{ url_for('citizen.dashboard') }}" class="btn-primary">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

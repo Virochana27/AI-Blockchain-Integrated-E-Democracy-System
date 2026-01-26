@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% set title = "Publish Electoral Roll" %}
+
+{% block content %}
+<div class="ec-blo-roll">
+
+    <h2>Electoral Roll Publication</h2>
+
+    <!-- =========================
+         Explanation
+    ========================== -->
+    <div class="info-note">
+        <p>
+            After completing door-to-door verification and updating
+            voter details, the Booth Level Officer (BLO) submits the
+            verified electoral roll for publication.
+        </p>
+        <p>
+            Final approval of the electoral roll is handled
+            administratively by the Election Commission.
+        </p>
+    </div>
+
+    <!-- =========================
+         Roll Status
+    ========================== -->
+    <section class="status-section">
+        <h3>Booth Roll Status</h3>
+
+        <ul>
+            <li>
+                <strong>Booth ID:</strong>
+                {{ session.get("booth_id") }}
+            </li>
+            <li>
+                <strong>Verification Status:</strong>
+                <span class="status active">Completed</span>
+            </li>
+            <li>
+                <strong>Submitted By:</strong>
+                Booth Level Officer
+            </li>
+        </ul>
+    </section>
+
+    <!-- =========================
+         Publish Action
+    ========================== -->
+    <section class="action-section">
+        <form method="POST">
+            <button class="btn-primary" disabled>
+                Submit Electoral Roll for Publication
+            </button>
+        </form>
+
+        <p class="note">
+            <strong>Note:</strong>
+            This action represents administrative submission.
+            Actual publication occurs after higher-level approval.
+        </p>
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% set title = "E-Democracy Platform" %}
+
+{% block content %}
+<div class="public-landing">
+
+    <!-- =========================
+         Hero Section
+    ========================== -->
+    <section class="hero">
+        <h1>AI–Blockchain Integrated E-Democracy System</h1>
+
+        <p class="hero-subtitle">
+            Secure. Transparent. Accountable.
+        </p>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('auth.login') }}" class="btn-primary">
+                Login
+            </a>
+
+            <a href="{{ url_for('public.election_schedule') }}" class="btn-secondary">
+                View Election Schedule
+            </a>
+        </div>
+    </section>
+
+    <!-- =========================
+         About Section
+    ========================== -->
+    <section class="about">
+        <h2>What is this Platform?</h2>
+
+        <p>
+            This platform enables secure digital elections and transparent
+            governance using blockchain technology and AI-driven analytics.
+        </p>
+
+        <ul>
+            <li>End-to-end verifiable voting</li>
+            <li>Constituency-based issue reporting</li>
+            <li>Performance accountability for representatives</li>
+            <li>Public ledger for vote verification</li>
+        </ul>
+    </section>
+
+    <!-- =========================
+         Roles Overview
+    ========================== -->
+    <section class="roles">
+        <h2>User Roles</h2>
+
+        <div class="role-grid">
+            <div class="role-card">
+                <h3>Citizens</h3>
+                <p>
+                    Vote securely, raise issues, and verify votes using
+                    the public ledger.
+                </p>
+            </div>
+
+            <div class="role-card">
+                <h3>Representatives</h3>
+                <p>
+                    Publish updates, resolve issues, and engage in
+                    structured debates.
+                </p>
+            </div>
+
+            <div class="role-card">
+                <h3>Election Commission</h3>
+                <p>
+                    Manage election workflows from national to booth level
+                    with complete auditability.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================
+         Footer CTA
+    ========================== -->
+    <section class="cta">
+        <h2>Ready to Participate?</h2>
+
+        <a href="{{ url_for('auth.login') }}" class="btn-primary">
+            Access the Platform
+        </a>
+    </section>
+
+</div>
+{% endblock %}

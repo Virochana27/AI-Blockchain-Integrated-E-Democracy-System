@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% set title = "My Issues" %}
+
+{% block content %}
+<h2>My Raised Issues</h2>
+
+{% for issue in issues %}
+<div class="issue-card">
+    <h4>{{ issue.title }}</h4>
+    <p>Status: {{ issue.status }}</p>
+</div>
+{% else %}
+<p>You haven't raised any issues.</p>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/issue.js') }}"></script>
+{% endblock %}

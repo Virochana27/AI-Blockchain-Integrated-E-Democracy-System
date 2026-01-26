@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% set title = "Representatives" %}
+
+{% block content %}
+<h2>Your Representatives</h2>
+
+{% for rep in representatives %}
+<div class="rep-card">
+    <p>User ID: {{ rep.user_id }}</p>
+    <p>Type: {{ rep.type }}</p>
+</div>
+{% else %}
+<p>No representatives found.</p>
+{% endfor %}
+{% endblock %}

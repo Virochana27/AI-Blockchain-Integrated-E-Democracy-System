@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% set title = "Issue Management" %}
+
+{% block content %}
+<h2>Constituency Issues</h2>
+
+{% for issue in issues %}
+<div class="issue-card">
+    <h4>{{ issue.title }}</h4>
+    <p>Status: {{ issue.status }}</p>
+</div>
+{% else %}
+<p>No issues found.</p>
+{% endfor %}
+{% endblock %}

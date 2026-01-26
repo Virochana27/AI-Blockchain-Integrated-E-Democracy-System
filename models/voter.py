@@ -2,6 +2,7 @@ from supabase.db import fetch_one, fetch_all, insert_record, update_record
 from utils.helpers import generate_uuid, utc_now
 
 
+
 # -----------------------------
 # Table Names
 # -----------------------------
@@ -100,3 +101,7 @@ def get_voter_user_mapping_by_user(user_id: str):
 
 def get_voter_user_mapping_by_voter(voter_id: str):
     return fetch_one(VOTER_USER_MAP_TABLE, {"voter_id": voter_id})
+
+def get_voters_by_booth(booth_id: str):
+    return fetch_all(VOTERS_TABLE, {"booth_id": booth_id})
+

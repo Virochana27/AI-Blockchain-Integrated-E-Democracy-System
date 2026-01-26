@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% set title = "Performance Score" %}
+
+{% block content %}
+<h2>My Performance Score</h2>
+
+{% if score %}
+<ul>
+    <li>Post Score: {{ score.post_score }}</li>
+    <li>Issue Resolution Score: {{ score.issue_resolution_score }}</li>
+    <li>Total Score: {{ score.overall_score }}</li>
+</ul>
+{% else %}
+<p>Score not available.</p>
+{% endif %}
+{% endblock %}

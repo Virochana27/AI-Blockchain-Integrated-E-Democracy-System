@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% set title = "BLO Voter Verification" %}
+
+{% block content %}
+<div class="ec-blo">
+
+    <h2>Booth Level Officer – Voter Verification</h2>
+
+    <div class="info-note">
+        <p>
+            BLO is responsible for door-to-door verification,
+            updating voter photograph and confirming voter existence.
+        </p>
+    </div>
+
+    <!-- =========================
+         Voters List
+    ========================== -->
+    {% if voters and voters|length > 0 %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Voter ID</th>
+                <th>Photo</th>
+                <th>Status</th>
+                <th>Verify</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for voter in voters %}
+            <tr>
+                <td>{{ voter.full_name }}</td>
+                <td>{{ voter.voter_id_number }}</td>
+                <td>
+                    {% if voter.photo_url %}
+                        <img src="{{ voter.photo_url }}" width="50">
+                    {% else %}
+                        No Photo
+                    {% endif %}
+                </td>
+                <td>
+                    {% if voter.is_verified %}
+                        <span class="status active">Verified</span>
+                    {% else %}
+                        <span class="status pending">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not voter.is_verified %}
+                    <form method="POST"
+                          action="{{ url_for('election_commission.verify_voter', voter_id=voter.id) }}">
+                        <input
+                            type="text"
+                            name="photo_url"
+                            placeholder="Updated Photo URL"
+                            required
+                        >
+                        <button class="btn-small btn-primary">
+                            Verify
+                        </button>
+                    </form>
+                    {% else %}
+                        ✔
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No voters assigned to this booth.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

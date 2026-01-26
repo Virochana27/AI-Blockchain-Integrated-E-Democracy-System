@@ -1,0 +1,190 @@
+/* =========================
+   CITIZEN THEME
+========================= */
+
+:root {
+    --primary: #2d6cdf;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --light-bg: #f8f9fa;
+    --border: #e2e6ea;
+    --text-dark: #212529;
+    --text-muted: #6c757d;
+}
+
+/* =========================
+   Layout
+========================= */
+
+.dashboard,
+.vote-page,
+.vote-success,
+.raise-issue-page,
+.public-landing,
+.public-elections {
+    background: #fff;
+    padding: 24px;
+    border-radius: 8px;
+}
+
+/* =========================
+   Headings
+========================= */
+
+h2 {
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+h3 {
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+/* =========================
+   Action Bar
+========================= */
+
+.action-bar {
+    display: flex;
+    gap: 12px;
+    margin: 15px 0;
+}
+
+/* =========================
+   Buttons
+========================= */
+
+.btn-primary,
+.btn-secondary {
+    padding: 10px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: #fff;
+}
+
+/* =========================
+   Forms
+========================= */
+
+.auth-form,
+.vote-form,
+.issue-form {
+    max-width: 500px;
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+/* =========================
+   Cards
+========================= */
+
+.issue-card,
+.rep-card,
+.post-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #fff;
+}
+
+.issue-status {
+    font-weight: 600;
+}
+
+.issue-status.resolved {
+    color: var(--success);
+}
+
+.issue-status.pending {
+    color: var(--warning);
+}
+
+/* =========================
+   Ledger / Vote Success
+========================= */
+
+.transaction-details {
+    background: var(--light-bg);
+    padding: 16px;
+    border-radius: 6px;
+    margin-top: 15px;
+}
+
+.tx-id,
+.vote-hash {
+    font-family: monospace;
+    word-break: break-all;
+}
+
+/* =========================
+   Info Notes
+========================= */
+
+.info-note,
+.login-note,
+.vote-note,
+.issue-note {
+    background: var(--light-bg);
+    padding: 12px;
+    border-left: 4px solid var(--primary);
+    margin-top: 20px;
+    color: var(--text-muted);
+}
+
+/* =========================
+   Profile
+========================= */
+
+.profile-section p {
+    margin-bottom: 8px;
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 768px) {
+    .action-bar {
+        flex-direction: column;
+    }
+
+    .dashboard,
+    .vote-page,
+    .raise-issue-page {
+        padding: 16px;
+    }
+}

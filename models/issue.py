@@ -122,3 +122,7 @@ def confirm_issue_resolution(issue_id: str):
 
 def get_issue_resolution(issue_id: str):
     return fetch_one(ISSUE_RESOLUTION_TABLE, {"issue_id": issue_id})
+
+def get_issues_by_user(user_id: str):
+    return fetch_all(ISSUES_TABLE, {"created_by": user_id})
+

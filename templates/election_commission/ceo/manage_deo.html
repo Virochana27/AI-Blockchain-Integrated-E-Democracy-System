@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% set title = "Manage District Election Officers (DEO)" %}
+
+{% block content %}
+<div class="ec-manage">
+
+    <h2>Manage District Election Officers (DEO)</h2>
+
+    <!-- =========================
+         Navigation
+    ========================== -->
+    <div class="action-bar">
+        <a href="{{ url_for('election_commission.ceo_dashboard') }}" class="btn-secondary">
+            ← Back to CEO Dashboard
+        </a>
+    </div>
+
+    <!-- =========================
+         DEO List
+    ========================== -->
+    <section class="table-section">
+        <h3>Registered DEOs</h3>
+
+        {% if deos and deos|length > 0 %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>District</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for deo in deos %}
+                        <tr>
+                            <td>{{ deo.email }}</td>
+                            <td>{{ deo.district_id }}</td>
+                            <td>
+                                {% if deo.is_active %}
+                                    <span class="status active">Active</span>
+                                {% else %}
+                                    <span class="status inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ deo.created_at }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No District Election Officers found.</p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

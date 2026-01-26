@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set title = "Cast Vote" %}
+
+{% block content %}
+<div class="vote-page">
+    <h2>Cast Your Vote</h2>
+
+    <form id="vote-form" method="POST" class="vote-form">
+        <!-- =========================
+             Election Selection
+        ========================== -->
+        <div class="form-group">
+            <label for="election_id">Election</label>
+            <select id="election_id" name="election_id" required>
+                <option value="">Select Election</option>
+                <!-- Election options will be populated from backend -->
+            </select>
+        </div>
+
+        <!-- =========================
+             Vote Payload (Encrypted / Hashed)
+        ========================== -->
+        <div class="form-group">
+            <label for="vote_payload">Your Choice</label>
+            <input
+                type="text"
+                id="vote_payload"
+                name="vote_payload"
+                placeholder="Enter candidate or option"
+                required
+            >
+        </div>
+
+        <button type="submit" class="btn-primary">
+            Submit Vote
+        </button>
+    </form>
+
+    <div class="vote-note">
+        <p>
+            Your vote will be securely recorded on the blockchain.
+            You will receive a transaction ID after submission.
+        </p>
+    </div>
+</div>
+
+<!-- =========================
+     Vote JS
+========================= -->
+<script src="{{ url_for('static', filename='js/vote.js') }}"></script>
+
+{% endblock %}

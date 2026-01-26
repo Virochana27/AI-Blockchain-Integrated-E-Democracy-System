@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% set title = "Manage Chief Electoral Officers (CEO)" %}
+
+{% block content %}
+<div class="ec-manage">
+
+    <h2>Manage Chief Electoral Officers (CEO)</h2>
+
+    <!-- =========================
+         Navigation
+    ========================== -->
+    <div class="action-bar">
+        <a href="{{ url_for('election_commission.cec_dashboard') }}" class="btn-secondary">
+            ← Back to CEC Dashboard
+        </a>
+    </div>
+
+    <!-- =========================
+         CEO List
+    ========================== -->
+    <section class="table-section">
+        <h3>Registered CEOs</h3>
+
+        {% if ceos and ceos|length > 0 %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>State</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ceo in ceos %}
+                        <tr>
+                            <td>{{ ceo.email }}</td>
+                            <td>{{ ceo.state_id }}</td>
+                            <td>
+                                {% if ceo.is_active %}
+                                    <span class="status active">Active</span>
+                                {% else %}
+                                    <span class="status inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ceo.created_at }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Chief Electoral Officers found.</p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

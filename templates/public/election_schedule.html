@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% set title = "Election Schedule" %}
+
+{% block content %}
+<div class="public-elections">
+
+    <h2>Upcoming & Ongoing Elections</h2>
+
+    <p class="info-note">
+        This page displays officially approved election schedules
+        published by the Election Commission.
+    </p>
+
+    {% if elections and elections|length > 0 %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Election Name</th>
+                    <th>Type</th>
+                    <th>State</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for election in elections %}
+                <tr>
+                    <td>{{ election.election_name }}</td>
+                    <td>{{ election.election_type }}</td>
+                    <td>{{ election.state_id }}</td>
+                    <td>{{ election.start_time }}</td>
+                    <td>{{ election.end_time }}</td>
+                    <td>
+                        <span class="status {{ election.status|lower }}">
+                            {{ election.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No elections scheduled at the moment.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

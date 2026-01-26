@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% set title = "Manage Returning Officers (RO)" %}
+
+{% block content %}
+<div class="ec-manage">
+
+    <h2>Manage Returning Officers (RO)</h2>
+
+    <!-- =========================
+         Navigation
+    ========================== -->
+    <div class="action-bar">
+        <a href="{{ url_for('election_commission.deo_dashboard') }}" class="btn-secondary">
+            ← Back to DEO Dashboard
+        </a>
+    </div>
+
+    <!-- =========================
+         RO List
+    ========================== -->
+    <section class="table-section">
+        <h3>Registered Returning Officers</h3>
+
+        {% if ros and ros|length > 0 %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Constituency</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ro in ros %}
+                        <tr>
+                            <td>{{ ro.email }}</td>
+                            <td>{{ ro.constituency_id }}</td>
+                            <td>
+                                {% if ro.is_active %}
+                                    <span class="status active">Active</span>
+                                {% else %}
+                                    <span class="status inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ro.created_at }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Returning Officers found.</p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

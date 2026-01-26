@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% set title = "CEC Dashboard" %}
+
+{% block content %}
+<div class="ec-dashboard">
+
+    <h2>Chief Election Commissioner Dashboard</h2>
+
+    <!-- =========================
+         Quick Actions
+    ========================== -->
+    <div class="action-bar">
+        <a href="{{ url_for('election_commission.manage_ceo') }}" class="btn-primary">
+            Manage CEOs
+        </a>
+
+        <a href="{{ url_for('election_commission.approve_elections_page') }}" class="btn-secondary">
+            Approve Elections
+        </a>
+
+        <a href="{{ url_for('admin.audit_logs') }}" class="btn-secondary">
+            View Audit Logs
+        </a>
+    </div>
+
+    <!-- =========================
+         Elections Overview
+    ========================== -->
+    <section class="table-section">
+        <h3>All Elections</h3>
+
+        {% if elections and elections|length > 0 %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Election Name</th>
+                        <th>Type</th>
+                        <th>State</th>
+                        <th>Status</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for election in elections %}
+                        <tr>
+                            <td>{{ election.election_name }}</td>
+                            <td>{{ election.election_type }}</td>
+                            <td>{{ election.state_id }}</td>
+                            <td>
+                                <span class="status {{ election.status|lower }}">
+                                    {{ election.status }}
+                                </span>
+                            </td>
+                            <td>{{ election.start_time }}</td>
+                            <td>{{ election.end_time }}</td>
+                            <td>
+                                {% if election.status != "Approved" %}
+                                    <a
+                                        href="{{ url_for('election_commission.approve_election', election_id=election.id) }}"
+                                        class="btn-small"
+                                    >
+                                        Approve
+                                    </a>
+                                {% else %}
+                                    <span class="badge-approved">Approved</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No elections available.</p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% set title = "Representative Dashboard" %}
+
+{% block content %}
+<h2>Representative Dashboard</h2>
+
+<div class="action-bar">
+    <a href="{{ url_for('representative.create_post') }}" class="btn-primary">Create Post</a>
+    <a href="{{ url_for('representative.my_posts') }}" class="btn-secondary">My Posts</a>
+    <a href="{{ url_for('representative.performance_score') }}" class="btn-secondary">My Score</a>
+</div>
+{% endblock %}

@@ -1,0 +1,188 @@
+/* =========================
+   REPRESENTATIVE THEME
+========================= */
+
+:root {
+    --primary: #5a189a;
+    --secondary: #7209b7;
+    --success: #2a9d8f;
+    --danger: #d90429;
+    --light-bg: #f4f1fa;
+    --border: #e0d7ef;
+    --text-dark: #2d2a32;
+    --text-muted: #6c757d;
+}
+
+/* =========================
+   Layout
+========================= */
+
+.representative-dashboard,
+.rep-posts,
+.rep-create,
+.rep-debate,
+.rep-issues,
+.rep-score {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 8px;
+}
+
+/* =========================
+   Headings
+========================= */
+
+h2 {
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+h3 {
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+/* =========================
+   Action Bar
+========================= */
+
+.action-bar {
+    display: flex;
+    gap: 12px;
+    margin: 15px 0;
+}
+
+/* =========================
+   Buttons
+========================= */
+
+.btn-primary,
+.btn-secondary,
+.btn-small {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: #ffffff;
+}
+
+.btn-small {
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 13px;
+}
+
+/* =========================
+   Posts
+========================= */
+
+.post-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #ffffff;
+}
+
+.post-card small {
+    color: var(--text-muted);
+}
+
+/* =========================
+   Debate / Comments
+========================= */
+
+.comment-card {
+    border-left: 4px solid var(--primary);
+    background: var(--light-bg);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.comment-card p {
+    margin-bottom: 4px;
+}
+
+.comment-card small {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* =========================
+   Issue Management
+========================= */
+
+.issue-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #ffffff;
+}
+
+.issue-card h4 {
+    margin-bottom: 6px;
+}
+
+.issue-card .status {
+    font-weight: 600;
+}
+
+/* =========================
+   Performance Score
+========================= */
+
+.score-card {
+    background: var(--light-bg);
+    padding: 16px;
+    border-radius: 6px;
+    max-width: 400px;
+}
+
+.score-card ul {
+    list-style: none;
+}
+
+.score-card li {
+    margin-bottom: 6px;
+}
+
+/* =========================
+   Forms
+========================= */
+
+.rep-form textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 768px) {
+    .action-bar {
+        flex-direction: column;
+    }
+
+    .post-card,
+    .comment-card,
+    .issue-card {
+        padding: 12px;
+    }
+}

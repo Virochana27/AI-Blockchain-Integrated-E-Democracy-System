@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% set title = "Ledger Explorer" %}
+
+{% block content %}
+<div class="ledger-explorer">
+
+    <h2>Blockchain Ledger Explorer</h2>
+
+    <!-- =========================
+         Search Form
+    ========================== -->
+    <section class="search-section">
+        <form
+            id="ledger-search-form"
+            method="GET"
+            action="{{ url_for('ledger.explorer') }}"
+        >
+            <input
+                id="ledger-hash-input"
+                type="text"
+                name="hash"
+                placeholder="Enter Transaction ID / Vote Hash"
+                value="{{ request.args.get('hash', '') }}"
+                required
+            >
+            <button class="btn-primary">
+                Verify
+            </button>
+        </form>
+
+        <p class="info-note">
+            This explorer allows citizens to verify that their vote was
+            recorded on the ledger without revealing vote choice.
+        </p>
+    </section>
+
+    <!-- =========================
+         Result (Single Entry)
+    ========================== -->
+    {% if entry %}
+    <section class="result-section">
+        <h3>Verification Result</h3>
+
+        <table class="data-table">
+            <tr>
+                <th>Transaction ID</th>
+                <td>
+                    {{ entry.transaction_id }}
+                    <button
+                        type="button"
+                        class="btn-small"
+                        onclick="copyToClipboard('{{ entry.transaction_id }}')"
+                    >
+                        Copy
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <th>Vote Hash</th>
+                <td>{{ entry.vote_hash }}</td>
+            </tr>
+            <tr>
+                <th>Election ID</th>
+                <td>{{ entry.election_id }}</td>
+            </tr>
+            <tr>
+                <th>Recorded At</th>
+                <td>{{ entry.created_at }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>
+                    <span class="status active">
+                        Vote Successfully Recorded
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </section>
+    {% endif %}
+
+    <!-- =========================
+         Ledger Entries (Optional)
+    ========================== -->
+    {% if entries %}
+    <section class="table-section">
+        <h3>Recent Ledger Entries</h3>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Election ID</th>
+                    <th>Recorded At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in entries %}
+                <tr>
+                    <td>{{ row.transaction_id }}</td>
+                    <td>{{ row.election_id }}</td>
+                    <td>{{ row.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+</div>
+
+<!-- =========================
+     Ledger JS
+========================== -->
+<script src="{{ url_for('static', filename='js/ledger.js') }}"></script>
+
+{% endblock %}

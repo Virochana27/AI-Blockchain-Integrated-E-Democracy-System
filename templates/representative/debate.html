@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% set title = "Debate" %}
+
+{% block content %}
+<h2>Debate</h2>
+
+{% for comment in comments %}
+<div class="comment-card">
+    <p>{{ comment.comment }}</p>
+</div>
+{% else %}
+<p>No comments yet.</p>
+{% endfor %}
+
+<form method="POST" action="{{ url_for('representative.comment_post', post_id=post_id) }}">
+    <textarea name="comment" required></textarea>
+    <button class="btn-primary">Comment</button>
+</form>
+{% endblock %}

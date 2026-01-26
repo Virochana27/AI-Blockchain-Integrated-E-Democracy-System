@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set title = "DEO Dashboard" %}
+
+{% block content %}
+<div class="ec-dashboard">
+
+    <h2>District Election Officer (DEO) Dashboard</h2>
+
+    <!-- =========================
+         Quick Actions
+    ========================== -->
+    <div class="action-bar">
+        <a href="{{ url_for('election_commission.manage_ro') }}" class="btn-primary">
+            Manage Returning Officers (RO)
+        </a>
+    </div>
+
+    <!-- =========================
+         Role Description
+    ========================== -->
+    <section class="info-section">
+        <p>
+            As a <strong>District Election Officer</strong>, you oversee
+            the election process within your district. Your responsibilities include:
+        </p>
+
+        <ul>
+            <li>Managing Returning Officers (ROs)</li>
+            <li>Ensuring proper coordination across constituencies</li>
+            <li>Monitoring election preparedness</li>
+        </ul>
+    </section>
+
+</div>
+{% endblock %}

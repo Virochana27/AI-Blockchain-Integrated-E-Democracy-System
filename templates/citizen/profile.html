@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% set title = "My Profile" %}
+
+{% block content %}
+<h2>Citizen Profile</h2>
+
+<p><strong>Username:</strong> {{ profile.alias.random_username }}</p>
+<p><strong>Voter ID:</strong> {{ profile.voter_mapping.voter_id }}</p>
+{% endblock %}

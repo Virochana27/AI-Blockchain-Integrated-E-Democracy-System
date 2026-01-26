@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% set title = "Nomination Management" %}
+
+{% block content %}
+<div class="ec-nomination">
+
+    <h2>Candidate Nomination Management</h2>
+
+    <!-- =========================
+         Info Note
+    ========================== -->
+    <div class="info-note">
+        <p>
+            <strong>Note:</strong> Nomination verification is conducted
+            <em>offline</em>. Only candidates whose nominations have been
+            accepted offline should be added here.
+        </p>
+    </div>
+
+    <!-- =========================
+         Add Candidate Form
+    ========================== -->
+    <section class="form-section">
+        <h3>Add Accepted Candidate</h3>
+
+        <form method="POST" action="{{ url_for('election_commission.add_candidate') }}">
+
+            <div class="form-group">
+                <label for="user_id">Candidate User ID</label>
+                <input
+                    type="text"
+                    id="user_id"
+                    name="user_id"
+                    placeholder="Enter candidate user ID"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="party_name">Party Name</label>
+                <input
+                    type="text"
+                    id="party_name"
+                    name="party_name"
+                    placeholder="Eg: Indian National Congress"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="election_id">Election ID</label>
+                <input
+                    type="text"
+                    id="election_id"
+                    name="election_id"
+                    placeholder="Election ID"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn-primary">
+                Add Candidate
+            </button>
+        </form>
+    </section>
+
+    <!-- =========================
+         Accepted Candidates List
+    ========================== -->
+    <section class="table-section">
+        <h3>Accepted Candidates</h3>
+
+        {% if candidates and candidates|length > 0 %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Candidate User ID</th>
+                        <th>Party</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in candidates %}
+                        <tr>
+                            <td>{{ c.user_id }}</td>
+                            <td>{{ c.party_name }}</td>
+                            <td>{{ c.status }}</td>
+                            <td>{{ c.created_at }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No candidates added yet.</p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

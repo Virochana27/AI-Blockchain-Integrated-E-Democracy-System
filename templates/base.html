@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title if title else "E-Democracy System" }}</title>
+
+    <!-- Meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/citizen.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/representative.css') }}">
+
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- =========================
+         Top Navigation Bar
+    ========================== -->
+    <header class="navbar">
+        <div class="navbar-left">
+            <a href="/" class="logo">E-Democracy</a>
+        </div>
+
+        <div class="navbar-right">
+            {% if session.get("user_id") %}
+                <span class="nav-user">{{ session.get("role") }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="nav-link">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- =========================
+         Flash Messages
+    ========================== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- =========================
+         Main Content
+    ========================== -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- =========================
+         Footer
+    ========================== -->
+    <footer class="footer">
+        <p>&copy; {{ current_year if current_year else "2026" }} E-Democracy System</p>
+    </footer>
+
+    <!-- JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

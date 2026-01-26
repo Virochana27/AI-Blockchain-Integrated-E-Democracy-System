@@ -1,10 +1,13 @@
 from models.representative import (
     create_rep_post,
     add_rep_comment,
-    update_rep_score
+    update_rep_score,
+    get_rep_posts_by_user,
+    get_rep_score
 )
 from models.issue import get_issue_by_id
 from models.audit import create_audit_log
+from models.issue import get_issues_by_constituency
 
 
 # -----------------------------
@@ -60,3 +63,16 @@ def reward_issue_resolution(rep_user_id: str, issue_id: str):
         entity_type="ISSUE",
         entity_id=issue_id
     )
+
+
+
+def get_my_posts(user_id: str):
+    return get_rep_posts_by_user(user_id)
+
+
+def get_constituency_issues_for_rep(constituency_id: str):
+    return get_issues_by_constituency(constituency_id)
+
+
+def get_my_performance_score(user_id: str):
+    return get_rep_score(user_id)
