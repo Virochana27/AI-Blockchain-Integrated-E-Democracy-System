@@ -27,12 +27,12 @@ def create_election(
         "election_name": election_name,
         "election_type": election_type,
         "state_id": state_id,
-        "start_time": start_time,
-        "end_time": end_time,
+        "start_time": start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
+        "end_time": end_time.isoformat() if hasattr(end_time, "isoformat") else end_time,
         "status": "Draft",
         "created_by": created_by,
         "approved_by": None,
-        "created_at": utc_now()
+        "created_at": utc_now().isoformat()
     }
     return insert_record(ELECTIONS_TABLE, payload, use_admin=True)
 
