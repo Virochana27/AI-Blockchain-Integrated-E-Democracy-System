@@ -101,3 +101,21 @@ def get_voter_user_mapping_by_voter(voter_id: str):
 def get_voters_by_booth(booth_id: str):
     return fetch_all(VOTERS_TABLE, {"booth_id": booth_id})
 
+from supabase_db.db import fetch_one
+
+def get_voter_by_user_id(user_id: str):
+    """
+    Resolve voter using voter_user_map
+    """
+    mapping = fetch_one("voter_user_map", {"user_id": user_id})
+
+    if not mapping:
+        return None
+
+    return fetch_one("voters", {"id": mapping["voter_id"]})
+
+
+
+
+
+

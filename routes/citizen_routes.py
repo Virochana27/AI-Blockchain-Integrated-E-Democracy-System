@@ -12,6 +12,12 @@ from services.citizen_service import (
 )
 from models.election import get_active_elections_by_constituency
 from models.candidate import get_candidates_with_names
+from models.voter import (
+    get_voters_by_constituency,
+    get_voter_by_user_id
+)
+
+
 bp = Blueprint("citizen", __name__, url_prefix="/citizen")
 
 
@@ -45,11 +51,15 @@ def vote():
         try:
             election_id = request.form.get("election_id")
             vote_payload = request.form.get("vote_payload")
+            voter = get_voter_by_user_id(session.get("user_id"))
+            if not voter:
+                raise ValueError("Voter record not found")
+            voter_id = voter["id"]
 
             result = submit_vote(
                 election_id=election_id,
                 constituency_id=constituency_id,
-                voter_id=session.get("user_id"),
+                voter_id=voter_id,
                 vote_payload=vote_payload
             )
 
