@@ -56,8 +56,7 @@ def submit_vote(
     )
 
     return {
-        "transaction_id": transaction_id,
-        "vote_hash": vote_hash
+        "transaction_id": transaction_id
     }
 
 def hash_vote(candidate_id, election_id, voter_id):

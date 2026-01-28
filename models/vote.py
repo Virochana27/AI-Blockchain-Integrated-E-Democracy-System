@@ -1,5 +1,6 @@
-from supabase_db.db import fetch_one, fetch_all, insert_record, update_record
+from supabase_db.db import fetch_one, fetch_all, insert_record, update_record, upsert_record
 from utils.helpers import generate_uuid, utc_now
+
 
 
 # -----------------------------
@@ -62,16 +63,17 @@ def initialize_vote_status(voter_id: str, election_id: str):
 
 
 def mark_voter_as_voted(voter_id: str, election_id: str):
-    return update_record(
+    payload = {
+        "voter_id": voter_id,
+        "election_id": election_id,
+        "has_voted": True,
+        "voted_at": utc_now().isoformat()
+    }
+
+    return upsert_record(
         VOTE_STATUS_TABLE,
-        {
-            "voter_id": voter_id,
-            "election_id": election_id
-        },
-        {
-            "has_voted": True,
-            "voted_at": utc_now().isoformat()
-        },
+        payload,
+        conflict_columns=["voter_id", "election_id"],
         use_admin=True
     )
 
@@ -85,3 +87,10 @@ def has_voter_voted(voter_id: str, election_id: str) -> bool:
         }
     )
     return bool(record and record.get("has_voted"))
+
+def get_vote_by_transaction_id(transaction_id: str):
+    return fetch_one(
+        "votes",
+        {"transaction_id": transaction_id}
+    )
+

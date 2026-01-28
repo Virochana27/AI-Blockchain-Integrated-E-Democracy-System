@@ -46,3 +46,7 @@ def get_ledger_entries_by_entity(entity_type: str, entity_id: str):
 
 def get_all_ledger_entries():
     return fetch_all(LEDGER_TABLE)
+
+def get_vote_by_transaction_hash(tx_hash):
+    return fetch_one("votes", {"transaction_id": tx_hash})
+

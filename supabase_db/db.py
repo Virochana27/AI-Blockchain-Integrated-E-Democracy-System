@@ -77,3 +77,22 @@ def delete_record(table: str, filters: dict, use_admin: bool = False):
 
     response = query.execute()
     return response.data
+
+def upsert_record(
+    table: str,
+    payload: dict,
+    conflict_columns: list,
+    use_admin: bool = False
+):
+    client = supabase_admin if use_admin else supabase
+
+    return (
+        client
+        .table(table)
+        .upsert(
+            payload,
+            on_conflict=",".join(conflict_columns)
+        )
+        .execute()
+    )
+

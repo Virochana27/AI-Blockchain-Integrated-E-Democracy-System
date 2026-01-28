@@ -38,74 +38,80 @@
          Result (Single Entry)
     ========================== -->
     {% if entry %}
-    <section class="result-section">
-        <h3>Verification Result</h3>
+<section class="result-section">
+    <h3>Verification Result</h3>
 
-        <table class="data-table">
-            <tr>
-                <th>Transaction ID</th>
-                <td>
-                    {{ entry.transaction_id }}
-                    <button
-                        type="button"
-                        class="btn-small"
-                        onclick="copyToClipboard('{{ entry.transaction_id }}')"
-                    >
-                        Copy
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <th>Vote Hash</th>
-                <td>{{ entry.vote_hash }}</td>
-            </tr>
-            <tr>
-                <th>Election ID</th>
-                <td>{{ entry.election_id }}</td>
-            </tr>
-            <tr>
-                <th>Recorded At</th>
-                <td>{{ entry.created_at }}</td>
-            </tr>
-            <tr>
-                <th>Status</th>
-                <td>
-                    <span class="status active">
-                        Vote Successfully Recorded
-                    </span>
-                </td>
-            </tr>
-        </table>
-    </section>
-    {% endif %}
+    <table class="data-table">
+        <tr>
+            <th>Transaction ID</th>
+            <td>
+                {{ entry.transaction_hash }}
+                <button
+                    type="button"
+                    class="btn-small"
+                    onclick="copyToClipboard('{{ entry.transaction_hash }}')"
+                >
+                    Copy
+                </button>
+            </td>
+        </tr>
+
+        <tr>
+</tr>
+
+<tr>
+    <th>Election ID</th>
+    <td>
+        {{ vote.election_id if vote else "Not Found" }}
+    </td>
+</tr>
+
+        <tr>
+            <th>Recorded At</th>
+            <td>{{ entry.timestamp }}</td>
+        </tr>
+
+        <tr>
+            <th>Status</th>
+            <td>
+                <span class="status active">
+                    Vote Successfully Recorded
+                </span>
+            </td>
+        </tr>
+    </table>
+</section>
+{% endif %}
+
 
     <!-- =========================
          Ledger Entries (Optional)
     ========================== -->
     {% if entries %}
-    <section class="table-section">
-        <h3>Recent Ledger Entries</h3>
+<section class="table-section">
+    <h3>Recent Ledger Entries</h3>
 
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Transaction ID</th>
-                    <th>Election ID</th>
-                    <th>Recorded At</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in entries %}
-                <tr>
-                    <td>{{ row.transaction_id }}</td>
-                    <td>{{ row.election_id }}</td>
-                    <td>{{ row.created_at }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
-    {% endif %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Entity Type</th>
+                <th>Recorded At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in entries %}
+            <tr>
+                <td>{{ row.transaction_hash }}</td>
+                <td>{{ row.entity_type }}</td>
+                <td>{{ row.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
 
 </div>
 
