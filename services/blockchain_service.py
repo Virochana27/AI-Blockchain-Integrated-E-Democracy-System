@@ -86,3 +86,46 @@ def _web3_cast_vote(election_id, candidate_id, receipt_hash):
     tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
 
     return tx_hash.hex()
+    
+def count_votes_from_blockchain(election_id: str) -> dict:
+    """
+    Counts votes for an election by reading VoteCast events
+    from the blockchain.
+    """
+
+    from web3 import Web3
+    import json
+    from utils.crypto import uuid_to_uint256
+
+    WEB3_PROVIDER = Config.WEB3_PROVIDER_URL
+    CONTRACT_ADDRESS = Config.VOTING_CONTRACT_ADDRESS
+
+    w3 = Web3(Web3.HTTPProvider(WEB3_PROVIDER))
+
+    with open("blockchain/abi/VotingContractABI.json") as f:
+        abi = json.load(f)
+
+    contract = w3.eth.contract(
+        address=Web3.to_checksum_address(CONTRACT_ADDRESS),
+        abi=abi
+    )
+
+    election_uint = uuid_to_uint256(election_id)
+
+    # 🔍 Fetch all VoteCast events for this election
+    events = contract.events.VoteCast.get_logs(
+        fromBlock=0,
+        toBlock="latest",
+        argument_filters={
+            "electionId": election_uint
+        }
+    )
+
+    results = {}
+
+    for event in events:
+        candidate_id = event["args"]["candidateId"]
+
+        results[candidate_id] = results.get(candidate_id, 0) + 1
+
+    return results

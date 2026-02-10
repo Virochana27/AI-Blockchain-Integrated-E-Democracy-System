@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, flash
 from utils.decorators import login_required
 from models.vote_receipt import get_all_receipts_for_election
 from utils.merkle import get_merkle_proof
-from services.blockchain_service import verify_receipt_on_chain
 
 bp = Blueprint("verify_vote", __name__, url_prefix="/verify-vote")
 

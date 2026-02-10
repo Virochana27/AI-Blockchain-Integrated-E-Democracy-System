@@ -1,6 +1,7 @@
 import hashlib
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+import pytz
 
 
 # -----------------------------
@@ -117,3 +118,20 @@ def assign_constituencies_to_election(election_id: str, constituency_ids: list[s
     for cid in constituency_ids:
         add_constituency_to_election(election_id, cid)
 
+def parse_iso_date(value) -> date:
+    """
+    Converts ISO date/datetime string to date object.
+    Works with:
+    - 'YYYY-MM-DD'
+    - 'YYYY-MM-DDTHH:MM:SS'
+    """
+    if isinstance(value, date):
+        return value
+
+    # Strip time part if present
+    return date.fromisoformat(value[:10])
+
+IST = pytz.timezone("Asia/Kolkata")
+
+def today_ist() -> date:
+    return datetime.now(IST).date()

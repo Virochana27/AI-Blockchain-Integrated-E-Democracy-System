@@ -1,6 +1,6 @@
 # routes/evote_routes.py
 
-from flask import Blueprint, render_template, jsonify, session, request, redirect, flash
+from flask import Blueprint, render_template, jsonify, session, request, redirect, flash,url_for
 from utils.decorators import login_required, role_required
 from services.voting_service import submit_vote
 from models.candidate import  get_candidates_by_election_and_constituency
@@ -14,7 +14,6 @@ from services.booth_session_service import (
 import uuid
 from datetime import datetime
 from models.election import get_election_by_id
-
 
 bp = Blueprint("evote", __name__, url_prefix="/evote")
 

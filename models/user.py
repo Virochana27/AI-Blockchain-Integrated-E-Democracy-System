@@ -80,3 +80,11 @@ def get_citizen_alias(user_id: str):
 
 def get_alias_by_username(random_username: str):
     return fetch_one(CITIZEN_ALIAS_TABLE, {"random_username": random_username})
+
+def update_user_role(user_id: str, role: str):
+    return update_record(
+        USERS_TABLE,
+        {"id": user_id},
+        {"role": role},
+        use_admin=True
+    )

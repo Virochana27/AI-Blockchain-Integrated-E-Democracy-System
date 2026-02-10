@@ -1,15 +1,35 @@
 from supabase_db.db import fetch_one, fetch_all, insert_record, update_record
 from utils.helpers import generate_uuid, utc_now
+from datetime import date
+
 
 
 # -----------------------------
 # Table Names
 # -----------------------------
-
+REPRESENTATIVES_TABLE = "representatives"
 REP_POSTS_TABLE = "rep_posts"
 REP_COMMENTS_TABLE = "rep_comments"
 REP_SCORES_TABLE = "rep_scores"
 
+
+def create_representative(
+    user_id: str,
+    constituency_id: str,
+    rep_type: str,
+    term_start,
+    term_end
+):
+    payload = {
+        "id": generate_uuid(),
+        "user_id": user_id,
+        "constituency_id": constituency_id,
+        "type": rep_type,
+        "term_start": term_start.isoformat(),
+        "term_end": term_end.isoformat(),
+    }
+
+    return insert_record(REPRESENTATIVES_TABLE, payload, use_admin=True)
 
 # -----------------------------
 # Representative Posts
@@ -102,3 +122,17 @@ def update_rep_score(
         },
         use_admin=True
     )
+
+def get_active_representatives(today: date):
+    reps = fetch_all(REPRESENTATIVES_TABLE)
+
+    active = []
+    for r in reps:
+        if r["term_start"] <= today.isoformat() <= r["term_end"]:
+            active.append(r)
+
+    return active
+
+
+def get_all_representatives():
+    return fetch_all(REPRESENTATIVES_TABLE)

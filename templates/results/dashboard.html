@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% set title = "Live Results" %}
+
+{% block content %}
+<div class="container">
+    <h2>Live Election Results</h2>
+
+    <p><strong>Election:</strong> {{ election.election_name }}</p>
+
+    <label>Select Constituency</label>
+    <select id="constituency-select">
+        <option value="">-- Select --</option>
+        {% for c in constituencies %}
+            <option value="{{ c.constituency_id }}">
+                {{ c.constituency_name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <table class="mt-3" id="results-table">
+        <thead>
+            <tr>
+                <th>Candidate</th>
+                <th>Party</th>
+                <th>Votes</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById("constituency-select").addEventListener("change", async e => {
+    const cid = e.target.value;
+    if (!cid) return;
+
+    const res = await fetch(`/results/api/constituency?constituency_id=${cid}`);
+    const data = await res.json();
+
+    const tbody = document.querySelector("#results-table tbody");
+    tbody.innerHTML = "";
+
+    data.results.forEach(r => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${r.candidate_name}</td>
+                <td>${r.party_name}</td>
+                <td>${r.votes}</td>
+            </tr>
+        `;
+    });
+});
+</script>
+{% endblock %}

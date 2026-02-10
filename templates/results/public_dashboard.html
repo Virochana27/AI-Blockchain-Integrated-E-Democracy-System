@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set title = "Final Election Results" %}
+
+{% block content %}
+<div class="container">
+
+<h2>Final Election Results</h2>
+
+<label>Select Election</label>
+<select id="election">
+    <option value="">-- Select --</option>
+    {% for e in elections %}
+        <option value="{{ e.id }}">{{ e.election_name }}</option>
+    {% endfor %}
+</select>
+
+<label class="mt-2">Select Constituency</label>
+<select id="constituency"></select>
+
+<button class="mt-2" onclick="loadResults()">View Results</button>
+
+<hr>
+
+<div id="results"></div>
+
+</div>
+
+<script>
+async function loadConstituencies() {
+    const eid = election.value;
+    const res = await fetch(`/public/results/constituencies?election_id=${eid}`);
+    const data = await res.json();
+
+    constituency.innerHTML = "";
+    data.forEach(c => {
+        constituency.innerHTML += `
+            <option value="${c.constituency_id}">
+                ${c.constituency_name}
+            </option>
+        `;
+    });
+}
+
+async function loadResults() {
+    const eid = election.value;
+    const cid = constituency.value;
+
+    const res = await fetch(
+        `/public/results/final?election_id=${eid}&constituency_id=${cid}`
+    );
+    const data = await res.json();
+
+    let html = `
+        <h3>Winner: ${data.winner.candidate_name}</h3>
+        <p>Runner-up: ${data.runner_up?.candidate_name || "N/A"}</p>
+
+        <table>
+            <tr>
+                <th>Candidate</th>
+                <th>Party</th>
+                <th>Votes</th>
+            </tr>
+    `;
+
+    data.all_candidates.forEach(c => {
+        html += `
+            <tr>
+                <td>${c.candidate_name}</td>
+                <td>${c.party_name}</td>
+                <td>${c.votes}</td>
+            </tr>
+        `;
+    });
+
+    html += "</table>";
+    results.innerHTML = html;
+}
+
+election.addEventListener("change", loadConstituencies);
+</script>
+
+{% endblock %}

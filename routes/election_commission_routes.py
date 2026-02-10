@@ -17,6 +17,7 @@ from models.candidate import get_candidates_by_constituency, create_candidate
 from datetime import datetime
 from models.election import add_constituency_to_election
 from models.constituency import get_constituencies_by_state
+from services.election_finalizer import finalize_election_if_needed
 
 
 bp = Blueprint("election_commission", __name__, url_prefix="/commission")
@@ -33,6 +34,8 @@ def dashboard():
 
     if role == "CEC":
         elections = get_all_elections()
+        for election in elections:
+            finalize_election_if_needed(election)
         return render_template("election_commission/cec/dashboard.html", elections=elections)
 
     if role == "CEO":
@@ -272,3 +275,18 @@ def verify_voter(voter_id):
 @role_required("BLO")
 def publish_electoral_roll():
     return render_template("election_commission/blo/electoral_roll_publish.html")
+
+@bp.route("/results/<election_id>")
+@login_required
+@role_required("CEC", "RO")
+def view_results(election_id):
+    results = get_election_results(
+        election_id,
+        session.get("constituency_id")
+    )
+
+    return render_template(
+        "results/view.html",
+        results=results
+    )
+

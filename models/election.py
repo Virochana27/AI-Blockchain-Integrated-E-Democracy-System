@@ -75,8 +75,33 @@ def add_constituency_to_election(election_id: str, constituency_id: str):
     return insert_record(ELECTION_CONSTITUENCIES_TABLE, payload, use_admin=True)
 
 
-def get_constituencies_for_election(election_id: str):
-    return fetch_all(ELECTION_CONSTITUENCIES_TABLE, {"election_id": election_id})
+def get_constituencies_for_election(election_id):
+    """
+    Returns constituency_id + constituency_name for an election
+    """
+
+    mappings = fetch_all(
+        "election_constituencies",
+        {"election_id": election_id}
+    )
+
+    results = []
+
+    for m in mappings:
+        constituency = fetch_one(
+            "constituencies",
+            {"id": m["constituency_id"]}
+        )
+
+        if not constituency:
+            continue
+
+        results.append({
+            "constituency_id": constituency["id"],
+            "constituency_name": constituency["constituency_name"]
+        })
+
+    return results
 
 
 def is_constituency_in_election(election_id: str, constituency_id: str) -> bool:
@@ -127,3 +152,33 @@ def get_active_elections_by_constituency(constituency_id: str):
             elections.append(election)
 
     return elections
+
+def get_current_active_election():
+    now = utc_now().isoformat()
+
+    elections = fetch_all("elections", {"status": "Approved"})
+
+    for election in elections:
+        if election["start_time"] <= now <= election["end_time"]:
+            return election
+
+    return None
+
+def get_completed_elections():
+    now = utc_now().isoformat()
+    elections = fetch_all("elections", {"status": "Approved"})
+    return [e for e in elections if e["end_time"] < now]
+
+def mark_election_completed(election_id: str):
+    """
+    Marks an election as COMPLETED.
+    This should be done only once, after end_time.
+    """
+    return update_record(
+        ELECTIONS_TABLE,
+        {"id": election_id},
+        {
+            "status": "COMPLETED"
+        },
+        use_admin=True
+    )
