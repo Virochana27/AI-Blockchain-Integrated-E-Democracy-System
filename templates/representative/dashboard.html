@@ -2,11 +2,62 @@
 {% set title = "Representative Dashboard" %}
 
 {% block content %}
-<h2>Representative Dashboard</h2>
+<div class="rep-dashboard">
 
-<div class="action-bar">
-    <a href="{{ url_for('representative.create_post') }}" class="btn-primary">Create Post</a>
-    <a href="{{ url_for('representative.my_posts') }}" class="btn-secondary">My Posts</a>
-    <a href="{{ url_for('representative.performance_score') }}" class="btn-secondary">My Score</a>
+    <!-- =========================
+         Page Header
+    ========================== -->
+    <div class="page-header">
+        <h2>🏛️ Representative Dashboard</h2>
+        <p class="page-subtext">
+            Manage constituency issues and communicate with citizens.
+        </p>
+    </div>
+
+    <!-- =========================
+         Quick Actions
+    ========================== -->
+    <div class="dashboard-actions">
+        <a href="{{ url_for('representative.create_post') }}" class="btn-primary">
+            ➕ Create Post
+        </a>
+
+        <a href="{{ url_for('representative.my_posts') }}" class="btn-secondary">
+            📄 My Posts
+        </a>
+
+        <a href="{{ url_for('representative.issue_management') }}" class="btn-secondary">
+            🧑‍⚖️ Manage Issues
+        </a>
+
+        <a href="{{ url_for('representative.performance_score') }}" class="btn-secondary">
+            📊 My Score
+        </a>
+    </div>
+
+    <!-- =========================
+         Open Issues Summary
+    ========================== -->
+    <section class="dashboard-section">
+        <h3>📌 Issues Requiring Attention</h3>
+
+        {% if issues %}
+            {% for issue in issues[:5] %}
+                {% if issue.status != "Resolved" %}
+                    <div class="issue-row">
+                        <a href="#">
+                            {{ issue.title }}
+                        </a>
+                        <span class="status status-{{ issue.status|lower }}">
+                            {{ issue.status }}
+                        </span>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <p>No active issues at the moment.</p>
+        {% endif %}
+    </section>
+
 </div>
 {% endblock %}

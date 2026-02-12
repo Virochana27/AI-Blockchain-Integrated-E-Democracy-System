@@ -153,7 +153,15 @@ def issues_feed():
 @role_required("CITIZEN")
 def my_issues():
     issues = get_my_issues(session.get("user_id"))
+
+    issues = sorted(
+        issues,
+        key=lambda i: i["created_at"],
+        reverse=True
+    )
+
     return render_template("citizen/my_issues.html", issues=issues)
+
 
 
 # -----------------------------

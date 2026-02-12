@@ -1,19 +1,68 @@
 {% extends "base.html" %}
-{% set title = "Debate" %}
+{% set title = "Representative Debate" %}
 
 {% block content %}
-<h2>Debate</h2>
+<div class="debate-page">
 
-{% for comment in comments %}
-<div class="comment-card">
-    <p>{{ comment.comment }}</p>
+    <!-- =========================
+         Page Header
+    ========================== -->
+    <div class="page-header">
+        <h2>⚖️ Representative Debate</h2>
+        <p class="page-subtext">
+            Discussion and counterpoints on this representative post.
+        </p>
+    </div>
+
+    <!-- =========================
+         Debate Thread
+    ========================== -->
+    <section class="debate-thread">
+
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="debate-comment">
+
+                    <div class="debate-comment-header">
+                        <span class="rep-badge">
+                            🧑‍⚖️ Representative
+                        </span>
+                        <span class="comment-date">
+                            {{ comment.created_at }}
+                        </span>
+                    </div>
+
+                    <div class="debate-comment-body">
+                        {{ comment.comment }}
+                    </div>
+
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No debate yet. Be the first to respond.</p>
+        {% endif %}
+
+    </section>
+
+    <!-- =========================
+         Add Comment
+    ========================== -->
+    <section class="debate-form">
+        <h4>Add Your Response</h4>
+
+        <form method="POST" action="{{ url_for('representative.comment_post', post_id=post_id) }}">
+            <textarea
+                name="comment"
+                rows="4"
+                placeholder="Write your response or counterpoint..."
+                required
+            ></textarea>
+
+            <button type="submit" class="btn-primary">
+                Post Response
+            </button>
+        </form>
+    </section>
+
 </div>
-{% else %}
-<p>No comments yet.</p>
-{% endfor %}
-
-<form method="POST" action="{{ url_for('representative.comment_post', post_id=post_id) }}">
-    <textarea name="comment" required></textarea>
-    <button class="btn-primary">Comment</button>
-</form>
 {% endblock %}

@@ -1,69 +1,101 @@
 {% extends "base.html" %}
-{% set title = "Raise Issue" %}
+{% set title = "Raise an Issue" %}
 
 {% block content %}
 <div class="raise-issue-page">
-    <h2>Raise an Issue</h2>
 
+    <!-- =========================
+         Page Header
+    ========================== -->
+    <div class="page-header">
+        <h2>🧑‍⚖️ Raise a Civic Issue</h2>
+        <p class="page-subtext">
+            Report an issue affecting your constituency.
+            Your identity will remain anonymous.
+        </p>
+    </div>
+
+    <!-- =========================
+         Issue Form
+    ========================== -->
     <form method="POST" class="issue-form">
-        <!-- =========================
-             Issue Title
-        ========================== -->
+
+        <!-- Issue Title -->
         <div class="form-group">
             <label for="title">Issue Title</label>
             <input
                 type="text"
                 id="title"
                 name="title"
-                placeholder="Briefly describe the issue"
+                placeholder="Example: Potholes on Main Road near Bus Stand"
+                maxlength="120"
                 required
             >
+            <small class="hint">
+                Be short and specific. This helps representatives understand the issue quickly.
+            </small>
         </div>
 
-        <!-- =========================
-             Category
-        ========================== -->
+        <!-- Category -->
         <div class="form-group">
             <label for="category">Category</label>
             <select id="category" name="category" required>
                 <option value="">Select category</option>
-                <option value="Roads">Roads</option>
-                <option value="Water">Water</option>
-                <option value="Electricity">Electricity</option>
-                <option value="Health">Health</option>
-                <option value="Education">Education</option>
-                <option value="Other">Other</option>
+                <option value="Roads">🚧 Roads</option>
+                <option value="Water">🚰 Water</option>
+                <option value="Electricity">💡 Electricity</option>
+                <option value="Health">🏥 Health</option>
+                <option value="Education">🎓 Education</option>
+                <option value="Sanitation">🧹 Sanitation</option>
+                <option value="Other">📌 Other</option>
             </select>
         </div>
 
-        <!-- =========================
-             Description
-        ========================== -->
+        <!-- Description -->
         <div class="form-group">
             <label for="description">Detailed Description</label>
             <textarea
                 id="description"
                 name="description"
-                rows="5"
-                placeholder="Explain the issue in detail"
+                rows="6"
+                placeholder="Describe the problem, location, and how long it has existed..."
                 required
             ></textarea>
+            <small class="hint">
+                Include location, frequency, and impact on citizens.
+            </small>
         </div>
 
-        <button type="submit" class="btn-primary">
-            Submit Issue
-        </button>
+        <!-- Guidelines -->
+        <div class="guidelines-box">
+            <h4>📋 Guidelines</h4>
+            <ul>
+                <li>Raise issues related to your constituency only</li>
+                <li>Avoid personal attacks or political slogans</li>
+                <li>One issue per submission</li>
+                <li>False or abusive reports may be moderated</li>
+            </ul>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                Submit Issue
+            </button>
+            <a href="{{ url_for('citizen.dashboard') }}" class="btn-secondary">
+                Cancel
+            </a>
+        </div>
+
     </form>
 
-    <div class="issue-note">
-        <p>
-            Your identity will remain anonymous.
-            Only your constituency representatives will view this issue.
-        </p>
+    <!-- =========================
+         Privacy Note
+    ========================== -->
+    <div class="privacy-note">
+        🔐 Your real identity is never shown publicly.
+        Only authorized election officials can access voter records.
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/issue.js') }}"></script>
+</div>
 {% endblock %}

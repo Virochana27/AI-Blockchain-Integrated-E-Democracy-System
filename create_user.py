@@ -96,11 +96,10 @@ def update_user_credentials(user_id, new_email=None, new_password=None):
         supabase.table("users").update({
             "email": new_email
         }).eq("id", user_id).execute()
-
     print("User updated successfully")
 
 
 
 if __name__ == "__main__":
-    create_user()
-    #update_user_credentials('f7a63834-4fe3-4d92-97c3-7bc881aff227', new_email='ro.mangalore_city_north.dakshina_kannada.karnataka@eci.gov.in', new_password='admin@123')
+    #create_user()
+    update_user_credentials('c1ec1a46-400e-41ff-aa0e-4ad6ecf1980c', new_email='yashwithlm5810@gmail.com', new_password='user@123')

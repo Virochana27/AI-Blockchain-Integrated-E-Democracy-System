@@ -337,4 +337,276 @@ button {
     border-left: 2px solid #eee;
     padding-left: 8px;
 }
+.issue-status-badge {
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
 
+.status-open {
+    color: #d9534f;
+}
+
+.status-resolved {
+    color: #5cb85c;
+}
+
+.issue-card {
+    border: 1px solid #eee;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+}
+.profile-page {
+    max-width: 700px;
+    margin: auto;
+}
+
+.profile-card {
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.profile-subtext {
+    color: #777;
+    font-size: 0.9em;
+}
+
+.alias-name {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.profile-links li {
+    margin: 6px 0;
+}
+
+.privacy-box {
+    background-color: #f9f9f9;
+}
+.rep-post-card {
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.rep-post-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.rep-badge {
+    background: #f0f4ff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.rep-post-content {
+    margin-bottom: 10px;
+}
+
+.rep-card {
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.rep-role {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.rep-role-elected_rep {
+    color: #2c7be5;
+}
+
+.rep-role-opposition_rep {
+    color: #d9534f;
+}
+
+.rep-note {
+    color: #555;
+    font-size: 0.9em;
+    margin-top: 6px;
+}
+
+.rep-actions {
+    margin-top: 10px;
+}
+.create-post-page {
+    max-width: 700px;
+    margin: auto;
+}
+
+.rep-post-form textarea {
+    width: 100%;
+}
+
+.guidelines-box {
+    background-color: #f9f9f9;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+}
+
+.page-subtext {
+    color: #666;
+    font-size: 0.9em;
+}
+.rep-dashboard {
+    max-width: 800px;
+    margin: auto;
+}
+
+.dashboard-actions {
+    margin-bottom: 20px;
+}
+
+.dashboard-actions a {
+    margin-right: 10px;
+}
+
+.dashboard-section {
+    margin-top: 20px;
+}
+
+.issue-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+.debate-page {
+    max-width: 800px;
+    margin: auto;
+}
+
+.debate-thread {
+    margin-top: 20px;
+}
+
+.debate-comment {
+    border-left: 4px solid #ddd;
+    padding: 12px;
+    margin-bottom: 14px;
+    background: #fafafa;
+}
+
+.debate-comment-header {
+    font-size: 0.85em;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.rep-badge {
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.debate-form {
+    margin-top: 20px;
+}
+
+.issue-management-page {
+    max-width: 900px;
+    margin: auto;
+}
+
+.issue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.issue-card {
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.issue-preview {
+    margin: 8px 0;
+}
+
+.issue-actions {
+    margin-top: 10px;
+}
+
+.resolved-indicator {
+    color: #5cb85c;
+    font-weight: bold;
+}
+
+.my-posts-page {
+    max-width: 800px;
+    margin: auto;
+}
+
+.post-card {
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.post-header {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.post-actions {
+    margin-top: 10px;
+}
+.performance-score-page {
+    max-width: 900px;
+    margin: auto;
+}
+
+.score-summary {
+    display: flex;
+    gap: 16px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.score-card {
+    flex: 1;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+.score-value {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.score-hint {
+    font-size: 0.85em;
+    color: #666;
+}
+
+.total-score {
+    background-color: #f9fafc;
+    border: 2px solid #dbe5ff;
+}
+
+.transparency-note {
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.page-actions {
+    margin-top: 20px;
+}

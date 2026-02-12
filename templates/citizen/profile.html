@@ -2,8 +2,87 @@
 {% set title = "My Profile" %}
 
 {% block content %}
-<h2>Citizen Profile</h2>
+<div class="profile-page">
 
-<p><strong>Username:</strong> {{ profile.alias.random_username }}</p>
-<p><strong>Voter ID:</strong> {{ profile.voter_mapping.voter_id }}</p>
+    <!-- =========================
+         Profile Header
+    ========================== -->
+    <div class="profile-header">
+        <h2>👤 Citizen Profile</h2>
+        <p class="profile-subtext">
+            Your public identity remains anonymous.
+        </p>
+    </div>
+
+    <!-- =========================
+         Anonymous Identity
+    ========================== -->
+    <div class="profile-card">
+        <h3>🕶️ Anonymous Identity</h3>
+
+        <p>
+            <strong>Username:</strong>
+            <span class="alias-name">
+                {{ profile.alias.random_username }}
+            </span>
+        </p>
+
+        <p class="hint">
+            This name is visible to others when you comment or raise issues.
+        </p>
+    </div>
+
+    <!-- =========================
+         Voting Identity (Private)
+    ========================== -->
+    <div class="profile-card">
+        <h3>🗳️ Voting Identity</h3>
+
+        <p>
+            <strong>Voter ID:</strong>
+            {{ profile.voter_mapping.voter_id }}
+        </p>
+
+        <p class="hint">
+            This information is private and never shown publicly.
+        </p>
+    </div>
+
+    <!-- =========================
+         Participation Shortcuts
+    ========================== -->
+    <div class="profile-card">
+        <h3>📌 Your Participation</h3>
+
+        <ul class="profile-links">
+            <li>
+                <a href="{{ url_for('citizen.my_issues') }}">
+                    🧑‍⚖️ My Raised Issues
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('citizen.issues_feed') }}">
+                    💬 Constituency Discussions
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('citizen.dashboard') }}">
+                    🏠 Dashboard
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- =========================
+         Privacy Notice
+    ========================== -->
+    <div class="profile-card privacy-box">
+        <h3>🔐 Privacy & Safety</h3>
+        <p>
+            Your real identity is never exposed in discussions.
+            Only authorized election systems can access your voter records.
+        </p>
+    </div>
+
+</div>
 {% endblock %}

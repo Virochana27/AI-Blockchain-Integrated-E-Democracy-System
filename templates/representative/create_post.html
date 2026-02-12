@@ -1,11 +1,71 @@
 {% extends "base.html" %}
-{% set title = "Create Post" %}
+{% set title = "Create Representative Post" %}
 
 {% block content %}
-<h2>Create Post</h2>
+<div class="create-post-page">
 
-<form method="POST">
-    <textarea name="content" rows="5" required></textarea>
-    <button type="submit" class="btn-primary">Post</button>
-</form>
+    <!-- =========================
+         Page Header
+    ========================== -->
+    <div class="page-header">
+        <h2>🏛️ Create Official Post</h2>
+        <p class="page-subtext">
+            Share official updates, announcements, or clarifications
+            with citizens of your constituency.
+        </p>
+    </div>
+
+    <!-- =========================
+         Post Form
+    ========================== -->
+    <form method="POST" class="rep-post-form">
+
+        <div class="form-group">
+            <label for="content">Post Content</label>
+            <textarea
+                id="content"
+                name="content"
+                rows="6"
+                placeholder="Example: Today we began road repair work near the central market..."
+                required
+            ></textarea>
+
+            <small class="hint">
+                Keep the message clear, factual, and respectful.
+                Avoid political slogans or personal attacks.
+            </small>
+        </div>
+
+        <!-- =========================
+             Guidelines
+        ========================== -->
+        <div class="guidelines-box">
+            <h4>📋 Posting Guidelines</h4>
+            <ul>
+                <li>Posts are visible to all citizens in your constituency</li>
+                <li>Posts may be discussed and debated publicly</li>
+                <li>Maintain professionalism and accountability</li>
+                <li>Misleading information may be reviewed</li>
+            </ul>
+        </div>
+
+        <!-- =========================
+             Actions
+        ========================== -->
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                Publish Post
+            </button>
+
+            <a
+                href="{{ url_for('representative.dashboard') }}"
+                class="btn-secondary"
+            >
+                Cancel
+            </a>
+        </div>
+
+    </form>
+
+</div>
 {% endblock %}

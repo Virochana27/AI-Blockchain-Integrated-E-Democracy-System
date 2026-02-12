@@ -2,18 +2,72 @@
 {% set title = "My Issues" %}
 
 {% block content %}
-<h2>My Raised Issues</h2>
+<div class="my-issues-page">
 
-{% for issue in issues %}
-<div class="issue-card">
-    <h4>{{ issue.title }}</h4>
-    <p>Status: {{ issue.status }}</p>
+    <div class="page-header">
+        <h2>🧑‍⚖️ My Raised Issues</h2>
+        <a href="{{ url_for('citizen.new_issue') }}" class="btn-primary">
+            Raise New Issue
+        </a>
+    </div>
+
+    {% if issues %}
+        {% for issue in issues %}
+            <div class="issue-card">
+
+                <!-- Status Indicator -->
+                <div class="issue-status-badge status-{{ issue.status|lower }}">
+                    {{ issue.status }}
+                </div>
+
+                <!-- Issue Title -->
+                <a
+                    href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}"
+                    class="issue-title"
+                >
+                    {{ issue.title }}
+                </a>
+
+                <!-- Meta Info -->
+                <div class="issue-meta">
+                    <span class="category">
+                        {{ issue.category }}
+                    </span>
+
+                    <span class="date">
+                        Raised on {{ issue.created_at }}
+                    </span>
+                </div>
+
+                <!-- Description Preview -->
+                <p class="issue-preview">
+                    {{ issue.description[:120] }}
+                    {% if issue.description|length > 120 %}...{% endif %}
+                </p>
+
+                <!-- Quick Actions -->
+                <div class="issue-actions">
+                    <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}">
+                        💬 View Discussion
+                    </a>
+
+                    {% if issue.status == "Resolved" %}
+                        <span class="resolved-indicator">
+                            ✅ Awaiting Confirmation?
+                        </span>
+                    {% endif %}
+                </div>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>You haven’t raised any issues yet.</p>
+            <a href="{{ url_for('citizen.new_issue') }}" class="btn-secondary">
+                Raise Your First Issue
+            </a>
+        </div>
+    {% endif %}
+
 </div>
-{% else %}
-<p>You haven't raised any issues.</p>
-{% endfor %}
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/issue.js') }}"></script>
 {% endblock %}

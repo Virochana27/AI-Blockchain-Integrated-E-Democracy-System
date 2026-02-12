@@ -41,7 +41,7 @@ def create_rep_post(user_id: str, constituency_id: str, content: str):
         "user_id": user_id,
         "constituency_id": constituency_id,
         "content": content,
-        "created_at": utc_now()
+        "created_at": utc_now().isoformat()
     }
     return insert_record(REP_POSTS_TABLE, payload, use_admin=True)
 
@@ -68,7 +68,7 @@ def add_rep_comment(post_id: str, user_id: str, comment: str):
         "post_id": post_id,
         "user_id": user_id,
         "comment": comment,
-        "created_at": utc_now()
+        "created_at": utc_now().isoformat()
     }
     return insert_record(REP_COMMENTS_TABLE, payload, use_admin=True)
 
@@ -88,7 +88,7 @@ def initialize_rep_score(user_id: str):
         "post_score": 0,
         "issue_resolution_score": 0,
         "overall_score": 0,
-        "updated_at": utc_now()
+        "updated_at": utc_now().isoformat()
     }
     return insert_record(REP_SCORES_TABLE, payload, use_admin=True)
 
@@ -118,7 +118,7 @@ def update_rep_score(
             "post_score": new_post_score,
             "issue_resolution_score": new_issue_score,
             "overall_score": new_overall_score,
-            "updated_at": utc_now()
+            "updated_at": utc_now().isoformat()
         },
         use_admin=True
     )

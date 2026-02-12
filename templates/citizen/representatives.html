@@ -1,15 +1,67 @@
 {% extends "base.html" %}
-{% set title = "Representatives" %}
+{% set title = "My Representatives" %}
 
 {% block content %}
-<h2>Your Representatives</h2>
+<div class="representatives-page">
 
-{% for rep in representatives %}
-<div class="rep-card">
-    <p>User ID: {{ rep.user_id }}</p>
-    <p>Type: {{ rep.type }}</p>
+    <!-- =========================
+         Page Header
+    ========================== -->
+    <div class="page-header">
+        <h2>🏛️ Your Constituency Representatives</h2>
+        <p class="page-subtext">
+            These are the officially recognized representatives for your constituency.
+        </p>
+    </div>
+
+    {% if representatives %}
+        <div class="rep-list">
+            {% for rep in representatives %}
+                <div class="rep-card">
+
+                    <!-- Role Badge -->
+                    <div class="rep-role rep-role-{{ rep.type|lower }}">
+                        {% if rep.type == "ELECTED_REP" %}
+                            🧑‍⚖️ Elected Representative
+                        {% else %}
+                            ⚖️ Opposition Representative
+                        {% endif %}
+                    </div>
+
+                    <!-- Representative Info -->
+                    <div class="rep-info">
+                        <p>
+                            <strong>Representative ID:</strong>
+                            {{ rep.user_id }}
+                        </p>
+
+                        <p class="rep-note">
+                            {% if rep.type == "ELECTED_REP" %}
+                                Responsible for addressing and resolving civic issues.
+                            {% else %}
+                                Participates in debate and oversight of governance.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="rep-actions">
+                        <a
+                            href="{{ url_for('citizen.representative_posts') }}"
+                            class="btn-secondary"
+                        >
+                            View Updates
+                        </a>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No representatives found for your constituency.</p>
+        </div>
+    {% endif %}
+
 </div>
-{% else %}
-<p>No representatives found.</p>
-{% endfor %}
 {% endblock %}

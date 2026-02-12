@@ -1,15 +1,55 @@
 {% extends "base.html" %}
-{% set title = "Representative Posts" %}
+{% set title = "Representative Updates" %}
 
 {% block content %}
-<h2>Representative Posts</h2>
+<div class="rep-posts-page">
 
-{% for post in posts %}
-<div class="post-card">
-    <p>{{ post.content }}</p>
-    <small>{{ post.created_at }}</small>
+    <!-- =========================
+         Page Header
+    ========================== -->
+    <div class="page-header">
+        <h2>🏛️ Representative Updates</h2>
+        <p class="page-subtext">
+            Official posts and statements from your constituency representatives.
+        </p>
+    </div>
+
+    {% if posts %}
+        {% for post in posts %}
+            <div class="rep-post-card">
+
+                <!-- Header -->
+                <div class="rep-post-header">
+                    <span class="rep-badge">
+                        🧑‍⚖️ Representative
+                    </span>
+                    <span class="post-date">
+                        {{ post.created_at }}
+                    </span>
+                </div>
+
+                <!-- Content -->
+                <div class="rep-post-content">
+                    <p>{{ post.content }}</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="rep-post-actions">
+                    <a
+                        href="{{ url_for('representative.debate', post_id=post.id) }}"
+                        class="btn-secondary"
+                    >
+                        💬 View Debate
+                    </a>
+                </div>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>No representative updates yet.</p>
+        </div>
+    {% endif %}
+
 </div>
-{% else %}
-<p>No posts available.</p>
-{% endfor %}
 {% endblock %}

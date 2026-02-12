@@ -2,15 +2,81 @@
 {% set title = "Performance Score" %}
 
 {% block content %}
-<h2>My Performance Score</h2>
+<div class="performance-score-page">
 
-{% if score %}
-<ul>
-    <li>Post Score: {{ score.post_score }}</li>
-    <li>Issue Resolution Score: {{ score.issue_resolution_score }}</li>
-    <li>Total Score: {{ score.overall_score }}</li>
-</ul>
-{% else %}
-<p>Score not available.</p>
-{% endif %}
+    <!-- =========================
+         Page Header
+    ========================== -->
+    <div class="page-header">
+        <h2>📊 Performance Score</h2>
+        <p class="page-subtext">
+            Your performance score reflects engagement, issue resolution,
+            and public accountability.
+        </p>
+    </div>
+
+    {% if score %}
+        <!-- =========================
+             Score Summary
+        ========================== -->
+        <div class="score-summary">
+
+            <div class="score-card">
+                <h3>📝 Post Engagement</h3>
+                <p class="score-value">
+                    {{ score.post_score }}
+                </p>
+                <p class="score-hint">
+                    Based on citizen interaction with your posts.
+                </p>
+            </div>
+
+            <div class="score-card">
+                <h3>✅ Issue Resolution</h3>
+                <p class="score-value">
+                    {{ score.issue_resolution_score }}
+                </p>
+                <p class="score-hint">
+                    Earned when citizens confirm resolved issues.
+                </p>
+            </div>
+
+            <div class="score-card total-score">
+                <h3>🏆 Overall Score</h3>
+                <p class="score-value">
+                    {{ score.overall_score }}
+                </p>
+                <p class="score-hint">
+                    Combined measure of responsibility and engagement.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- =========================
+             Transparency Note
+        ========================== -->
+        <div class="transparency-note">
+            <p>
+                ℹ️ Scores are calculated automatically based on system activity.
+                Manual edits are not allowed to ensure fairness.
+            </p>
+        </div>
+
+    {% else %}
+        <div class="empty-state">
+            <p>Performance score is not available yet.</p>
+        </div>
+    {% endif %}
+
+    <!-- =========================
+         Navigation
+    ========================== -->
+    <div class="page-actions">
+        <a href="{{ url_for('representative.dashboard') }}" class="btn-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+</div>
 {% endblock %}

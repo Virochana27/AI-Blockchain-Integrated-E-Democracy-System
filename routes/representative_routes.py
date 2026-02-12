@@ -21,8 +21,15 @@ bp = Blueprint("representative", __name__, url_prefix="/representative")
 @role_required("ELECTED_REP", "OPPOSITION_REP")
 def dashboard():
     constituency_id = session.get("constituency_id")
-    posts = get_rep_posts_by_constituency(constituency_id)
-    return render_template("representative/dashboard.html", posts=posts)
+
+    from services.representative_service import get_constituency_issues_for_rep
+
+    issues = get_constituency_issues_for_rep(constituency_id)
+
+    return render_template(
+        "representative/dashboard.html",
+        issues=issues
+    )
 
 
 # -----------------------------
@@ -102,4 +109,18 @@ def issue_management():
 def performance_score():
     score = get_my_performance_score(session.get("user_id"))
     return render_template("representative/performance_score.html", score=score)
+
+@bp.route("/issues/<issue_id>/resolve", methods=["POST"])
+@login_required
+@role_required("ELECTED_REP")
+def resolve_issue(issue_id):
+    from services.issue_service import resolve_issue
+
+    resolve_issue(
+        issue_id=issue_id,
+        resolved_by=session.get("user_id")
+    )
+
+    return redirect(url_for("representative.issue_management"))
+
 
