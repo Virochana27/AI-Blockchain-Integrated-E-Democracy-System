@@ -17,6 +17,7 @@ from models.issue import (
     upsert_issue_vote,
     remove_issue_vote
 )
+from services.citizen_service import ensure_citizen_alias
 
 
 
@@ -35,7 +36,7 @@ def raise_issue(
     Citizen raises an issue.
     Issue content is hashed and stored in ledger for integrity.
     """
-
+    ensure_citizen_alias(created_by)
     issue_hash = sha256_hash(f"{title}:{description}:{created_by}")
 
     issue = create_issue(

@@ -21,7 +21,7 @@ from models.issue_timeline import get_issue_timeline
 from models.issue_feedback import get_feedback
 from models.issue_feedback import submit_feedback as save_feedback
 from services.issue_service import close_issue
-
+from services.citizen_service import ensure_citizen_alias
 
 
 
@@ -265,7 +265,8 @@ def issue_detail(issue_id):
         get_issue_comments,
         get_issue_resolution,
         get_issue_score,
-        get_user_issue_vote
+        get_user_issue_vote,
+        get_comment_author_alias
     )
 
     issue = get_issue_by_id(issue_id)
@@ -285,10 +286,17 @@ def issue_detail(issue_id):
     )
     user_vote = user_vote if user_vote else None
     user_vote = user_vote["vote_type"] if user_vote is not None else 0
-
-
-
     is_issue_owner = issue["created_by"] == session.get("user_id")
+
+    def attach_usernames_to_comments(comments):
+        for c in comments:
+            c["username"] = get_comment_author_alias(c["user_id"])
+
+        # 🔁 recurse into replies
+            if c.get("replies"):
+                attach_usernames_to_comments(c["replies"])
+
+    attach_usernames_to_comments(comments)
 
     return render_template(
         "citizen/issue_detail.html",
@@ -298,7 +306,7 @@ def issue_detail(issue_id):
         timeline=timeline, 
         feedback=feedback,
         is_issue_owner=is_issue_owner,
-        user_vote=user_vote
+        user_vote=user_vote,
     )
 
 @bp.route("/issues/<issue_id>/comment", methods=["POST"])
@@ -306,10 +314,9 @@ def issue_detail(issue_id):
 @role_required("CITIZEN")
 def add_issue_comment(issue_id):
     from services.issue_service import comment_on_issue
-
+    ensure_citizen_alias(session["user_id"])
     comment = request.form.get("comment")
     parent_id = request.form.get("parent_comment_id")
-    print(parent_id)
     comment_on_issue(
         issue_id=issue_id,
         user_id=session.get("user_id"),

@@ -34,7 +34,7 @@ def create_user(
         "constituency_id": constituency_id,
         "booth_id": booth_id,
         "is_active": True,
-        "created_at": utc_now()
+        "created_at": utc_now().isoformat()
     }
     return insert_record(USERS_TABLE, payload, use_admin=True)
 
@@ -69,7 +69,7 @@ def create_citizen_alias(user_id: str, random_username: str):
         "id": generate_uuid(),
         "user_id": user_id,
         "random_username": random_username,
-        "created_at": utc_now()
+        "created_at": utc_now().isoformat()
     }
     return insert_record(CITIZEN_ALIAS_TABLE, payload, use_admin=True)
 

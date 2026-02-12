@@ -7,7 +7,12 @@
            onclick="toggleThread('{{ comment.id }}'); return false;">
             <span id="toggle-icon-{{ comment.id }}">[–]</span>
         </a>
-        <span class="comment-date">{{ comment.created_at }}</span>
+            <span class="comment-username">
+        u/{{ comment.username }}
+    </span>
+    <span class="comment-time">
+        {{ comment.created_at }}
+    </span>
     </div>
 
     <!-- Comment Body -->

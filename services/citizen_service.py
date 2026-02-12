@@ -6,6 +6,9 @@ from models.user import get_citizen_alias
 from models.voter import get_voter_user_mapping_by_user
 from models.representative import get_rep_posts_by_constituency
 from models.candidate import get_representatives_by_constituency
+from models.user import get_citizen_alias, create_citizen_alias
+from utils.alias_generator import generate_random_username
+from supabase_db.db import fetch_one
 
 
 # -----------------------------
@@ -36,3 +39,20 @@ def get_representatives(constituency_id: str):
 
 def get_representative_posts(constituency_id: str):
     return get_rep_posts_by_constituency(constituency_id)
+
+def ensure_citizen_alias(user_id: str):
+    alias = get_citizen_alias(user_id)
+    if alias:
+        return alias
+
+    # Keep generating until unique
+    while True:
+        username = generate_random_username()
+        existing = fetch_one(
+            "citizen_alias",
+            {"random_username": username}
+        )
+        if not existing:
+            break
+
+    return create_citizen_alias(user_id, username)[0]

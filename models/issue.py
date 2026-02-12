@@ -202,3 +202,8 @@ def upsert_issue_vote(issue_id: str, user_id: str, vote_type: str):
         }
         return insert_record(ISSUE_VOTES_TABLE, payload, use_admin=True)
 
+def get_comment_author_alias(user_id: str):
+    from models.user import get_citizen_alias
+    alias = get_citizen_alias(user_id)
+    return alias["random_username"] if alias else "Anonymous"
+
