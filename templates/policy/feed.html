@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% set title = "Policy Feed" %}
+
+{% block content %}
+<div class="policy-feed">
+
+    <h2>🏛️ Policy Discussions</h2>
+
+    {% if posts %}
+        {% for post in posts %}
+            <div class="policy-card">
+
+                <h4>
+                    <a href="{{ url_for('rep_policy.view_policy', post_id=post.id) }}">
+                        Policy Post
+                    </a>
+                </h4>
+
+                <p><strong>Status:</strong> {{ post.status }}</p>
+
+                <p>
+                    👍 {{ post.upvotes }}
+                    👎 {{ post.downvotes }}
+                </p>
+
+                <p>
+                    <small>Created at {{ post.created_at }}</small>
+                </p>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No policy posts yet.</p>
+    {% endif %}
+
+    {% if session.role in ["ELECTED_REP", "OPPOSITION_REP"] %}
+        <a href="{{ url_for('rep_policy.create_policy') }}" class="btn-primary">
+            ➕ Create Policy Post
+        </a>
+    {% endif %}
+
+</div>
+{% endblock %}

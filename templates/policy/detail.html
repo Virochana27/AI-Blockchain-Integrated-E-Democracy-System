@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% set title = "Policy Detail" %}
+
+{% macro render_comment(comment, level=0) %}
+<div class="comment" style="margin-left: {{ level * 20 }}px">
+
+    {% if comment.ai_generated %}
+    <div class="ai-comment">
+        🤖 <strong>AI Assistant</strong>
+        <p>{{ comment.content }}</p>
+    </div>
+{% else %}
+    <p>{{ comment.content }}</p>
+{% endif %}
+
+
+    <small>Posted at {{ comment.created_at }}</small>
+
+    <form method="POST"
+          action="{{ url_for('rep_policy.comment', post_id=post.id) }}">
+        <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+        <textarea name="content" rows="2" placeholder="Reply..." required></textarea>
+        <button class="btn-secondary">Reply</button>
+    </form>
+
+    {% for reply in comment.replies %}
+        {{ render_comment(reply, level + 1) }}
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="policy-detail">
+
+    <h2>📜 Policy Discussion</h2>
+
+    <!-- ======================
+         Representative Section
+    ======================= -->
+    <section class="policy-section">
+        <h3>🏛️ Representative Position</h3>
+
+        {% if post.representative_statement %}
+            <p>{{ post.representative_statement }}</p>
+        {% else %}
+            <p><em>No representative statement yet.</em></p>
+        {% endif %}
+    </section>
+
+    <!-- ======================
+         Opposition Section
+    ======================= -->
+    <section class="policy-section">
+        <h3>⚖️ Opposition Position</h3>
+
+       {% if post.opposition_statement %}
+    <p>{{ post.opposition_statement }}</p>
+
+{% elif session.role == "OPPOSITION_REP" %}
+    <div class="empty-state">
+        <p><em>You have not added your official opposition response yet.</em></p>
+
+        <form
+            method="POST"
+            action="{{ url_for('rep_policy.counter_statement', post_id=post.id) }}"
+        >
+            <label>Official Opposition Response</label>
+            <textarea name="content" rows="4" required
+                      placeholder="Present the opposition's official position..."></textarea>
+            <button class="btn-primary">Submit Opposition Response</button>
+        </form>
+    </div>
+
+{% else %}
+    <p><em>Opposition response has not been submitted yet.</em></p>
+{% endif %}
+
+    </section>
+
+    <!-- ======================
+         Counter Statement Form
+    ======================= -->
+        <form
+            method="POST"
+            action="{{ url_for('rep_policy.counter_statement', post_id=post.id) }}"
+        >
+            <label>Add Your Statement</label>
+            <textarea name="content" rows="4" required></textarea>
+            <button class="btn-secondary">Submit</button>
+        </form>
+
+    <!-- ======================
+         Voting
+    ======================= -->
+    <div class="policy-voting">
+        <form method="POST" action="{{ url_for('rep_policy.vote', post_id=post.id) }}">
+            <button name="vote" value="1">👍 Upvote</button>
+            <button name="vote" value="-1">👎 Downvote</button>
+        </form>
+
+        <p>
+            👍 {{ post.upvotes }} |
+            👎 {{ post.downvotes }}
+        </p>
+    </div>
+
+     <div class="ai-summary-box">
+
+    <h4>🤖 AI Summary & Fact Check</h4>
+
+    {% if post.ai_summary %}
+        <p class="ai-summary-text">
+            {{ post.ai_summary }}
+        </p>
+
+        {% set fc = post.ai_fact_check %}
+
+        <!-- Representative Claims -->
+        {% if fc.representative_claims %}
+        <div class="ai-claims rep-claims">
+            <h5>🏛️ Representative Claims</h5>
+            <ul>
+                {% for item in fc.representative_claims %}
+                    <li>
+                        <strong>{{ item.claim }}</strong><br>
+                        <small>{{ item.note }}</small>
+                        <span class="claim-tag {{ item.type | lower | replace(' ', '-') }}">
+                            {{ item.type }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Opposition Claims -->
+        {% if fc.opposition_claims %}
+        <div class="ai-claims opp-claims">
+            <h5>⚖️ Opposition Claims</h5>
+            <ul>
+                {% for item in fc.opposition_claims %}
+                    <li>
+                        <strong>{{ item.claim }}</strong><br>
+                        <small>{{ item.note }}</small>
+                        <span class="claim-tag {{ item.type | lower | replace(' ', '-') }}">
+                            {{ item.type }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Neutral Observations -->
+        {% if fc.neutral_observations %}
+        <div class="ai-neutral">
+            <h5>⚖️ Neutral Observations</h5>
+            <ul>
+                {% for obs in fc.neutral_observations %}
+                    <li>{{ obs }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Confidence -->
+        <div class="ai-confidence">
+            <strong>AI Confidence:</strong>
+            {{ post.ai_confidence_score }}%
+        </div>
+
+        <p class="ai-disclaimer">
+            ℹ️ This summary is AI-generated to assist understanding.
+            It does not represent an official judgment.
+        </p>
+
+    {% else %}
+        <p><em>AI analysis will appear once both sides respond.</em></p>
+    {% endif %}
+
+</div>
+
+    <a href="{{ url_for('rep_policy.policy_feed') }}">
+        ← Back to Policy Feed
+    </a>
+
+</div>
+<hr>
+
+<h3>💬 Discussion</h3>
+
+<form method="POST" action="{{ url_for('rep_policy.comment', post_id=post.id) }}">
+    <textarea name="content" rows="3" placeholder="Add a comment..." required></textarea>
+    <button class="btn-primary">Comment</button>
+</form>
+
+{% if comments %}
+    {% for comment in comments %}
+        {{ render_comment(comment) }}
+    {% endfor %}
+{% else %}
+    <p>No comments yet.</p>
+{% endif %}
+
+{% endblock %}
+

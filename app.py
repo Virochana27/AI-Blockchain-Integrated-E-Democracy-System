@@ -16,6 +16,9 @@ from routes.presiding_officer_routes import bp as po_bp
 from routes.verify_vote_routes import bp as verify_vote_bp
 from routes.results_routes import bp as results_bp
 from routes.public_results_routes import bp as public_results_bp
+from routes.rep_policy_routes import bp as rep_policy_bp
+from routes.accountability_routes import bp as accountability_bp
+
 
 
 
@@ -63,6 +66,8 @@ def create_app():
     app.register_blueprint(verify_vote_bp)
     app.register_blueprint(results_bp)
     app.register_blueprint(public_results_bp)
+    app.register_blueprint(rep_policy_bp)
+    app.register_blueprint(accountability_bp)
 
 
 

@@ -1,0 +1,20 @@
+from flask import Blueprint, render_template
+from services.accountability_service import build_accountability_snapshot
+from utils.decorators import login_required
+
+bp = Blueprint("accountability", __name__, url_prefix="/accountability")
+
+
+@bp.route("/<rep_user_id>")
+@login_required
+def view_rep_accountability(rep_user_id):
+    # constituency resolution can be inferred or passed
+    snapshot = build_accountability_snapshot(
+        rep_user_id=rep_user_id,
+        constituency_id=None  # optional refinement
+    )
+
+    return render_template(
+        "accountability/rep_dashboard.html",
+        snapshot=snapshot
+    )

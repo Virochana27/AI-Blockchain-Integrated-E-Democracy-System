@@ -43,10 +43,10 @@ def dashboard():
 # Create Post
 # -----------------------------
 
-@bp.route("/post/new", methods=["GET", "POST"])
+#@bp.route("/post/new", methods=["GET", "POST"])
 @login_required
 @role_required("ELECTED_REP", "OPPOSITION_REP")
-def create_post():
+#def create_post():
     if request.method == "POST":
         try:
             post_update(
@@ -67,22 +67,22 @@ def create_post():
 # Comment on Post (Debate)
 # -----------------------------
 
-@bp.route("/post/<post_id>/comment", methods=["POST"])
+@bp.route("/<post_id>")
 @login_required
-@role_required("ELECTED_REP", "OPPOSITION_REP")
-def comment_post(post_id):
-    try:
-        comment_on_rep_post(
-            post_id=post_id,
-            user_id=session.get("user_id"),
-            comment=request.form.get("comment")
-        )
-        flash("Comment added", "success")
+def view_policy(post_id):
+    post = get_policy_post_by_id(post_id)
+    if not post:
+        flash("Policy post not found", "error")
+        return redirect(url_for("rep_policy.policy_feed"))
 
-    except Exception as e:
-        flash(str(e), "error")
+    comments = get_threaded_comments(post_id)
 
-    return redirect(url_for("representative.dashboard"))
+    return render_template(
+        "policy/detail.html",
+        post=post,
+        comments=comments
+    )
+
 
 
 @bp.route("/my-posts")
@@ -93,13 +93,25 @@ def my_posts():
     return render_template("representative/my_posts.html", posts=posts)
 
 
-@bp.route("/debate/<post_id>")
+@bp.route("/<post_id>/comment", methods=["POST"])
 @login_required
-@role_required("ELECTED_REP", "OPPOSITION_REP")
-def debate(post_id):
-    from models.representative import get_rep_comments
-    comments = get_rep_comments(post_id)
-    return render_template("representative/debate.html", post_id=post_id, comments=comments)
+def comment(post_id):
+    content = request.form.get("content")
+    parent_id = request.form.get("parent_comment_id")
+
+    if not content:
+        flash("Comment cannot be empty", "error")
+        return redirect(url_for("rep_policy.view_policy", post_id=post_id))
+
+    add_comment(
+        post_id=post_id,
+        user_id=session["user_id"],
+        content=content,
+        parent_comment_id=parent_id
+    )
+
+    return redirect(url_for("rep_policy.view_policy", post_id=post_id))
+
 
 
 @bp.route("/issues")

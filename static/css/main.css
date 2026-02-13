@@ -1022,3 +1022,65 @@ button {
 .status-in\ progress { background: #c7d2fe; }
 .status-resolved { background: #bbf7d0; }
 .status-closed { background: #e5e7eb; }
+
+.ai-summary-box {
+    background: #f8f9fb;
+    border-left: 4px solid #6c757d;
+    padding: 16px;
+    margin: 20px 0;
+    border-radius: 6px;
+}
+
+.ai-summary-text {
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.ai-claims {
+    margin-top: 12px;
+}
+
+.ai-claims ul {
+    padding-left: 18px;
+}
+
+.ai-claims li {
+    margin-bottom: 10px;
+}
+
+.rep-claims {
+    border-left: 3px solid #0d6efd;
+    padding-left: 10px;
+}
+
+.opp-claims {
+    border-left: 3px solid #dc3545;
+    padding-left: 10px;
+}
+
+.ai-neutral {
+    margin-top: 12px;
+    background: #fff;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.claim-tag {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #e9ecef;
+}
+
+.ai-confidence {
+    margin-top: 14px;
+    font-weight: bold;
+}
+
+.ai-disclaimer {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 10px;
+}

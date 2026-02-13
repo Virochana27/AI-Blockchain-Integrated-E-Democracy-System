@@ -10,20 +10,21 @@
     <div class="page-header">
         <h2>🏛️ Representative Dashboard</h2>
         <p class="page-subtext">
-            Manage constituency issues and communicate with citizens.
+            Govern, respond to issues, and participate in public policy discussions.
         </p>
     </div>
 
     <!-- =========================
-         Quick Actions
+         Quick Actions (UPDATED)
     ========================== -->
     <div class="dashboard-actions">
-        <a href="{{ url_for('representative.create_post') }}" class="btn-primary">
-            ➕ Create Post
+
+        <a href="{{ url_for('rep_policy.create_policy') }}" class="btn-primary">
+            ➕ Create Policy Post
         </a>
 
-        <a href="{{ url_for('representative.my_posts') }}" class="btn-secondary">
-            📄 My Posts
+        <a href="{{ url_for('rep_policy.policy_feed') }}" class="btn-secondary">
+            🏛️ Policy Discussions
         </a>
 
         <a href="{{ url_for('representative.issue_management') }}" class="btn-secondary">
@@ -33,6 +34,13 @@
         <a href="{{ url_for('representative.performance_score') }}" class="btn-secondary">
             📊 My Score
         </a>
+
+        <a href="{{ url_for('accountability.view_rep_accountability',
+                    rep_user_id=session.get('user_id')) }}"
+   class="btn-secondary">
+    📈 Public Accountability
+</a>
+
     </div>
 
     <!-- =========================
@@ -58,6 +66,14 @@
             <p>No active issues at the moment.</p>
         {% endif %}
     </section>
+
+    <!-- =========================
+         Info Box
+    ========================== -->
+    <div class="info-box">
+        ℹ️ Official statements and debates now happen through
+        <strong>Policy Discussions</strong> to ensure transparency and AI-assisted analysis.
+    </div>
 
 </div>
 {% endblock %}
