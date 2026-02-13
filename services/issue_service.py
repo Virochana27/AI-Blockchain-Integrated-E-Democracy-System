@@ -30,7 +30,8 @@ def raise_issue(
     description: str,
     category: str,
     created_by: str,
-    constituency_id: str
+    constituency_id: str,
+    image_url: str = None
 ):
     """
     Citizen raises an issue.
@@ -44,7 +45,8 @@ def raise_issue(
         description=description,
         category=category,
         created_by=created_by,
-        constituency_id=constituency_id
+        constituency_id=constituency_id,
+        image_url=image_url
     )
 
     issue_id = issue[0]["id"]

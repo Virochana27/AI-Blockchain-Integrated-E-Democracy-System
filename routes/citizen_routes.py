@@ -26,6 +26,9 @@ from models.user import get_user_by_id
 from models.user import get_display_name_by_user_id
 from models.comment_vote import get_comment_score, get_user_comment_vote
 from models.user import get_user_by_id, get_display_name_by_user_id
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 
 
@@ -132,12 +135,31 @@ def vote():
 def new_issue():
     if request.method == "POST":
         try:
+            image_file = request.files.get("image")
+            print(image_file)
+            image_url = None
+
+            if image_file and image_file.filename != "":
+                upload_result = cloudinary.uploader.upload(
+                    image_file,
+                    folder="issues",
+                    resource_type="image",
+                    transformation=[
+                        {"width": 1200, "height": 1200, "crop": "limit"},
+                        {"quality": "auto"},
+                        {"fetch_format": "auto"}
+                    ]
+                )
+                print("CLOUDINARY RESULT:", upload_result)
+
+                image_url = upload_result["secure_url"]
             raise_issue(
                 title=request.form.get("title"),
                 description=request.form.get("description"),
                 category=request.form.get("category"),
                 created_by=session.get("user_id"),
-                constituency_id=session.get("constituency_id")
+                constituency_id=session.get("constituency_id"),
+                image_url=image_url
             )
             flash("Issue raised successfully", "success")
             return redirect(url_for("citizen.dashboard"))

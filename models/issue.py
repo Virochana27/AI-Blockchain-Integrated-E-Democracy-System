@@ -22,6 +22,7 @@ def create_issue(
     category: str,
     created_by: str,
     constituency_id: str,
+    image_url: str = None
 ):
     payload = {
         "id": generate_uuid(),
@@ -31,6 +32,7 @@ def create_issue(
         "created_by": created_by,
         "constituency_id": constituency_id,
         "status": "Open",
+        "image_url": image_url,
         "created_at": utc_now().isoformat()
     }
     return insert_record(ISSUES_TABLE, payload, use_admin=True)

@@ -36,6 +36,19 @@ def create_app():
     app.config["DEBUG"] = Config.DEBUG
 
     # -----------------------------
+    # Configure Cloudinary
+    # -----------------------------
+
+    import cloudinary
+
+    cloudinary.config(
+        cloud_name=Config.CLOUDINARY_CLOUD_NAME,
+        api_key=Config.CLOUDINARY_API_KEY,
+        api_secret=Config.CLOUDINARY_API_SECRET,
+        secure=True
+    )
+
+    # -----------------------------
     # Register Blueprints
     # -----------------------------
     app.register_blueprint(auth_bp)

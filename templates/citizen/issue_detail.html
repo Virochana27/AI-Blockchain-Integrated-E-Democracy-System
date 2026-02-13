@@ -44,6 +44,12 @@
         <div class="issue-info">
             <h2>{{ issue.title }}</h2>
 
+            {% if issue.image_url %}
+    <div class="issue-image">
+        <img src="{{ issue.image_url }}" alt="Issue image">
+    </div>
+{% endif %}
+
             <p class="meta">
                 <span class="category">{{ issue.category }}</span>
                 •
