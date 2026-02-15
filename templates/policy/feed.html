@@ -8,26 +8,69 @@
 
     {% if posts %}
         {% for post in posts %}
-            <div class="policy-card">
+        <div class="policy-card">
 
-                <h4>
-                    <a href="{{ url_for('rep_policy.view_policy', post_id=post.id) }}">
-                        Policy Post
-                    </a>
-                </h4>
+            <!-- TITLE -->
+            <h3 class="policy-title">
+                <a href="{{ url_for('rep_policy.view_policy', post_id=post.id) }}">
+                    {{ post.title or "Public Forum Discussion" }}
+                </a>
+            </h3>
 
-                <p><strong>Status:</strong> {{ post.status }}</p>
+            <!-- META -->
+            <div class="policy-meta">
+                <span><strong>{{ post.author_name }}</strong></span>
 
-                <p>
-                    👍 {{ post.upvotes }}
-                    👎 {{ post.downvotes }}
-                </p>
+                {% if post.party_name %}
+                    <span class="party-badge">• {{ post.party_name }}</span>
+                {% endif %}
 
-                <p>
-                    <small>Created at {{ post.created_at }}</small>
-                </p>
+                <span class="post-time">• {{ post.time_ago }}</span>
+            </div>
+
+            <!-- IMAGE PREVIEW -->
+            {% if post.image_urls %}
+            <div class="policy-preview-images">
+                <img src="{{ post.image_urls[0] }}" class="preview-image">
+            </div>
+            {% endif %}
+
+            <!-- FOOTER -->
+            <div class="policy-footer">
+
+                <!-- VOTES -->
+<div class="vote-panel">
+
+    <!-- UPVOTE -->
+    <form method="POST" action="{{ url_for('rep_policy.vote', post_id=post.id) }}">
+        <input type="hidden" name="vote" value="1">
+        <button type="submit" class="vote-btn upvote" aria-label="Upvote">
+            ▲
+        </button>
+    </form>
+
+    <!-- SCORE -->
+    <div class="score">{{ post.score }}</div>
+
+    <!-- DOWNVOTE -->
+    <form method="POST" action="{{ url_for('rep_policy.vote', post_id=post.id) }}">
+        <input type="hidden" name="vote" value="-1">
+        <button type="submit" class="vote-btn downvote" aria-label="Downvote">
+            ▼
+        </button>
+    </form>
+
+</div>
+
+
+                <!-- COMMENTS -->
+                <div class="comment-count">
+                    💬 {{ post.comment_count }}
+                </div>
 
             </div>
+
+        </div>
         {% endfor %}
     {% else %}
         <p>No policy posts yet.</p>

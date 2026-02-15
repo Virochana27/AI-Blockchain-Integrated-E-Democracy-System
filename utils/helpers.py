@@ -14,12 +14,40 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
-def format_datetime(dt):
-    """Format datetime for UI display"""
-    if not dt:
-        return None
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
+def format_datetime(ts):
+    if not ts:
+        return ""
 
+    # Supabase returns string → convert to datetime
+    if isinstance(ts, str):
+        ts = ts.replace("Z", "")  # remove timezone Z if present
+        dt = datetime.fromisoformat(ts)
+    else:
+        dt = ts
+
+    return dt.strftime("%d %b %Y, %I:%M %p")
+
+
+def _time_ago(ts):
+    """Return relative time string like '2h ago'."""
+    if not ts:
+        return ""
+    dt = datetime.fromisoformat(ts.replace("Z", ""))
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    diff = now - dt
+
+    seconds = diff.total_seconds()
+
+    if seconds < 60:
+        return "just now"
+    if seconds < 3600:
+        return f"{int(seconds//60)}m ago"
+    if seconds < 86400:
+        return f"{int(seconds//3600)}h ago"
+    if seconds < 604800:
+        return f"{int(seconds//86400)}d ago"
+
+    return dt.strftime("%d %b %Y")
 
 # -----------------------------
 # ID & Hash Helpers

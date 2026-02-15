@@ -4,17 +4,21 @@
 {% macro render_comment(comment, level=0) %}
 <div class="comment" style="margin-left: {{ level * 20 }}px">
 
-    {% if comment.ai_generated %}
-    <div class="ai-comment">
-        🤖 <strong>AI Assistant</strong>
-        <p>{{ comment.content }}</p>
+    <div class="comment-header">
+        u/<strong>{{ comment.username }}</strong>
+        <span class="comment-time" title="{{ comment.created_at }}">
+            • {{ comment.time_ago }}
+        </span>
     </div>
-{% else %}
-    <p>{{ comment.content }}</p>
-{% endif %}
 
-
-    <small>Posted at {{ comment.created_at }}</small>
+    {% if comment.ai_generated %}
+        <div class="ai-comment">
+            🤖 <strong>AI Bot</strong>
+            <p>{{ comment.content }}</p>
+        </div>
+    {% else %}
+        <p>{{ comment.content }}</p>
+    {% endif %}
 
     <form method="POST"
           action="{{ url_for('rep_policy.comment', post_id=post.id) }}">
@@ -98,6 +102,15 @@
     {% if second_role == "ELECTED_REP" %}
         <h3>🏛️ Representative Response</h3>
 
+        {% if post.rep_name %}
+        <div class="rep-meta">
+            <strong>{{ post.rep_name }}</strong>
+            {% if post.rep_party %}
+                <span class="party-badge">• {{ post.rep_party }}</span>
+            {% endif %}
+        </div>
+    {% endif %}
+
         {% if post.representative_statement and first_role != "ELECTED_REP" %}
             {% if post.counter_image_urls %}
     {% for img in post.counter_image_urls %}
@@ -128,6 +141,14 @@
 
         {% if post.opposition_statement and first_role != "OPPOSITION_REP" %}
         {% if post.counter_image_urls %}
+        {% if post.opp_name %}
+        <div class="opp-meta">
+            <strong>{{ post.opp_name }}</strong>
+            {% if post.opp_party %}
+                <span class="party-badge">• {{ post.opp_party }}</span>
+            {% endif %}
+        </div>
+    {% endif %}
     {% for img in post.counter_image_urls %}
         <img src="{{ img }}" class="policy-image">
     {% endfor %}
@@ -159,17 +180,49 @@
     <!-- ======================
          Voting
     ======================= -->
-    <div class="policy-voting">
-        <form method="POST" action="{{ url_for('rep_policy.vote', post_id=post.id) }}">
-            <button name="vote" value="1">👍 Upvote</button>
-            <button name="vote" value="-1">👎 Downvote</button>
-        </form>
+<div class="vote-panel">
 
-        <p>
-            👍 {{ post.upvotes }} |
-            👎 {{ post.downvotes }}
-        </p>
+    <!-- UPVOTE -->
+    <form method="POST" action="{{ url_for('rep_policy.vote', post_id=post.id) }}">
+        <input type="hidden" name="vote" value="1">
+        <button
+            type="submit"
+            class="vote-btn upvote {% if post.user_vote == 1 %}active{% endif %}"
+            aria-label="Upvote"
+        >
+            {% if post.user_vote == 1 %}
+                ▲
+            {% else %}
+                △
+            {% endif %}
+        </button>
+    </form>
+
+    <!-- SCORE -->
+    <div class="score">
+        {{ post.upvotes - post.downvotes }}
     </div>
+
+    <!-- DOWNVOTE -->
+    <form method="POST" action="{{ url_for('rep_policy.vote', post_id=post.id) }}">
+        <input type="hidden" name="vote" value="-1">
+        <button
+            type="submit"
+            class="vote-btn downvote {% if post.user_vote == -1 %}active{% endif %}"
+            aria-label="Downvote"
+        >
+            {% if post.user_vote == -1 %}
+                ▼
+            {% else %}
+                ▽
+            {% endif %}
+        </button>
+    </form>
+
+</div>
+
+
+
 
      <div class="ai-summary-box">
 
@@ -262,12 +315,16 @@
 </form>
 
 {% if comments %}
-    {% for comment in comments %}
-        {{ render_comment(comment) }}
-    {% endfor %}
+    <div class="comment-thread">
+        {% for comment in comments %}
+            {% set level = 0 %}
+            {% include "policy/_comment.html" %}
+        {% endfor %}
+    </div>
 {% else %}
     <p>No comments yet.</p>
 {% endif %}
 
+<script src="{{ url_for('static', filename='js/issue.js') }}"></script>
 {% endblock %}
 

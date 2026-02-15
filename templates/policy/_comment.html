@@ -1,0 +1,89 @@
+<div class="comment-card" style="margin-left: {{ level * 20 }}px;">
+
+    <!-- Header -->
+    <div class="comment-header">
+
+        <a href="#"
+           class="toggle-thread"
+           onclick="toggleThread('{{ comment.id }}'); return false;">
+            <span id="toggle-icon-{{ comment.id }}">[–]</span>
+        </a>
+
+        <span class="comment-username">
+            {% if comment.ai_generated %}
+                🤖 AI Bot
+            {% else %}
+                u/{{ comment.username }}
+            {% endif %}
+        </span>
+
+        <span class="comment-time"
+              title="{{ comment.created_at }}">
+            • {{ comment.time_ago }}
+        </span>
+    </div>
+
+    <!-- Body -->
+    <p class="comment-text">
+        {{ comment.content }}
+    </p>
+    <div class="comment-vote-panel">
+
+    <!-- UP -->
+    <form method="POST"
+          action="{{ url_for('rep_policy.vote_comment_route', comment_id=comment.id) }}">
+        <input type="hidden" name="vote" value="1">
+        <input type="hidden" name="post_id" value="{{ post.id }}">
+        <button class="vote-btn upvote {% if comment.user_vote == 1 %}active{% endif %}">
+            {% if comment.user_vote == 1 %}▲{% else %}△{% endif %}
+        </button>
+    </form>
+
+    <!-- SCORE -->
+    <span class="comment-score">
+        {{ comment.score or 0 }}
+    </span>
+
+    <!-- DOWN -->
+    <form method="POST"
+          action="{{ url_for('rep_policy.vote_comment_route', comment_id=comment.id) }}">
+        <input type="hidden" name="vote" value="-1">
+        <input type="hidden" name="post_id" value="{{ post.id }}">
+        <button class="vote-btn downvote {% if comment.user_vote == -1 %}active{% endif %}">
+            {% if comment.user_vote == -1 %}▼{% else %}▽{% endif %}
+        </button>
+    </form>
+
+</div>
+
+
+    <!-- Actions -->
+    <div class="comment-actions">
+        <a href="#" onclick="toggleReply('{{ comment.id }}'); return false;">
+            Reply
+        </a>
+    </div>
+
+    <!-- Reply form -->
+    <form
+        id="reply-form-{{ comment.id }}"
+        method="POST"
+        action="{{ url_for('rep_policy.comment', post_id=post.id) }}"
+        style="display:none;"
+    >
+        <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+        <textarea name="content" rows="2" required></textarea>
+        <button class="btn-secondary">Reply</button>
+    </form>
+
+    <!-- Replies -->
+    <div id="replies-{{ comment.id }}" class="comment-replies">
+
+        {% for reply in comment.replies %}
+            {% set level = level + 1 %}
+            {% set comment = reply %}
+            {% include "policy/_comment.html" %}
+        {% endfor %}
+
+    </div>
+</div>

@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from utils.decorators import login_required, role_required
+from supabase_db.db import fetch_one, fetch_all, insert_record, update_record
+from utils.helpers import generate_uuid, utc_now
 
 from services.rep_policy_service import (
     create_new_policy_post,
@@ -79,7 +81,7 @@ def create_policy():
 @bp.route("/<post_id>")
 @login_required
 def view_policy(post_id):
-    post = get_policy_post_by_id(post_id)
+    post = get_policy_post_by_id(post_id, session["user_id"])
     comments = get_policy_comments(post_id)
     if not post:
         flash("Policy post not found", "error")
@@ -112,7 +114,34 @@ def counter_statement(post_id):
         content=content,
         images=images
     )
+    user_id = session["user_id"]
+    role = session["role"]
+    rep = fetch_one("representatives", {"user_id": user_id})
 
+    if role == "ELECTED_REP":
+        update_record(
+            'rep_policy_posts',
+            {"id": post_id},
+            {
+                "rep_name": rep.get("candidate_name"),
+                "rep_party": rep.get("party_name"),
+                "updated_at": utc_now().isoformat()
+            },
+            use_admin=True
+        )
+
+    elif role == "OPPOSITION_REP":
+        update_record(
+            'rep_policy_posts',
+            {"id": post_id},
+            {
+                "opp_name": rep.get("candidate_name"),
+                "opp_party": rep.get("party_name"),
+                "updated_at": utc_now().isoformat()
+            },
+            use_admin=True
+        )
+    
     flash("Statement added", "success")
     return redirect(url_for("rep_policy.view_policy", post_id=post_id))
 
@@ -125,14 +154,18 @@ def counter_statement(post_id):
 @login_required
 def vote(post_id):
     vote_value = int(request.form.get("vote"))
-
     vote_policy_post(
         user_id=session["user_id"],
         post_id=post_id,
         vote_value=vote_value
     )
 
+    # 🔥 Force fresh read (prevents stale counts)
+    post = get_policy_post_by_id(post_id, session["user_id"])
+    comments = get_policy_comments(post_id)
+
     return redirect(url_for("rep_policy.view_policy", post_id=post_id))
+
 
 @bp.route("/<post_id>/comment", methods=["POST"])
 @login_required
@@ -152,3 +185,19 @@ def comment(post_id):
     )
 
     return redirect(url_for("rep_policy.view_policy", post_id=post_id))
+
+@bp.route("/comment/<comment_id>/vote", methods=["POST"])
+@login_required
+def vote_comment_route(comment_id):
+    vote_value = int(request.form.get("vote"))
+    post_id = request.form.get("post_id")
+
+    from services.rep_policy_comment_service import vote_comment
+
+    vote_comment(
+        user_id=session["user_id"],
+        comment_id=comment_id,
+        vote_value=vote_value
+    )
+
+    return redirect(url_for("rep_policy.view_policy", post_id=post_id), code=303)

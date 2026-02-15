@@ -10,10 +10,17 @@ from services.ai_client import run_policy_analysis, AIClientError
 from utils.helpers import utc_now
 from supabase_db.db import insert_record
 from services.ai_client import run_comment_reply
+from services.citizen_service import ensure_citizen_alias
+from models.rep_policy_comment_votes import (
+    get_user_comment_vote,
+    upsert_comment_vote,
+    remove_comment_vote
+)
 
 
 
 def add_comment(post_id, user_id, content, parent_comment_id=None):
+    ensure_citizen_alias(user_id)
     comment = add_policy_comment(
         post_id=post_id,
         user_id=user_id,
@@ -138,4 +145,19 @@ def add_comment(post_id, user_id, content, parent_comment_id=None):
 
     return comment
 
+def vote_comment(user_id, comment_id, vote_value):
+
+    if vote_value not in (1, -1):
+        raise ValueError("Invalid vote")
+
+    existing = get_user_comment_vote(comment_id, user_id)
+
+    if not existing:
+        upsert_comment_vote(comment_id, user_id, vote_value)
+
+    elif existing["vote_value"] == vote_value:
+        remove_comment_vote(comment_id, user_id)
+
+    else:
+        upsert_comment_vote(comment_id, user_id, vote_value)
 

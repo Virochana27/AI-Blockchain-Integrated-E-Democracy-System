@@ -14,10 +14,12 @@ from services.policy_ai_service import (
 from services.policy_ai_prompt import build_policy_prompt
 from services.ai_client import run_policy_analysis, AIClientError
 import cloudinary.uploader
-from utils.helpers import generate_uuid, utc_now
+from utils.helpers import generate_uuid, utc_now, _time_ago
 import cloudinary.uploader
 from utils.helpers import utc_now
 from models.rep_policy import update_policy_post_images
+from models.rep_policy import get_user_vote, upsert_vote, remove_vote
+from supabase_db.db import fetch_one, fetch_all, insert_record, update_record
 
 
 # -------------------------------------------------
@@ -118,14 +120,29 @@ def add_counter_statement(post_id, user_id, role, content, images=None):
 # -------------------------------------------------
 
 def vote_policy_post(user_id, post_id, vote_value):
+
     if vote_value not in (1, -1):
         raise ValueError("Invalid vote")
 
-    upsert_vote(
-        post_id=post_id,
-        user_id=user_id,
-        vote_value=vote_value
-    )
+    existing = get_user_vote(post_id, user_id)
+
+    # -----------------------------
+    # No vote yet → insert vote
+    # -----------------------------
+    if not existing:
+        upsert_vote(post_id, user_id, vote_value)
+
+    # -----------------------------
+    # Same vote clicked again → remove
+    # -----------------------------
+    elif existing["vote_value"] == vote_value:
+        remove_vote(post_id, user_id)
+
+    # -----------------------------
+    # Different vote → update
+    # -----------------------------
+    else:
+        upsert_vote(post_id, user_id, vote_value)
 
     create_audit_log(
         user_id=user_id,
@@ -142,10 +159,28 @@ def vote_policy_post(user_id, post_id, vote_value):
 def get_policy_feed(constituency_id):
     posts = get_policy_posts_by_constituency(constituency_id)
 
-    # sort by net votes, then recency
+    enriched = []
+
+    for p in posts:
+
+        p["author_name"] = p.get("rep_name") if p.get("created_by_role")=='ELECTED_REP' else p.get("opp_name")
+        p["party_name"] = p.get("rep_party") if p.get("created_by_role")=='ELECTED_REP' else p.get("opp_party")
+
+        # time ago
+        p["time_ago"] = _time_ago(p.get("created_at"))
+
+        # score
+        p["score"] = p["upvotes"] - p["downvotes"]
+
+        # comment count
+        comments = fetch_all("rep_policy_comments", {"post_id": p["id"]}) or []
+        p["comment_count"] = len(comments)
+
+        enriched.append(p)
+
     return sorted(
-        posts,
-        key=lambda p: ((p["upvotes"] - p["downvotes"]), p["created_at"]),
+        enriched,
+        key=lambda p: (p["score"], p["created_at"]),
         reverse=True
     )
 

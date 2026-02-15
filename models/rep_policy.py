@@ -1,6 +1,7 @@
 from supabase_db.db import fetch_one, fetch_all, insert_record, update_record
-from utils.helpers import generate_uuid, utc_now
+from utils.helpers import generate_uuid, utc_now,format_datetime
 from models.voter import get_voter_by_user_id
+from supabase_db.db import delete_record
 
 
 REP_POLICY_POSTS_TABLE = "rep_policy_posts"
@@ -23,6 +24,9 @@ def create_policy_post(
     Create a new policy post.
     Only one side is filled based on creator role.
     """
+    
+    # get representative record at time of posting
+    rep = fetch_one("representatives", {"user_id": user_id})
 
     payload = {
         "id": generate_uuid(),
@@ -30,6 +34,14 @@ def create_policy_post(
         "created_by_user_id": user_id,
         "created_by_role": role,
         "title": title,
+        "election_id": rep.get("election_id") if rep else None,
+
+        # snapshot of creator
+        "rep_name": rep.get("candidate_name") if role == "ELECTED_REP" else None,
+        "rep_party": rep.get("party_name") if role == "ELECTED_REP" else None,
+        "opp_name": rep.get("candidate_name") if role == "OPPOSITION_REP" else None,
+        "opp_party": rep.get("party_name") if role == "OPPOSITION_REP" else None,
+
         "representative_statement": content if role == "ELECTED_REP" else None,
         "opposition_statement": content if role == "OPPOSITION_REP" else None,
         "image_urls": image_urls or [],
@@ -38,22 +50,24 @@ def create_policy_post(
         "updated_at": utc_now().isoformat(),
     }
 
+
     return insert_record(REP_POLICY_POSTS_TABLE, payload, use_admin=True)
 
 
-def get_policy_post_by_id(post_id: str):
+def get_policy_post_by_id(post_id: str, user_id: str = None):
     post = fetch_one(REP_POLICY_POSTS_TABLE, {"id": post_id})
     if not post:
         return None
     # Fetch user info
     user = get_voter_by_user_id(post["created_by_user_id"])
-    print('user info:', user)
     # Fetch representative info
     rep = fetch_one("representatives", {"user_id": post["created_by_user_id"]})
-    print('rep info:', rep)
     post["author_name"] = user.get("full_name") if user else "Unknown"
     post["party_name"] = rep.get("party_name") if rep else "Independent"
-    print(post)
+    post["created_at"]=format_datetime(post["created_at"])
+    if user_id:
+        vote = get_user_vote(post_id, user_id)
+        post["user_vote"] = vote["vote_value"] if vote else None
 
     return post
 
@@ -148,13 +162,9 @@ def upsert_vote(post_id: str, user_id: str, vote_value: int):
 
 
 def remove_vote(post_id: str, user_id: str):
-    """
-    Optional – allows vote removal.
-    """
-    return update_record(
+    return delete_record(
         REP_POLICY_VOTES_TABLE,
         {"post_id": post_id, "user_id": user_id},
-        {"vote_value": 0},
         use_admin=True
     )
 
@@ -168,3 +178,10 @@ def update_policy_post_images(post_id, image_urls):
         },
         use_admin=True
     )
+
+def get_user_vote(post_id: str, user_id: str):
+    return fetch_one(
+        REP_POLICY_VOTES_TABLE,
+        {"post_id": post_id, "user_id": user_id}
+    )
+

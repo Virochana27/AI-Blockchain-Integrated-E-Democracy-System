@@ -151,3 +151,4 @@ function voteComment(commentId, voteType) {
         body: JSON.stringify({ vote: voteType })
     }).then(() => window.location.reload());
 }
+
