@@ -1,89 +1,352 @@
-<div class="comment-card" style="margin-left: {{ level * 20 }} px;">
+<div class="comment-card" style="margin-left: {{ level * 24 }}px;" id="comment-{{ comment.id }}">
 
-    <!-- Comment Header -->
-    <div class="comment-header">
-        <a href="#"
-           class="toggle-thread"
-           onclick="toggleThread('{{ comment.id }}'); return false;">
-            <span id="toggle-icon-{{ comment.id }}">[–]</span>
-        </a>
-            <span class="comment-username">
-{% if comment.user_id == '00000000-0000-0000-0000-000000000001' %}
-    🤖 AI Assistant
-{% else %}
-        u/{{ comment.display_name }}
-{% endif %}
-</span>
+    <!-- Thread line for nested comments -->
+    {% if level > 0 %}
+        <div class="comment-thread-line"></div>
+    {% endif %}
 
-         {% if comment.is_op %}
-        <span class="op-badge" title="Original Poster">OP</span>
-    {% endif %}
-    {% if comment.is_official %}
-          {% if comment.role == "ELECTED_REP" %}
-    <span class="official-badge">Official Response</span>
-{% else %}
-    <span class="opposition-badge">Opposition Response</span>
-{% endif %}    
-    {% endif %}
-    <span class="comment-time"
-        title="{{ comment.created_at }}">
-        {{ comment.time_ago }}
-    </span>
+    <div class="comment-inner">
+
+        <!-- ── Comment Header ───────────────────── -->
+        <div class="comment-header">
+            <button
+                class="thread-toggle"
+                onclick="toggleThread('{{ comment.id }}'); return false;"
+                id="toggle-icon-{{ comment.id }}"
+                title="Collapse thread"
+                aria-label="Toggle thread"
+            >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </button>
+
+            <div class="comment-author-row">
+                <!-- Username / AI -->
+                {% if comment.user_id == '00000000-0000-0000-0000-000000000001' %}
+                    <span class="comment-username ai">
+                        <span class="ai-dot"></span>
+                        AI Assistant
+                    </span>
+                {% else %}
+                    <span class="comment-username">u/{{ comment.display_name }}</span>
+                {% endif %}
+
+                <!-- Badges -->
+                {% if comment.is_op %}
+                    <span class="comment-badge op">OP</span>
+                {% endif %}
+
+                {% if comment.is_official %}
+                    {% if comment.role == "ELECTED_REP" %}
+                        <span class="comment-badge official">
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Official Response
+                        </span>
+                    {% else %}
+                        <span class="comment-badge opposition">
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Opposition
+                        </span>
+                    {% endif %}
+                {% endif %}
+
+                <span class="comment-time" title="{{ comment.created_at }}">{{ comment.time_ago }}</span>
+            </div>
+        </div>
+
+        <!-- ── Comment Body ──────────────────────── -->
+        <div class="comment-body" id="thread-{{ comment.id }}">
+
+            <p class="comment-text">{{ comment.comment }}</p>
+
+            <!-- ── Vote + Actions row ────────────── -->
+            <div class="comment-footer">
+
+                <!-- Vote -->
+                <div class="comment-vote">
+                    <button
+                        class="cvote-btn up {% if comment.user_vote == 'up' %}active{% endif %}"
+                        onclick="voteComment('{{ comment.id }}', 'up')"
+                        aria-label="Upvote"
+                    >
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
+                    </button>
+                    <span class="comment-score {% if comment.score > 0 %}pos{% elif comment.score < 0 %}neg{% endif %}">
+                        {{ comment.score }}
+                    </span>
+                    <button
+                        class="cvote-btn down {% if comment.user_vote == 'down' %}active{% endif %}"
+                        onclick="voteComment('{{ comment.id }}', 'down')"
+                        aria-label="Downvote"
+                    >
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
+                    </button>
+                </div>
+
+                <span class="comment-footer-sep"></span>
+
+                <!-- Reply action -->
+                <button
+                    class="comment-action-btn"
+                    onclick="toggleReply('{{ comment.id }}'); return false;"
+                >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>
+                    </svg>
+                    Reply
+                </button>
+
+            </div>
+
+            <!-- ── Reply Form ─────────────────────── -->
+            <div id="reply-form-{{ comment.id }}" class="reply-form" style="display:none;">
+                <form method="POST" action="{{ url_for('citizen.add_issue_comment', issue_id=issue_id) }}">
+                    <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+                    <div class="reply-form-inner">
+                        <textarea
+                            name="comment"
+                            rows="2"
+                            placeholder="Write a reply..."
+                            required
+                        ></textarea>
+                        <div class="reply-form-actions">
+                            <button type="submit" class="reply-submit">Post Reply →</button>
+                            <button type="button" class="reply-cancel" onclick="toggleReply('{{ comment.id }}')">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ── Replies ────────────────────────── -->
+            {% if comment.replies %}
+                <div class="comment-replies" id="replies-{{ comment.id }}">
+                    {% for reply in comment.replies %}
+                        {% set level = level + 1 %}
+                        {% set comment = reply %}
+                        {% include "citizen/_comment.html" %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+        </div>
     </div>
 
-    <!-- Comment Body -->
-    <p class="comment-text">
-        {{ comment.comment }}
-    </p>
-
-    <div class="comment-vote-panel">
-    <button
-        class="vote-btn up {% if comment.user_vote == 'up' %}active{% endif %}"
-        onclick="voteComment('{{ comment.id }}', 'up')"
-    >
-        ▲
-    </button>
-
-    <span class="comment-score">{{ comment.score}}</span>
-
-    <button
-        class="vote-btn down {% if comment.user_vote == 'down' %}active{% endif %}"
-        onclick="voteComment('{{ comment.id }}', 'down')"
-    >
-        ▼
-    </button>
 </div>
 
+{% if loop.first and loop.last %}{% endif %}
 
-    <!-- Actions -->
-    <div class="comment-actions">
-        <a href="#" onclick="toggleReply('{{ comment.id }}'); return false;">
-            Reply
-        </a>
-    </div>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   COMMENT COMPONENT — injected once, scoped to .comment-card
+═══════════════════════════════════════════════════════════ */
 
-    <!-- Reply Form -->
-    <form
-        id="reply-form-{{ comment.id }}"
-        method="POST"
-        action="{{ url_for('citizen.add_issue_comment', issue_id=issue_id) }}"
-        style="display:none;"
-    >
-        <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
-        <textarea name="comment" rows="2" required></textarea>
-        <button class="btn-secondary">Reply</button>
-    </form>
+.comment-card {
+    position: relative;
+    padding: 1rem 0 0 0;
+}
 
-    <!-- Replies Container -->
-    <div
-        id="replies-{{ comment.id }}"
-        class="comment-replies"
-    >
-        {% for reply in comment.replies %}
-{% set level = level + 1 %}
-{% set comment = reply %}
-{% include "citizen/_comment.html" %}
+/* Nested thread indent line */
+.comment-thread-line {
+    position: absolute;
+    left: -13px; top: 0; bottom: 0;
+    width: 1px;
+    background: var(--border);
+    transition: background 0.2s;
+}
+.comment-card:hover > .comment-thread-line {
+    background: rgba(79,70,229,0.25);
+}
 
-        {% endfor %}
-    </div>
-</div>
+.comment-inner {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+.comment-card:hover > .comment-inner { border-color: rgba(79,70,229,0.18); }
+
+/* ── Header ─────────────────────────────────────────────── */
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+
+.thread-toggle {
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    padding: 0;
+}
+.thread-toggle:hover {
+    border-color: var(--indigo);
+    color: var(--indigo);
+    background: var(--indigo-dim);
+}
+.thread-toggle.collapsed svg {
+    transform: rotate(-90deg);
+}
+
+.comment-author-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    flex-wrap: wrap; flex: 1;
+}
+
+.comment-username {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    font-weight: 700;
+}
+.comment-username.ai {
+    color: var(--teal);
+    display: flex; align-items: center; gap: 0.4rem;
+}
+.ai-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--teal);
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+/* Badges */
+.comment-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    white-space: nowrap;
+}
+.comment-badge.op {
+    color: var(--indigo); background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.25);
+}
+.comment-badge.official {
+    color: var(--teal); background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.25);
+}
+.comment-badge.opposition {
+    color: var(--warm); background: var(--warm-dim);
+    border: 1px solid rgba(245,158,11,0.25);
+}
+
+.comment-time {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-left: auto;
+}
+
+/* ── Body ───────────────────────────────────────────────── */
+.comment-body { }
+
+.comment-text {
+    font-size: 0.9rem;
+    color: var(--text);
+    line-height: 1.75;
+    padding: 1rem 1.25rem 0.75rem;
+}
+
+/* ── Footer: vote + actions ─────────────────────────────── */
+.comment-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.25rem 0.65rem;
+    border-top: 1px solid var(--border);
+}
+
+.comment-vote {
+    display: flex; align-items: center; gap: 0.4rem;
+}
+.cvote-btn {
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); cursor: pointer; padding: 0;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.cvote-btn:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-dim); }
+.cvote-btn.up.active  { border-color: var(--indigo); color: #fff; background: var(--indigo); }
+.cvote-btn.down.active { border-color: #dc2626; color: #fff; background: #dc2626; }
+
+.comment-score {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--text); min-width: 1.5rem; text-align: center;
+    font-weight: 700; letter-spacing: 0.05em;
+}
+.comment-score.pos { color: var(--indigo); }
+.comment-score.neg { color: #dc2626; }
+
+.comment-footer-sep {
+    width: 1px; height: 14px;
+    background: var(--border); flex-shrink: 0;
+}
+
+.comment-action-btn {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted);
+    background: none; border: none; cursor: pointer; padding: 0;
+    transition: color 0.2s;
+}
+.comment-action-btn:hover { color: var(--indigo); }
+
+/* ── Reply Form ─────────────────────────────────────────── */
+.reply-form {
+    border-top: 1px solid var(--border);
+    background: var(--ink-2);
+    padding: 1rem 1.25rem;
+}
+.reply-form-inner { display: flex; flex-direction: column; gap: 0.6rem; }
+.reply-form textarea {
+    background: var(--ink); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: 0.85rem;
+    padding: 0.65rem 0.85rem; outline: none; resize: none; width: 100%;
+    border-radius: 0; line-height: 1.6;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.reply-form textarea:focus {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 2px var(--indigo-dim);
+}
+.reply-form textarea::placeholder { color: rgba(107,114,128,0.45); font-size: 0.82rem; }
+.reply-form-actions { display: flex; align-items: center; gap: 0.6rem; }
+.reply-submit {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    background: var(--indigo); color: #fff; border: none;
+    padding: 0.5rem 1.1rem; cursor: pointer;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    transition: background 0.2s;
+}
+.reply-submit:hover { background: var(--indigo-dark); }
+.reply-cancel {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); background: none; border: none; cursor: pointer;
+    padding: 0; transition: color 0.2s;
+}
+.reply-cancel:hover { color: var(--text); }
+
+/* ── Replies ────────────────────────────────────────────── */
+.comment-replies {
+    padding: 0.5rem 0 0 1.25rem;
+    border-left: 1px solid var(--border);
+    margin: 0.5rem 1.25rem 0.75rem;
+}
+</style>

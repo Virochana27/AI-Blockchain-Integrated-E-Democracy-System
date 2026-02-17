@@ -1,79 +1,696 @@
 {% extends "base.html" %}
 {% set title = "Representative Dashboard" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   REPRESENTATIVE DASHBOARD
+═══════════════════════════════════════════════════════════ */
+
+.rep-dashboard {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+}
+
+/* ── TOP BAR ──────────────────────────────────────────────── */
+.dashboard-topbar {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 2rem; margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.greeting-eyebrow {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 0.5rem;
+}
+.greeting-eyebrow .dot {
+    width: 6px; height: 6px; background: var(--teal);
+    border-radius: 50%; animation: blink 1.4s ease-in-out infinite;
+}
+.greeting-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    line-height: 0.95; color: var(--text); margin-bottom: 0.4rem;
+}
+.greeting-title em { font-style: normal; color: var(--indigo); }
+.greeting-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+.topbar-actions {
+    display: flex; flex-wrap: wrap; gap: 0.6rem;
+    align-items: center; justify-content: flex-end; flex-shrink: 0;
+}
+.btn-action {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; padding: 0.6rem 1.1rem;
+    border: 1px solid var(--border);
+    background: var(--ink); color: var(--text);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+.btn-action:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-dim); }
+.btn-action.primary {
+    background: var(--indigo); color: #fff; border-color: var(--indigo);
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+.btn-action.primary:hover { background: var(--indigo-dark); border-color: var(--indigo-dark); }
+
+/* ── STATS STRIP ──────────────────────────────────────────── */
+.stats-strip {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    border: 1px solid var(--border); background: var(--border);
+    gap: 1px; margin-bottom: 2rem;
+}
+.stat-cell {
+    background: var(--ink); padding: 1.5rem 1.25rem;
+    text-align: center; position: relative; overflow: hidden;
+    transition: background 0.2s; cursor: default;
+}
+.stat-cell::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+}
+.stat-cell:hover { background: #fafafe; }
+.stat-cell:hover::after { transform: scaleX(1); }
+.stat-cell.total::after    { background: var(--indigo); }
+.stat-cell.open::after     { background: var(--warm); }
+.stat-cell.progress::after { background: #9333ea; }
+.stat-cell.resolved::after { background: var(--teal); }
+.stat-cell.urgent::after   { background: #dc2626; }
+.stat-val {
+    font-family: var(--font-disp); font-size: 2.2rem; line-height: 1;
+    margin-bottom: 0.25rem;
+}
+.stat-cell.total .stat-val    { color: var(--indigo); }
+.stat-cell.open .stat-val     { color: var(--warm); }
+.stat-cell.progress .stat-val { color: #9333ea; }
+.stat-cell.resolved .stat-val { color: var(--teal); }
+.stat-cell.urgent .stat-val   { color: #dc2626; }
+.stat-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── MAIN GRID ────────────────────────────────────────────── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* ── ISSUE TABLE CARD ─────────────────────────────────────── */
+.table-card {
+    background: var(--ink); border: 1px solid var(--border);
+}
+.table-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.table-card-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.table-card-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+
+/* Filter tabs */
+.filter-tabs {
+    display: flex; border: 1px solid var(--border); overflow: hidden;
+}
+.filter-tab {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); padding: 0.4rem 0.85rem;
+    background: none; border: none; cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+.filter-tab:last-child { border-right: none; }
+.filter-tab:hover { color: var(--indigo); background: var(--indigo-dim); }
+.filter-tab.active { color: #fff; background: var(--indigo); }
+
+/* Issue table */
+.issue-table { width: 100%; border-collapse: collapse; }
+.issue-table thead tr {
+    border-bottom: 1px solid var(--border);
+}
+.issue-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.7rem 1.25rem; text-align: left;
+    background: var(--ink-2);
+}
+.issue-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.issue-table tbody tr:last-child { border-bottom: none; }
+.issue-table tbody tr:hover { background: #f8f8fd; }
+.issue-table td {
+    padding: 1rem 1.25rem; vertical-align: middle;
+}
+
+/* Issue title cell */
+.td-title a {
+    font-size: 0.88rem; font-weight: 500;
+    color: var(--text); text-decoration: none;
+    transition: color 0.2s; line-height: 1.4;
+    display: block; max-width: 280px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.td-title a:hover { color: var(--indigo); }
+.td-cat {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    color: var(--muted); margin-top: 0.15rem; letter-spacing: 0.05em;
+}
+
+/* Status pills */
+.status-pill {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 2px; white-space: nowrap;
+}
+.status-pill.open        { color: var(--indigo); background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2); }
+.status-pill.pending     { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.status-pill.resolved    { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.status-pill.closed      { color: var(--muted);  background: var(--ink-3);      border: 1px solid var(--border); }
+.status-pill.in_progress { color: #9333ea; background: rgba(147,51,234,0.08); border: 1px solid rgba(147,51,234,0.2); }
+.status-pill.rejected    { color: #dc2626; background: rgba(220,38,38,0.07);  border: 1px solid rgba(220,38,38,0.2); }
+
+.td-score {
+    font-family: var(--font-disp); font-size: 1.1rem;
+    color: var(--indigo); text-align: center;
+}
+.td-time {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--muted); letter-spacing: 0.05em; white-space: nowrap;
+}
+
+/* Action dropdown cell */
+.td-actions { white-space: nowrap; }
+.action-menu-wrap { position: relative; display: inline-block; }
+.action-menu-btn {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--indigo); background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    padding: 0.4rem 0.75rem; cursor: pointer;
+    transition: background 0.2s;
+}
+.action-menu-btn:hover { background: var(--indigo-mid); }
+.action-menu-btn svg { transition: transform 0.2s; }
+.action-menu-btn.open svg { transform: rotate(180deg); }
+
+.action-dropdown {
+    display: none;
+    position: absolute; right: 0; top: calc(100% + 4px);
+    background: var(--ink); border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(30,40,80,0.12);
+    z-index: 50; min-width: 220px;
+}
+.action-dropdown.visible { display: block; }
+
+.action-form { border-bottom: 1px solid var(--border); }
+.action-form:last-child { border-bottom: none; }
+
+.action-form-header {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1rem 0.4rem;
+}
+.action-form-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
+}
+.action-form-label.accept   { color: var(--teal); }
+.action-form-label.progress { color: #9333ea; }
+.action-form-label.resolve  { color: var(--indigo); }
+.action-form-label.reject   { color: #dc2626; }
+
+.action-form-inner { padding: 0 1rem 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.action-form-inner textarea,
+.action-form-inner input {
+    background: var(--ink-2); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: 0.78rem;
+    padding: 0.5rem 0.65rem; outline: none; width: 100%;
+    border-radius: 0; resize: none; line-height: 1.5;
+    transition: border-color 0.2s;
+}
+.action-form-inner textarea:focus,
+.action-form-inner input:focus { border-color: var(--indigo); }
+.action-form-inner textarea::placeholder,
+.action-form-inner input::placeholder { color: rgba(107,114,128,0.45); font-size: 0.75rem; }
+.action-form-inner label {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+.action-submit {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    border: none; padding: 0.5rem 0.85rem; cursor: pointer;
+    transition: opacity 0.2s; align-self: flex-end;
+}
+.action-submit.accept   { background: var(--teal);    color: #fff; }
+.action-submit.progress { background: #9333ea;        color: #fff; }
+.action-submit.resolve  { background: var(--indigo);  color: #fff; }
+.action-submit.reject   { background: #dc2626;        color: #fff; }
+.action-submit:hover { opacity: 0.85; }
+
+/* Empty table */
+.table-empty {
+    padding: 3rem 2rem; text-align: center;
+}
+.table-empty p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── SIDEBAR ──────────────────────────────────────────────── */
+.rep-sidebar {
+    position: sticky; top: calc(var(--nav-h) + 2rem);
+    display: flex; flex-direction: column; gap: 1.25rem;
+}
+.sidebar-card {
+    background: var(--ink); border: 1px solid var(--border); overflow: hidden;
+}
+.sidebar-card-header {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border); background: var(--ink-2);
+}
+.sidebar-card-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.sidebar-card-title::before { content: ''; width: 12px; height: 1px; background: var(--indigo); }
+.sidebar-card-body { padding: 1.25rem; }
+
+/* Quick links */
+.quick-links { display: flex; flex-direction: column; gap: 2px; }
+.quick-link {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    padding: 0.6rem 0.75rem; border-radius: 2px;
+    transition: color 0.2s, background 0.2s;
+}
+.quick-link:hover { color: var(--indigo); background: var(--indigo-dim); }
+.quick-link svg { opacity: 0.4; transition: opacity 0.2s, transform 0.2s; }
+.quick-link:hover svg { opacity: 1; transform: translateX(2px); }
+
+/* Status legend */
+.status-legend { display: flex; flex-direction: column; gap: 0.6rem; }
+.legend-row { display: flex; align-items: center; justify-content: space-between; }
+.legend-desc { font-size: 0.78rem; color: var(--muted); }
+
+/* Performance card */
+.perf-card {
+    background: var(--indigo-dark);
+    border-color: rgba(79,70,229,0.3); padding: 1.5rem;
+    position: relative; overflow: hidden;
+}
+.perf-card::before {
+    content: ''; position: absolute; bottom: -20px; right: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(245,158,11,0.06);
+}
+.perf-eyebrow {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--warm-light); margin-bottom: 0.4rem;
+}
+.perf-headline {
+    font-family: var(--font-disp); font-size: 1.5rem; line-height: 1;
+    color: #fff; margin-bottom: 0.6rem;
+}
+.perf-body {
+    font-size: 0.78rem; color: rgba(255,255,255,0.4);
+    line-height: 1.6; margin-bottom: 1rem;
+}
+.perf-card .btn-action {
+    background: var(--warm-light); color: var(--indigo-dark);
+    border-color: var(--warm-light); width: 100%;
+    justify-content: center; clip-path: none; font-size: 0.68rem;
+}
+.perf-card .btn-action:hover { background: #fff; border-color: #fff; color: var(--indigo-dark); }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1200px) {
+    .stats-strip { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1024px) {
+    .rep-dashboard { padding: 2rem 2rem 4rem; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .rep-sidebar { position: static; }
+}
+@media (max-width: 768px) {
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .dashboard-topbar { flex-direction: column; }
+    .topbar-actions { justify-content: flex-start; }
+    .issue-table thead { display: none; }
+    .issue-table td { display: block; padding: 0.4rem 1rem; }
+    .issue-table tbody tr { padding: 0.75rem 0; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
 <div class="rep-dashboard">
 
-    <!-- =========================
-         Page Header
-    ========================== -->
-    <div class="page-header">
-        <h2>🏛️ Representative Dashboard</h2>
-        <p class="page-subtext">
-            Govern, respond to issues, and participate in public policy discussions.
-        </p>
+    <!-- ── Top Bar ─────────────────────────────────────────── -->
+    <div class="dashboard-topbar">
+        <div>
+            <div class="greeting-eyebrow">
+                <span class="dot"></span>
+                {% if role == "ELECTED_REP" %}Elected Representative Portal{% else %}Opposition Representative Portal{% endif %}
+            </div>
+            <h1 class="greeting-title">Issue <em>Management</em></h1>
+            <p class="greeting-sub">
+                Review, respond to, and resolve constituency issues raised by citizens.
+            </p>
+        </div>
+
+        <div class="topbar-actions">
+            <a href="{{ url_for('representative.my_posts') }}" class="btn-action">My Posts</a>
+            <a href="{{ url_for('representative.performance_score') }}" class="btn-action">Performance Score</a>
+            {% if role == "ELECTED_REP" %}
+                <a href="{{ url_for('representative.issue_management') }}" class="btn-action primary">
+                    All Issues
+                </a>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- =========================
-         Quick Actions (UPDATED)
-    ========================== -->
-    <div class="dashboard-actions">
-
-        <a href="{{ url_for('rep_policy.create_policy') }}" class="btn-primary">
-            ➕ Create Policy Post
-        </a>
-
-        <a href="{{ url_for('rep_policy.policy_feed') }}" class="btn-secondary">
-            🏛️ Policy Discussions
-        </a>
-
-        <a href="{{ url_for('representative.issue_management') }}" class="btn-secondary">
-            🧑‍⚖️ Manage Issues
-        </a>
-
-        <a href="{{ url_for('representative.performance_score') }}" class="btn-secondary">
-            📊 My Score
-        </a>
-
-        <a href="{{ url_for('accountability.view_rep_accountability',
-                    rep_user_id=session.get('user_id')) }}"
-   class="btn-secondary">
-    📈 Public Accountability
-</a>
-
+    <!-- ── Stats Strip ─────────────────────────────────────── -->
+    <div class="stats-strip">
+        <div class="stat-cell total">
+            <div class="stat-val">{{ issues|length }}</div>
+            <div class="stat-label">Total Issues</div>
+        </div>
+        <div class="stat-cell open">
+            <div class="stat-val">{{ issues|selectattr('status','equalto','Open')|list|length }}</div>
+            <div class="stat-label">Open</div>
+        </div>
+        <div class="stat-cell progress">
+            <div class="stat-val">{{ issues|selectattr('status','equalto','In Progress')|list|length }}</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-cell resolved">
+            <div class="stat-val">{{ issues|selectattr('status','equalto','Resolved')|list|length }}</div>
+            <div class="stat-label">Resolved</div>
+        </div>
+        <div class="stat-cell urgent">
+            <div class="stat-val">{{ issues|selectattr('status','equalto','Pending')|list|length }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
     </div>
 
-    <!-- =========================
-         Open Issues Summary
-    ========================== -->
-    <section class="dashboard-section">
-        <h3>📌 Issues Requiring Attention</h3>
+    <!-- ── Main Grid ───────────────────────────────────────── -->
+    <div class="dashboard-grid">
 
-        {% if issues %}
-            {% for issue in issues[:5] %}
-                {% if issue.status != "Resolved" %}
-                    <div class="issue-row">
-                        <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}">
-                            {{ issue.title }}
+        <!-- Issue Table -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <span class="table-card-title">Constituency Issues</span>
+                <div class="filter-tabs" id="filterTabs">
+                    <button class="filter-tab active" data-filter="all">All</button>
+                    <button class="filter-tab" data-filter="open">Open</button>
+                    <button class="filter-tab" data-filter="in_progress">In Progress</button>
+                    <button class="filter-tab" data-filter="resolved">Resolved</button>
+                </div>
+            </div>
+
+            {% if issues %}
+                <table class="issue-table" id="issueTable">
+                    <thead>
+                        <tr>
+                            <th>Issue</th>
+                            <th>Status</th>
+                            <th>Score</th>
+                            <th>Raised</th>
+                            {% if role == "ELECTED_REP" %}<th>Actions</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for issue in issues %}
+                            <tr data-status="{{ issue.status|lower|replace(' ','_') }}">
+                                <!-- Title + category -->
+                                <td class="td-title">
+                                    <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" target="_blank">
+                                        {{ issue.title }}
+                                    </a>
+                                    <div class="td-cat">{{ issue.category }}</div>
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+                                    <span class="status-pill {{ issue.status|lower|replace(' ','_') }}">
+                                        {{ issue.status }}
+                                    </span>
+                                </td>
+
+                                <!-- Score -->
+                                <td class="td-score">{{ issue.score }}</td>
+
+                                <!-- Time -->
+                                <td class="td-time">{{ issue.time_ago }}</td>
+
+                                <!-- Actions (elected rep only) -->
+                                {% if role == "ELECTED_REP" %}
+                                <td class="td-actions">
+                                    <div class="action-menu-wrap">
+                                        <button
+                                            class="action-menu-btn"
+                                            onclick="toggleActionMenu(this)"
+                                            type="button"
+                                        >
+                                            Actions
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="6 9 12 15 18 9"/>
+                                            </svg>
+                                        </button>
+
+                                        <div class="action-dropdown">
+
+                                            <!-- Accept -->
+                                            {% if issue.status == "Open" %}
+                                            <div class="action-form">
+                                                <div class="action-form-header">
+                                                    <span class="action-form-label accept">Accept Issue</span>
+                                                </div>
+                                                <form method="POST" action="{{ url_for('representative.accept', issue_id=issue.id) }}">
+                                                    <div class="action-form-inner">
+                                                        <label>Note</label>
+                                                        <textarea name="note" rows="2" placeholder="Acknowledge and plan..." required></textarea>
+                                                        <label>Estimated Start</label>
+                                                        <input type="date" name="estimated_start" required>
+                                                        <button type="submit" class="action-submit accept">Accept →</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- Mark In Progress -->
+                                            {% if issue.status == "Pending" %}
+                                            <div class="action-form">
+                                                <div class="action-form-header">
+                                                    <span class="action-form-label progress">Mark In Progress</span>
+                                                </div>
+                                                <form method="POST" action="{{ url_for('representative.progress', issue_id=issue.id) }}">
+                                                    <div class="action-form-inner">
+                                                        <label>Update Note</label>
+                                                        <textarea name="note" rows="2" placeholder="Describe current work..." required></textarea>
+                                                        <label>Estimated Completion</label>
+                                                        <input type="date" name="estimated_completion" required>
+                                                        <button type="submit" class="action-submit progress">Mark Progress →</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- Resolve -->
+                                            {% if issue.status in ["Pending", "In Progress"] %}
+                                            <div class="action-form">
+                                                <div class="action-form-header">
+                                                    <span class="action-form-label resolve">Resolve</span>
+                                                </div>
+                                                <form method="POST" action="{{ url_for('representative.resolve', issue_id=issue.id) }}">
+                                                    <div class="action-form-inner">
+                                                        <label>Resolution Note</label>
+                                                        <textarea name="note" rows="2" placeholder="Describe the resolution..." required></textarea>
+                                                        <button type="submit" class="action-submit resolve">Resolve →</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- Reject -->
+                                            {% if issue.status == "Open" %}
+                                            <div class="action-form">
+                                                <div class="action-form-header">
+                                                    <span class="action-form-label reject">Reject</span>
+                                                </div>
+                                                <form method="POST" action="{{ url_for('representative.reject', issue_id=issue.id) }}">
+                                                    <div class="action-form-inner">
+                                                        <label>Reason</label>
+                                                        <textarea name="note" rows="2" placeholder="Why is this being rejected..." required></textarea>
+                                                        <button type="submit" class="action-submit reject">Reject</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            {% endif %}
+
+                                        </div>
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="table-empty">
+                    <p>No issues raised in your constituency yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ── Sidebar ──────────────────────────────────────── -->
+        <div class="rep-sidebar">
+
+            <!-- Quick links -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <span class="sidebar-card-title">Quick Links</span>
+                </div>
+                <div class="sidebar-card-body" style="padding:0.5rem 0;">
+                    <div class="quick-links">
+                        <a href="{{ url_for('representative.my_posts') }}" class="quick-link">
+                            My Posts
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
-                        <span class="status status-{{ issue.status|lower }}">
-                            {{ issue.status }}
-                        </span>
+                        <a href="{{ url_for('representative.performance_score') }}" class="quick-link">
+                            Performance Score
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        {% if role == "ELECTED_REP" %}
+                        <a href="{{ url_for('representative.issue_management') }}" class="quick-link">
+                            Full Issue List
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('rep_policy.policy_feed') }}" class="quick-link">
+                            Policy Feed
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
                     </div>
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <p>No active issues at the moment.</p>
-        {% endif %}
-    </section>
+                </div>
+            </div>
 
-    <!-- =========================
-         Info Box
-    ========================== -->
-    <div class="info-box">
-        ℹ️ Official statements and debates now happen through
-        <strong>Policy Discussions</strong> to ensure transparency and AI-assisted analysis.
+            <!-- Status legend -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <span class="sidebar-card-title">Status Guide</span>
+                </div>
+                <div class="sidebar-card-body">
+                    <div class="status-legend">
+                        <div class="legend-row">
+                            <span class="status-pill open">Open</span>
+                            <span class="legend-desc">Needs acceptance</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill pending">Pending</span>
+                            <span class="legend-desc">Accepted, not started</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill in_progress">In Progress</span>
+                            <span class="legend-desc">Actively being worked</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill resolved">Resolved</span>
+                            <span class="legend-desc">Awaiting citizen confirm</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill rejected">Rejected</span>
+                            <span class="legend-desc">Deemed out of scope</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance CTA -->
+            <div class="sidebar-card perf-card">
+                <div class="perf-eyebrow">Accountability</div>
+                <div class="perf-headline">Your Score</div>
+                <p class="perf-body">
+                    Track your resolution rate, response time, and citizen satisfaction ratings.
+                </p>
+                <a href="{{ url_for('representative.performance_score') }}" class="btn-action">
+                    View Performance →
+                </a>
+            </div>
+
+        </div>
     </div>
-
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Action dropdown toggle
+    function toggleActionMenu(btn) {
+        const wrap    = btn.closest('.action-menu-wrap');
+        const dropdown = wrap.querySelector('.action-dropdown');
+        const isOpen  = dropdown.classList.contains('visible');
+
+        // Close all other open dropdowns
+        document.querySelectorAll('.action-dropdown.visible').forEach(d => {
+            d.classList.remove('visible');
+            d.closest('.action-menu-wrap').querySelector('.action-menu-btn').classList.remove('open');
+        });
+
+        if (!isOpen) {
+            dropdown.classList.add('visible');
+            btn.classList.add('open');
+        }
+    }
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.action-menu-wrap')) {
+            document.querySelectorAll('.action-dropdown.visible').forEach(d => {
+                d.classList.remove('visible');
+                d.closest('.action-menu-wrap').querySelector('.action-menu-btn').classList.remove('open');
+            });
+        }
+    });
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const filter = tab.dataset.filter;
+            document.querySelectorAll('#issueTable tbody tr').forEach(row => {
+                const status = row.dataset.status;
+                row.style.display = (filter === 'all' || status === filter) ? '' : 'none';
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -1,82 +1,751 @@
 {% extends "base.html" %}
 {% set title = "Final Election Results" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════
+   PUBLIC RESULTS DASHBOARD
+═══════════════════════════════════════════════════ */
+.results-page {
+    min-height: calc(100vh - var(--nav-h));
+    padding: 3.5rem 4rem 6rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ── PAGE HEADER ─────────────────────────────── */
+.page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    gap: 2rem; flex-wrap: wrap;
+}
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 0.92; color: var(--text);
+}
+.page-title span { color: var(--indigo); }
+.page-title-sub {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-top: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.page-title-sub::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+
+.live-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--teal); background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.25);
+    padding: 0.5rem 1rem; align-self: flex-start;
+}
+.live-badge .dot {
+    width: 5px; height: 5px; background: var(--teal);
+    border-radius: 50%; animation: blink 1.8s ease-in-out infinite;
+}
+
+/* ── FILTER BAR ──────────────────────────────── */
+.filter-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 1rem;
+    align-items: end;
+    margin-bottom: 2.5rem;
+    padding: 1.75rem 2rem;
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+}
+.filter-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.filter-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── SEARCHABLE SELECT (shared) ─────────────── */
+.custom-select-wrap { position: relative; }
+.select-search-box {
+    width: 100%; background: #fff;
+    border: 1px solid var(--border); color: var(--text);
+    font-family: var(--font-mono); font-size: 0.78rem;
+    padding: 0.8rem 2.5rem 0.8rem 1rem;
+    outline: none; cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    user-select: none; display: block;
+}
+.select-search-box.open,
+.select-search-box:focus {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+.select-placeholder { color: rgba(107,114,128,0.5); }
+.select-value { color: var(--text); }
+.select-chevron {
+    position: absolute; right: 0.85rem; top: 50%;
+    transform: translateY(-50%); pointer-events: none;
+    transition: transform 0.2s; color: var(--muted);
+}
+.custom-select-wrap.open .select-chevron { transform: translateY(-50%) rotate(180deg); }
+.select-dropdown {
+    position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+    z-index: 200; background: #fff;
+    border: 1px solid var(--indigo);
+    box-shadow: 0 8px 32px rgba(79,70,229,0.12);
+    display: none; flex-direction: column; max-height: 260px; overflow: hidden;
+}
+.custom-select-wrap.open .select-dropdown { display: flex; }
+.select-search-input {
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--text);
+    background: var(--ink-2); border: none; border-bottom: 1px solid var(--border);
+    padding: 0.65rem 1rem; outline: none; flex-shrink: 0;
+}
+.select-search-input::placeholder { color: var(--muted); opacity: 0.5; }
+.select-options { overflow-y: auto; flex: 1; }
+.select-options::-webkit-scrollbar { width: 4px; }
+.select-options::-webkit-scrollbar-thumb { background: rgba(79,70,229,0.2); }
+.select-option {
+    padding: 0.7rem 1rem; font-family: var(--font-body); font-size: 0.85rem;
+    color: var(--text); cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s, color 0.1s;
+}
+.select-option:last-child { border-bottom: none; }
+.select-option:hover, .select-option.selected { background: var(--indigo-dim); color: var(--indigo); }
+.select-no-results {
+    padding: 1rem; font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-align: center; display: none;
+}
+.select-empty {
+    padding: 1rem; font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.08em; color: var(--muted); text-align: center;
+}
+.select-loading {
+    padding: 1rem; font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--indigo); text-align: center; display: none;
+    align-items: center; justify-content: center; gap: 0.5rem;
+}
+.select-loading.show { display: flex; }
+
+/* Hidden real selects */
+#election_id, #constituency_id { display: none; }
+
+/* View button */
+.btn-view {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.72rem;
+    letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
+    background: var(--indigo); color: #fff;
+    padding: 0.82rem 1.75rem; border: none; cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: background 0.2s, transform 0.2s;
+    white-space: nowrap; align-self: end;
+}
+.btn-view:hover { background: var(--indigo-dark); transform: translateY(-1px); }
+.btn-view:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── RESULTS AREA ────────────────────────────── */
+.results-area { display: none; }
+.results-area.visible { display: block; animation: fade-up 0.4s ease forwards; }
+
+/* Context bar */
+.results-context {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;
+}
+.results-context-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); display: flex; align-items: center; gap: 0.5rem;
+}
+.results-context-label::before { content: ''; width: 12px; height: 1px; background: var(--indigo); }
+.results-context-name {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    letter-spacing: 0.06em; color: var(--text);
+}
+
+/* Winner + runner-up strip */
+.podium-strip {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+}
+.podium-card {
+    padding: 2rem 2.5rem;
+    position: relative; overflow: hidden;
+    background: #fff;
+    transition: background 0.2s;
+}
+.podium-card.winner { background: var(--ink); }
+.podium-card.winner::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--indigo), var(--teal));
+}
+.podium-card.runner::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--border);
+}
+.podium-role {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.podium-card.winner .podium-role { color: var(--indigo); }
+.podium-role-icon {
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    font-size: 0.7rem;
+}
+.podium-card.winner .podium-role-icon {
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+}
+.podium-name {
+    font-family: var(--font-disp);
+    font-size: clamp(1.6rem, 3vw, 2.5rem);
+    line-height: 1; color: var(--text); margin-bottom: 0.4rem;
+}
+.podium-card.winner .podium-name { color: var(--indigo); }
+.podium-party {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 1rem;
+}
+.podium-votes {
+    font-family: var(--font-disp); font-size: 2.5rem;
+    color: var(--text); line-height: 1;
+}
+.podium-card.winner .podium-votes { color: var(--indigo); }
+.podium-votes-label {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── RESULTS TABLE ───────────────────────────── */
+.results-table-wrap {
+    border: 1px solid var(--border); overflow: hidden; overflow-x: auto;
+}
+.results-table {
+    width: 100%; border-collapse: collapse;
+    font-family: var(--font-body); font-size: 0.88rem;
+}
+.results-table thead { background: var(--ink-2); border-bottom: 1px solid var(--border); }
+.results-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.85rem 1.25rem; text-align: left;
+    border-right: 1px solid var(--border);
+}
+.results-table th:last-child { border-right: none; }
+.results-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+}
+.results-table tbody tr:last-child { border-bottom: none; }
+.results-table tbody tr:hover { background: var(--indigo-dim); }
+.results-table tbody tr.winner-row { background: rgba(79,70,229,0.04); }
+.results-table tbody tr.winner-row:hover { background: var(--indigo-dim); }
+.results-table td {
+    padding: 1rem 1.25rem; color: var(--text);
+    border-right: 1px solid var(--border); vertical-align: middle;
+}
+.results-table td:last-child { border-right: none; }
+
+.rank-cell {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: var(--muted); width: 40px; text-align: center;
+}
+.rank-cell.first {
+    color: var(--indigo); font-weight: 700;
+}
+
+.candidate-cell { display: flex; align-items: center; gap: 0.75rem; }
+.candidate-avatar {
+    width: 32px; height: 32px; flex-shrink: 0;
+    background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2);
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    font-weight: 700; color: var(--indigo); text-transform: uppercase;
+}
+.winner-row .candidate-avatar {
+    background: var(--indigo); color: #fff; border-color: var(--indigo);
+}
+
+.party-tag {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.08em; color: var(--muted);
+    background: var(--ink-2); border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+}
+
+/* Vote bar */
+.votes-cell { min-width: 180px; }
+.vote-bar-wrap { display: flex; align-items: center; gap: 0.75rem; }
+.vote-bar-bg {
+    flex: 1; height: 4px; background: var(--border);
+    overflow: hidden;
+}
+.vote-bar-fill {
+    height: 100%; background: var(--indigo);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0;
+}
+.winner-row .vote-bar-fill { background: var(--indigo); }
+.vote-count {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    color: var(--text); min-width: 3ch; text-align: right;
+}
+
+.win-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-family: var(--font-mono); font-size: 0.55rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--indigo); background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2); padding: 0.15rem 0.5rem;
+}
+
+/* ── EMPTY / LOADING STATES ─────────────────── */
+.results-empty {
+    border: 1px solid var(--border); padding: 5rem 2rem;
+    text-align: center; background: var(--ink-2);
+}
+.results-empty-icon {
+    width: 56px; height: 56px; background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    display: grid; place-items: center; margin: 0 auto 1.5rem;
+}
+.results-empty-icon svg {
+    width: 24px; height: 24px; stroke: var(--indigo);
+    fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+}
+.results-empty-title {
+    font-family: var(--font-disp); font-size: 1.8rem;
+    color: var(--text); margin-bottom: 0.4rem;
+}
+.results-empty-sub {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+
+.results-loading {
+    display: none; border: 1px solid var(--border);
+    padding: 3rem 2rem; text-align: center; background: var(--ink-2);
+}
+.results-loading.show { display: block; }
+.results-loading .spinner {
+    width: 28px; height: 28px; margin: 0 auto 1rem;
+    border: 2px solid rgba(79,70,229,0.15); border-top-color: var(--indigo);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+.results-loading p {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media (max-width: 900px) {
+    .results-page { padding: 2rem 1.5rem 4rem; }
+    .filter-bar { grid-template-columns: 1fr; }
+    .btn-view { width: 100%; justify-content: center; clip-path: none; }
+    .podium-strip { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="container">
+<div class="results-page">
 
-<h2>Final Election Results</h2>
+    <!-- ── PAGE HEADER ────────────────────────────── -->
+    <div class="page-header reveal">
+        <div>
+            <h1 class="page-title">Election<br><span>Results</span></h1>
+            <div class="page-title-sub">Public Dashboard · Blockchain Verified</div>
+        </div>
+        <div class="live-badge">
+            <span class="dot"></span>
+            Results Publicly Auditable
+        </div>
+    </div>
 
-<label>Select Election</label>
-<select id="election">
-    <option value="">-- Select --</option>
-    {% for e in elections %}
-        <option value="{{ e.id }}">{{ e.election_name }}</option>
-    {% endfor %}
-</select>
+    <!-- ── FILTER BAR ─────────────────────────────── -->
+    <div class="filter-bar reveal">
 
-<label class="mt-2">Select Constituency</label>
-<select id="constituency"></select>
+        <!-- Election selector -->
+        <div class="filter-group">
+            <label class="filter-label">Election</label>
 
-<button class="mt-2" onclick="loadResults()">View Results</button>
+            <select id="election_id" name="election_id">
+                <option value="">-- Select --</option>
+                {% for e in elections %}
+                    <option value="{{ e.id }}">{{ e.election_name }}</option>
+                {% endfor %}
+            </select>
 
-<hr>
+            <div class="custom-select-wrap" id="electionWrap">
+                <div class="select-search-box" id="electionBox" tabindex="0" role="combobox">
+                    <span id="electionDisplay" class="select-placeholder">Select an election…</span>
+                </div>
+                <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                <div class="select-dropdown" id="electionDropdown">
+                    <input class="select-search-input" id="electionSearch" type="text" placeholder="Search elections…" autocomplete="off">
+                    <div class="select-options" id="electionOptions">
+                        {% for e in elections %}
+                        <div class="select-option" data-value="{{ e.id }}" data-label="{{ e.election_name }}">{{ e.election_name }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="select-no-results" id="electionNoResults">No elections found</div>
+                </div>
+            </div>
+        </div>
 
-<div id="results"></div>
+        <!-- Constituency selector -->
+        <div class="filter-group">
+            <label class="filter-label">Constituency</label>
+
+            <select id="constituency_id" name="constituency_id">
+                <option value="">-- Select --</option>
+            </select>
+
+            <div class="custom-select-wrap" id="constWrap">
+                <div class="select-search-box" id="constBox" tabindex="0" role="combobox">
+                    <span id="constDisplay" class="select-placeholder">Select a constituency…</span>
+                </div>
+                <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                <div class="select-dropdown" id="constDropdown">
+                    <input class="select-search-input" id="constSearch" type="text" placeholder="Search constituencies…" autocomplete="off">
+                    <div class="select-options" id="constOptions">
+                        <div class="select-empty">Select an election first</div>
+                    </div>
+                    <div class="select-no-results" id="constNoResults">No constituencies found</div>
+                </div>
+                <div class="select-loading" id="constLoading">
+                    <div style="width:12px;height:12px;border:2px solid rgba(79,70,229,0.2);border-top-color:var(--indigo);border-radius:50%;animation:spin 0.7s linear infinite"></div>
+                    Loading…
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-view" id="viewBtn" onclick="loadResults()" disabled>
+            View Results →
+        </button>
+
+    </div>
+
+    <!-- ── LOADING ────────────────────────────────── -->
+    <div class="results-loading" id="resultsLoading">
+        <div class="spinner"></div>
+        <p>Fetching results from blockchain…</p>
+    </div>
+
+    <!-- ── RESULTS AREA ───────────────────────────── -->
+    <div class="results-area" id="resultsArea">
+
+        <!-- Context label -->
+        <div class="results-context">
+            <span class="results-context-label">Showing results for</span>
+            <span class="results-context-name" id="resultsContextName">—</span>
+        </div>
+
+        <!-- Winner / Runner-up podium -->
+        <div class="podium-strip" id="podiumStrip">
+            <div class="podium-card winner" id="winnerCard">
+                <div class="podium-role"><div class="podium-role-icon">🏆</div> Winner</div>
+                <div class="podium-name" id="winnerName">—</div>
+                <div class="podium-party" id="winnerParty">—</div>
+                <div class="podium-votes" id="winnerVotes">—</div>
+                <div class="podium-votes-label">Votes</div>
+            </div>
+            <div class="podium-card runner" id="runnerCard">
+                <div class="podium-role"><div class="podium-role-icon" style="background:var(--ink-2);border:1px solid var(--border)">2</div> Runner-up</div>
+                <div class="podium-name" id="runnerName">—</div>
+                <div class="podium-party" id="runnerParty">—</div>
+                <div class="podium-votes" id="runnerVotes">—</div>
+                <div class="podium-votes-label">Votes</div>
+            </div>
+        </div>
+
+        <!-- Full table -->
+        <div class="results-table-wrap">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Candidate</th>
+                        <th>Party</th>
+                        <th>Votes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTableBody"></tbody>
+            </table>
+        </div>
+
+    </div>
 
 </div>
+{% endblock %}
 
+
+{% block extra_js %}
 <script>
-async function loadConstituencies() {
-    const eid = election.value;
-    const res = await fetch(`/public/results/constituencies?election_id=${eid}`);
-    const data = await res.json();
+(function () {
 
-    constituency.innerHTML = "";
-    data.forEach(c => {
-        constituency.innerHTML += `
-            <option value="${c.constituency_id}">
-                ${c.constituency_name}
-            </option>
-        `;
+    /* ═══════════════════════════════════════════════
+       SEARCHABLE SELECT FACTORY
+    ═══════════════════════════════════════════════ */
+    function makeSelect({ wrapId, boxId, displayId, searchId, optionsId, noResultsId, realSelectId, onSelect }) {
+        const wrap       = document.getElementById(wrapId);
+        const box        = document.getElementById(boxId);
+        const display    = document.getElementById(displayId);
+        const search     = document.getElementById(searchId);
+        const optionsEl  = document.getElementById(optionsId);
+        const noResults  = document.getElementById(noResultsId);
+        const realSelect = document.getElementById(realSelectId);
+
+        const open  = () => {
+            wrap.classList.add('open');
+            box.classList.add('open');
+            search.value = '';
+            filter('');
+            setTimeout(() => search.focus(), 10);
+        };
+        const close = () => {
+            wrap.classList.remove('open');
+            box.classList.remove('open');
+        };
+
+        box.addEventListener('click', () => wrap.classList.contains('open') ? close() : open());
+        box.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); }});
+        document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
+        search.addEventListener('input', () => filter(search.value));
+
+        function filter(q) {
+            const t = q.toLowerCase().trim();
+            const opts = Array.from(optionsEl.querySelectorAll('.select-option'));
+            let any = false;
+            opts.forEach(o => {
+                const match = o.dataset.label.toLowerCase().includes(t);
+                o.style.display = match ? '' : 'none';
+                if (match) any = true;
+            });
+            if (noResults) noResults.style.display = any ? 'none' : '';
+        }
+
+        function setOptions(items) {
+            optionsEl.innerHTML = '';
+            // Rebuild the real <select> options to match
+            realSelect.innerHTML = '<option value="">-- Select --</option>';
+            if (noResults) noResults.style.display = 'none';
+            if (!items.length) {
+                optionsEl.innerHTML = '<div class="select-empty">No options available</div>';
+                return;
+            }
+            items.forEach(item => {
+                // Add to real <select>
+                const realOpt = document.createElement('option');
+                realOpt.value = item.value;
+                realOpt.textContent = item.label;
+                realSelect.appendChild(realOpt);
+
+                // Add to custom dropdown
+                const div = document.createElement('div');
+                div.className = 'select-option';
+                div.dataset.value = item.value;
+                div.dataset.label = item.label;
+                div.textContent = item.label;
+                div.addEventListener('click', () => pick(div));
+                optionsEl.appendChild(div);
+            });
+        }
+
+        function pick(opt) {
+            Array.from(optionsEl.querySelectorAll('.select-option')).forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+
+            // Ensure the value exists in the real <select> before assigning
+            if (!realSelect.querySelector(`option[value="${opt.dataset.value}"]`)) {
+                const o = document.createElement('option');
+                o.value = opt.dataset.value;
+                o.textContent = opt.dataset.label;
+                realSelect.appendChild(o);
+            }
+            realSelect.value = opt.dataset.value;
+
+            display.textContent = opt.dataset.label;
+            display.className = 'select-value';
+            close();
+            if (onSelect) onSelect(opt.dataset.value, opt.dataset.label);
+        }
+
+        function reset(placeholder) {
+            Array.from(optionsEl.querySelectorAll('.select-option')).forEach(o => o.classList.remove('selected'));
+            realSelect.value = '';
+            display.textContent = '';
+            display.className = 'select-placeholder';
+            display.textContent = placeholder || 'Select…';
+        }
+
+        // Wire existing options (for election select pre-rendered)
+        Array.from(optionsEl.querySelectorAll('.select-option')).forEach(opt => {
+            opt.addEventListener('click', () => pick(opt));
+        });
+
+        return { setOptions, reset, filter };
+    }
+
+    /* ═══════════════════════════════════════════════
+       INIT SELECTS
+    ═══════════════════════════════════════════════ */
+    const constCtrl = makeSelect({
+        wrapId: 'constWrap', boxId: 'constBox', displayId: 'constDisplay',
+        searchId: 'constSearch', optionsId: 'constOptions',
+        noResultsId: 'constNoResults', realSelectId: 'constituency_id',
+        onSelect: () => updateViewBtn()
     });
-}
 
-async function loadResults() {
-    const eid = election.value;
-    const cid = constituency.value;
-
-    const res = await fetch(
-        `/public/results/final?election_id=${eid}&constituency_id=${cid}`
-    );
-    const data = await res.json();
-
-    let html = `
-        <h3>Winner: ${data.winner.candidate_name}</h3>
-        <p>Runner-up: ${data.runner_up?.candidate_name || "N/A"}</p>
-
-        <table>
-            <tr>
-                <th>Candidate</th>
-                <th>Party</th>
-                <th>Votes</th>
-            </tr>
-    `;
-
-    data.all_candidates.forEach(c => {
-        html += `
-            <tr>
-                <td>${c.candidate_name}</td>
-                <td>${c.party_name}</td>
-                <td>${c.votes}</td>
-            </tr>
-        `;
+    makeSelect({
+        wrapId: 'electionWrap', boxId: 'electionBox', displayId: 'electionDisplay',
+        searchId: 'electionSearch', optionsId: 'electionOptions',
+        noResultsId: 'electionNoResults', realSelectId: 'election_id',
+        onSelect: (val) => { loadConstituencies(val); updateViewBtn(); }
     });
 
-    html += "</table>";
-    results.innerHTML = html;
-}
+    function updateViewBtn() {
+        const eid = document.getElementById('election_id').value;
+        const cid = document.getElementById('constituency_id').value;
+        document.getElementById('viewBtn').disabled = !(eid && cid);
+    }
 
-election.addEventListener("change", loadConstituencies);
+    /* ═══════════════════════════════════════════════
+       LOAD CONSTITUENCIES
+    ═══════════════════════════════════════════════ */
+    async function loadConstituencies(electionId) {
+        const loadingEl = document.getElementById('constLoading');
+        constCtrl.reset('Loading…');
+        loadingEl.classList.add('show');
+        document.getElementById('constituency_id').value = '';
+        updateViewBtn();
+
+        try {
+            const res  = await fetch(`/public/results/constituencies?election_id=${electionId}`);
+            const data = await res.json();
+            loadingEl.classList.remove('show');
+            constCtrl.setOptions(data.map(c => ({ value: c.constituency_id, label: c.constituency_name })));
+            constCtrl.reset('Select a constituency…');
+        } catch (_) {
+            loadingEl.classList.remove('show');
+            constCtrl.reset('Error loading');
+        }
+    }
+
+    /* ═══════════════════════════════════════════════
+       LOAD RESULTS
+    ═══════════════════════════════════════════════ */
+    window.loadResults = async function () {
+        const eid = document.getElementById('election_id').value;
+        const cid = document.getElementById('constituency_id').value;
+        const constName = document.getElementById('constDisplay').textContent;
+        const electName = document.getElementById('electionDisplay').textContent;
+        if (!eid || !cid) return;
+
+        const loading = document.getElementById('resultsLoading');
+        const area    = document.getElementById('resultsArea');
+        area.classList.remove('visible');
+        loading.classList.add('show');
+
+        try {
+            const res  = await fetch(`/public/results/final?election_id=${eid}&constituency_id=${cid}`);
+            const data = await res.json();
+            loading.classList.remove('show');
+            renderResults(data, electName, constName);
+        } catch (_) {
+            loading.classList.remove('show');
+        }
+    };
+
+    function renderResults(data, electName, constName) {
+        const area = document.getElementById('resultsArea');
+
+        // Context
+        document.getElementById('resultsContextName').textContent =
+            `${electName} · ${constName}`;
+
+        // Winner
+        const w = data.winner || {};
+        document.getElementById('winnerName').textContent  = w.candidate_name || '—';
+        document.getElementById('winnerParty').textContent = w.party_name || '—';
+        document.getElementById('winnerVotes').textContent = (w.votes ?? '—').toLocaleString?.() ?? w.votes;
+
+        // Runner-up
+        const r = data.runner_up || {};
+        document.getElementById('runnerName').textContent  = r.candidate_name || 'N/A';
+        document.getElementById('runnerParty').textContent = r.party_name || '—';
+        document.getElementById('runnerVotes').textContent = (r.votes ?? '—').toLocaleString?.() ?? r.votes;
+
+        // Table
+        const tbody    = document.getElementById('resultsTableBody');
+        const all      = data.all_candidates || [];
+        const maxVotes = Math.max(...all.map(c => c.votes || 0), 1);
+
+        tbody.innerHTML = all.map((c, i) => {
+            const isWinner = i === 0;
+            const pct      = Math.round((c.votes / maxVotes) * 100);
+            const initial  = (c.candidate_name || '?')[0].toUpperCase();
+            return `
+            <tr class="${isWinner ? 'winner-row' : ''}">
+                <td class="rank-cell ${isWinner ? 'first' : ''}">${isWinner ? '●' : i + 1}</td>
+                <td>
+                    <div class="candidate-cell">
+                        <div class="candidate-avatar">${initial}</div>
+                        ${escHtml(c.candidate_name)}
+                    </div>
+                </td>
+                <td><span class="party-tag">${escHtml(c.party_name)}</span></td>
+                <td class="votes-cell">
+                    <div class="vote-bar-wrap">
+                        <div class="vote-bar-bg">
+                            <div class="vote-bar-fill" style="width:${pct}%"></div>
+                        </div>
+                        <span class="vote-count">${(c.votes ?? 0).toLocaleString?.() ?? c.votes}</span>
+                    </div>
+                </td>
+                <td>${isWinner ? '<span class="win-badge">✔ Winner</span>' : ''}</td>
+            </tr>`;
+        }).join('');
+
+        area.classList.add('visible');
+        area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Animate bars after render
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                tbody.querySelectorAll('.vote-bar-fill').forEach((bar, i) => {
+                    const pct = all[i] ? Math.round((all[i].votes / maxVotes) * 100) : 0;
+                    bar.style.width = pct + '%';
+                });
+            });
+        });
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+})();
 </script>
-
 {% endblock %}

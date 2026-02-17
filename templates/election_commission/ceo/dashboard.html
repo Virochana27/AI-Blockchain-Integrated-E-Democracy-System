@@ -1,65 +1,523 @@
 {% extends "base.html" %}
 {% set title = "CEO Dashboard" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   CEO DASHBOARD
+═══════════════════════════════════════════════════════════ */
+
+.ceo-dashboard {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+}
+
+/* ── TOP BAR ──────────────────────────────────────────────── */
+.dashboard-topbar {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 2rem; margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.greeting-eyebrow {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 0.5rem;
+}
+.greeting-eyebrow .dot {
+    width: 6px; height: 6px; background: var(--teal);
+    border-radius: 50%; animation: blink 1.4s ease-in-out infinite;
+}
+.greeting-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 0.95; color: var(--text); margin-bottom: 0.4rem;
+}
+.greeting-title em { font-style: normal; color: var(--indigo); }
+.greeting-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+.topbar-actions {
+    display: flex; flex-wrap: wrap; gap: 0.6rem;
+    align-items: center; justify-content: flex-end; flex-shrink: 0;
+}
+.btn-action {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; padding: 0.6rem 1.1rem;
+    border: 1px solid var(--border);
+    background: var(--ink); color: var(--text);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+.btn-action:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-dim); }
+.btn-action.primary {
+    background: var(--indigo); color: #fff; border-color: var(--indigo);
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+.btn-action.primary:hover { background: var(--indigo-dark); border-color: var(--indigo-dark); }
+
+/* ── STATS STRIP ──────────────────────────────────────────── */
+.stats-strip {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    border: 1px solid var(--border); background: var(--border);
+    gap: 1px; margin-bottom: 2rem;
+}
+.stat-cell {
+    background: var(--ink); padding: 1.5rem 1.25rem;
+    text-align: center; position: relative; overflow: hidden;
+    transition: background 0.2s; cursor: default;
+}
+.stat-cell::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+}
+.stat-cell:hover { background: #fafafe; }
+.stat-cell:hover::after { transform: scaleX(1); }
+.stat-cell.total::after    { background: var(--indigo); }
+.stat-cell.approved::after { background: var(--teal); }
+.stat-cell.active::after   { background: #16a34a; }
+.stat-cell.pending::after  { background: var(--warm); }
+.stat-cell.ended::after    { background: var(--muted); }
+.stat-val {
+    font-family: var(--font-disp); font-size: 2.2rem; line-height: 1; margin-bottom: 0.25rem;
+}
+.stat-cell.total .stat-val    { color: var(--indigo); }
+.stat-cell.approved .stat-val { color: var(--teal); }
+.stat-cell.active .stat-val   { color: #16a34a; }
+.stat-cell.pending .stat-val  { color: var(--warm); }
+.stat-cell.ended .stat-val    { color: var(--muted); }
+.stat-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── MAIN GRID ────────────────────────────────────────────── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1.5rem; align-items: start;
+}
+
+/* ── TABLE CARD ───────────────────────────────────────────── */
+.table-card {
+    background: var(--ink); border: 1px solid var(--border);
+}
+.table-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+    gap: 1rem; flex-wrap: wrap;
+}
+.table-card-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.table-card-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+
+/* Filter tabs */
+.filter-tabs {
+    display: flex; border: 1px solid var(--border); overflow: hidden;
+}
+.filter-tab {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); padding: 0.4rem 0.85rem;
+    background: none; border: none; cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: color 0.2s, background 0.2s; white-space: nowrap;
+}
+.filter-tab:last-child { border-right: none; }
+.filter-tab:hover { color: var(--indigo); background: var(--indigo-dim); }
+.filter-tab.active { color: #fff; background: var(--indigo); }
+
+/* Data table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead tr { border-bottom: 1px solid var(--border); }
+.data-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.7rem 1.25rem; text-align: left;
+    background: var(--ink-2); white-space: nowrap;
+}
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: #f8f8fd; }
+.data-table td { padding: 1rem 1.25rem; vertical-align: middle; }
+
+/* Row num */
+.td-num {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: rgba(79,70,229,0.2); font-weight: 700;
+}
+
+/* Election name */
+.td-name { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.td-sub  {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    color: var(--muted); letter-spacing: 0.06em; margin-top: 0.15rem;
+}
+
+/* Type tag */
+.type-tag {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); background: var(--ink-2);
+    border: 1px solid var(--border); padding: 0.18rem 0.55rem;
+    white-space: nowrap;
+}
+
+/* Status pills */
+.status-pill {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 2px; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.3rem;
+}
+.status-pill.approved  { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.status-pill.pending   { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.status-pill.active    { color: #16a34a; background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.2); }
+.status-pill.active::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: #16a34a; animation: blink 1.4s ease-in-out infinite;
+}
+.status-pill.ended     { color: var(--muted);  background: var(--ink-3);      border: 1px solid var(--border); }
+.status-pill.scheduled { color: var(--indigo); background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2); }
+
+/* Date cell */
+.date-range {
+    display: flex; flex-direction: column; gap: 0.1rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    color: var(--muted); letter-spacing: 0.04em;
+}
+.dr-label {
+    font-size: 0.52rem; opacity: 0.65;
+    letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* Empty state */
+.table-empty {
+    padding: 4rem 2rem; text-align: center;
+}
+.table-empty-num {
+    font-family: var(--font-disp); font-size: 4rem; line-height: 1;
+    color: rgba(79,70,229,0.07); margin-bottom: 0.75rem;
+}
+.table-empty p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 1.5rem;
+}
+
+/* ── SIDEBAR ──────────────────────────────────────────────── */
+.ceo-sidebar {
+    position: sticky; top: calc(var(--nav-h) + 2rem);
+    display: flex; flex-direction: column; gap: 1.25rem;
+}
+.sidebar-card {
+    background: var(--ink); border: 1px solid var(--border); overflow: hidden;
+}
+.sidebar-card-header {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border); background: var(--ink-2);
+}
+.sidebar-card-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.sidebar-card-title::before { content: ''; width: 12px; height: 1px; background: var(--indigo); }
+.sidebar-card-body { padding: 1.25rem; }
+
+/* Quick links */
+.quick-links { display: flex; flex-direction: column; gap: 2px; }
+.quick-link {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    padding: 0.65rem 0.75rem; border-radius: 2px;
+    transition: color 0.2s, background 0.2s;
+}
+.quick-link:hover { color: var(--indigo); background: var(--indigo-dim); }
+.quick-link svg { opacity: 0.4; transition: opacity 0.2s, transform 0.2s; }
+.quick-link:hover svg { opacity: 1; transform: translateX(2px); }
+
+/* Status legend */
+.status-legend { display: flex; flex-direction: column; gap: 0.65rem; }
+.legend-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.legend-desc { font-size: 0.78rem; color: var(--muted); }
+
+/* Create election CTA */
+.create-card {
+    background: var(--indigo-dark);
+    border-color: rgba(79,70,229,0.3); padding: 1.5rem;
+    position: relative; overflow: hidden;
+}
+.create-card::before {
+    content: ''; position: absolute; bottom: -20px; right: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(245,158,11,0.06);
+}
+.create-eyebrow {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--warm-light); margin-bottom: 0.4rem;
+}
+.create-headline {
+    font-family: var(--font-disp); font-size: 1.5rem; line-height: 1;
+    color: #fff; margin-bottom: 0.6rem;
+}
+.create-body {
+    font-size: 0.78rem; color: rgba(255,255,255,0.4);
+    line-height: 1.6; margin-bottom: 1rem;
+}
+.create-card a {
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    background: var(--warm-light); color: var(--indigo-dark);
+    text-decoration: none; padding: 0.7rem 1.25rem;
+    border: none; transition: background 0.2s; width: 100%;
+}
+.create-card a:hover { background: #fff; }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1200px) { .stats-strip { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1024px) {
+    .ceo-dashboard { padding: 2rem 2rem 4rem; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .ceo-sidebar { position: static; }
+}
+@media (max-width: 768px) {
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .dashboard-topbar { flex-direction: column; }
+    .topbar-actions { justify-content: flex-start; }
+    .data-table thead { display: none; }
+    .data-table td { display: block; padding: 0.4rem 1rem; }
+    .data-table tbody tr { display: block; padding: 0.75rem 0; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="ec-dashboard">
+<div class="ceo-dashboard">
 
-    <h2>Chief Electoral Officer (State) Dashboard</h2>
+    <!-- ── Top Bar ─────────────────────────────────────────── -->
+    <div class="dashboard-topbar">
+        <div>
+            <div class="greeting-eyebrow">
+                <span class="dot"></span>
+                Chief Electoral Officer · State Portal
+            </div>
+            <h1 class="greeting-title">State Election <em>Control</em></h1>
+            <p class="greeting-sub">
+                Create and manage elections, oversee District Electoral Officers, and monitor live results for your state.
+            </p>
+        </div>
 
-    <!-- =========================
-         Quick Actions
-    ========================== -->
-    <div class="action-bar">
-        <a href="{{ url_for('election_commission.create_election') }}" class="btn-primary">
-            Create New Election
-        </a>
-
-                <a href="{{ url_for('results.dashboard') }}" class="btn-secondary">
-    View Live Results
-</a>
-
-        <a href="{{ url_for('election_commission.manage_deo') }}" class="btn-secondary">
-            Manage DEOs
-        </a>
+        <div class="topbar-actions">
+            <a href="{{ url_for('results.dashboard') }}" class="btn-action">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Live Results
+            </a>
+            <a href="{{ url_for('election_commission.manage_deo') }}" class="btn-action">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Manage DEOs
+            </a>
+            <a href="{{ url_for('election_commission.create_election') }}" class="btn-action primary">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Create Election
+            </a>
+        </div>
     </div>
 
-    <!-- =========================
-         State Elections Overview
-    ========================== -->
-    <section class="table-section">
-        <h3>State Elections</h3>
+    <!-- ── Stats Strip ─────────────────────────────────────── -->
+    <div class="stats-strip">
+        <div class="stat-cell total">
+            <div class="stat-val">{{ elections|length if elections else 0 }}</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-cell approved">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','Approved')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-cell active">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','Active')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-cell pending">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','Draft')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-cell ended">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','COMPLETED')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Ended</div>
+        </div>
+    </div>
 
-        {% if elections and elections|length > 0 %}
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Election Name</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Start</th>
-                        <th>End</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for election in elections %}
+    <!-- ── Main Grid ───────────────────────────────────────── -->
+    <div class="dashboard-grid">
+
+        <!-- Elections Table -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <span class="table-card-title">State Elections</span>
+                <div class="filter-tabs" id="filterTabs">
+                    <button class="filter-tab active" data-filter="all">All</button>
+                    <button class="filter-tab" data-filter="draft">Pending</button>
+                    <button class="filter-tab" data-filter="approved">Approved</button>
+                    <button class="filter-tab" data-filter="active">Active</button>
+                    <button class="filter-tab" data-filter="completed">Ended</button>
+                </div>
+            </div>
+
+            {% if elections and elections|length > 0 %}
+                <table class="data-table" id="electionsTable">
+                    <thead>
                         <tr>
-                            <td>{{ election.election_name }}</td>
-                            <td>{{ election.election_type }}</td>
-                            <td>
-                                <span class="status {{ election.status|lower }}">
-                                    {{ election.status }}
-                                </span>
-                            </td>
-                            <td>{{ election.start_time }}</td>
-                            <td>{{ election.end_time }}</td>
+                            <th style="width:3rem;">#</th>
+                            <th>Election</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Schedule</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No elections created for this state.</p>
-        {% endif %}
-    </section>
+                    </thead>
+                    <tbody>
+                        {% for election in elections %}
+                            <tr data-status="{{ election.status|lower }}">
 
+                                <td class="td-num">{{ '%02d' % loop.index }}</td>
+
+                                <td>
+                                    <div class="td-name">{{ election.election_name }}</div>
+                                </td>
+
+                                <td>
+                                    <span class="type-tag">{{ election.election_type }}</span>
+                                </td>
+
+                                <td>
+                                    <span class="status-pill {{ election.status|lower }}">
+                                        {{ election.status }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="date-range">
+                                        <span><span class="dr-label">Start </span>{{ election.start_time }}</span>
+                                        <span><span class="dr-label">End &nbsp; </span>{{ election.end_time }}</span>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            {% else %}
+                <div class="table-empty">
+                    <div class="table-empty-num">0</div>
+                    <p>No elections created for your state yet.</p>
+                    <a href="{{ url_for('election_commission.create_election') }}" class="btn-action primary" style="display:inline-flex;">
+                        + Create First Election
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ── Sidebar ──────────────────────────────────────── -->
+        <div class="ceo-sidebar">
+
+            <!-- Quick links -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <span class="sidebar-card-title">Quick Navigation</span>
+                </div>
+                <div class="sidebar-card-body" style="padding:0.5rem 0;">
+                    <div class="quick-links">
+                        <a href="{{ url_for('election_commission.create_election') }}" class="quick-link">
+                            Create Election
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="{{ url_for('election_commission.manage_deo') }}" class="quick-link">
+                            Manage DEOs
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="{{ url_for('results.dashboard') }}" class="quick-link">
+                            Live Results
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status legend -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <span class="sidebar-card-title">Status Guide</span>
+                </div>
+                <div class="sidebar-card-body">
+                    <div class="status-legend">
+                        <div class="legend-row">
+                            <span class="status-pill pending">Pending</span>
+                            <span class="legend-desc">Awaiting CEC approval</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill approved">Approved</span>
+                            <span class="legend-desc">Cleared to proceed</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill active">Active</span>
+                            <span class="legend-desc">Voting open now</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill ended">Ended</span>
+                            <span class="legend-desc">Voting period closed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create election CTA -->
+            <div class="sidebar-card create-card">
+                <div class="create-eyebrow">State Authority</div>
+                <div class="create-headline">New Election</div>
+                <p class="create-body">
+                    Submit a new election for CEC approval. It will appear in the table once approved.
+                </p>
+                <a href="{{ url_for('election_commission.create_election') }}">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Create Election →
+                </a>
+            </div>
+
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const filter = tab.dataset.filter;
+            document.querySelectorAll('#electionsTable tbody tr').forEach(row => {
+                row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+            });
+        });
+    });
+</script>
 {% endblock %}

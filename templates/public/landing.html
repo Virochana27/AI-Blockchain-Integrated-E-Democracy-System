@@ -1,112 +1,692 @@
 {% extends "base.html" %}
 {% set title = "E-Democracy Platform" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   LANDING PAGE
+═══════════════════════════════════════════════════════════ */
+
+/* ── HERO ─────────────────────────────────────────────────── */
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    padding: 8rem 4rem 4rem;
+}
+
+/* Grid lines */
+.hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(79,70,229,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,70,229,0.05) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 80%);
+}
+
+/* Glow orb */
+.hero::after {
+    content: '';
+    position: absolute;
+    width: 700px; height: 700px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(79,70,229,0.07) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.hero-inner {
+    position: relative; z-index: 2;
+    max-width: 1000px;
+    text-align: center;
+}
+
+.hero-label {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal);
+    border: 1px solid var(--teal-dim);
+    background: var(--teal-dim);
+    padding: 0.4rem 1rem;
+    border-radius: 2px;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fade-up 0.8s 0.2s forwards;
+}
+.hero-label .dot {
+    width: 6px; height: 6px;
+    background: var(--teal); border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+.hero-title {
+    font-family: var(--font-disp);
+    font-size: clamp(4rem, 10vw, 9rem);
+    line-height: 0.92;
+    letter-spacing: 0.01em;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    animation: fade-up 0.9s 0.4s forwards;
+}
+.hero-title .accent { color: var(--indigo); }
+.hero-title .stroke {
+    -webkit-text-stroke: 1.5px rgba(79,70,229,0.3);
+    color: transparent;
+}
+
+.hero-subtitle-line {
+    display: flex; align-items: center; justify-content: center; gap: 1.5rem;
+    margin: 2rem 0 3rem;
+    opacity: 0;
+    animation: fade-up 0.9s 0.6s forwards;
+}
+.hero-subtitle-line span {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.hero-subtitle-line .sep { width: 40px; height: 1px; background: var(--border); }
+
+.hero-actions {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: 1rem;
+    opacity: 0;
+    animation: fade-up 0.9s 0.8s forwards;
+}
+
+/* ── TICKER ───────────────────────────────────────────────── */
+.ticker-wrap {
+    position: relative; overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0;
+    background: var(--ink-2);
+}
+.ticker {
+    display: flex; gap: 0;
+    animation: ticker-scroll 28s linear infinite;
+    white-space: nowrap;
+}
+.ticker-item {
+    display: inline-flex; align-items: center; gap: 2rem;
+    padding: 0 2rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.ticker-item .tag {
+    background: var(--indigo-dim);
+    color: var(--indigo);
+    padding: 0.15rem 0.5rem;
+    font-size: 0.6rem;
+}
+
+/* ── STATS STRIP ─────────────────────────────────────────── */
+.stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    animation: fade-up 0.8s 1s forwards;
+}
+.stat-cell {
+    padding: 3rem 2rem;
+    border-right: 1px solid var(--border);
+    text-align: center;
+    position: relative; overflow: hidden;
+    transition: background 0.3s;
+}
+.stat-cell:last-child { border-right: none; }
+.stat-cell::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--indigo), transparent);
+    transform: scaleX(0); transition: transform 0.4s;
+}
+.stat-cell:hover::before { transform: scaleX(1); }
+.stat-cell:hover { background: var(--ink-2); }
+.stat-number {
+    font-family: var(--font-disp);
+    font-size: 3rem;
+    color: var(--indigo);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+    transition: color 0.3s;
+}
+.stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* ── ABOUT ────────────────────────────────────────────────── */
+.about-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.about-left .section-title em { color: var(--indigo); font-style: normal; }
+.about-left p {
+    color: var(--muted); font-size: 1rem; line-height: 1.8;
+    margin-bottom: 2.5rem; max-width: 480px;
+}
+
+.feature-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+}
+.feature-item {
+    background: var(--ink);
+    padding: 1.5rem;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    transition: background 0.2s;
+}
+.feature-item:hover { background: #fff; }
+.feature-icon {
+    width: 28px; height: 28px; flex-shrink: 0;
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    display: grid; place-items: center;
+    font-size: 0.75rem;
+}
+.feature-text { font-size: 0.82rem; color: var(--text); line-height: 1.5; }
+.feature-text strong {
+    display: block; font-size: 0.72rem; letter-spacing: 0.05em;
+    color: var(--indigo); margin-bottom: 0.2rem;
+    font-family: var(--font-mono); text-transform: uppercase;
+}
+
+/* Blockchain visual */
+.chain-visual {
+    position: relative; height: 380px;
+    display: flex; align-items: center; justify-content: center;
+}
+.chain-block {
+    position: absolute;
+    background: #fff;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(30,40,80,0.08);
+    padding: 1rem 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem; letter-spacing: 0.08em; color: var(--muted);
+    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.chain-block .block-id {
+    font-size: 0.55rem; color: var(--indigo); margin-bottom: 0.3rem;
+    text-transform: uppercase; letter-spacing: 0.15em;
+}
+.chain-block .block-hash { font-size: 0.6rem; color: var(--teal); opacity: 0.8; }
+.chain-block:hover {
+    border-color: var(--indigo); color: var(--text);
+    box-shadow: 0 8px 32px rgba(79,70,229,0.12);
+}
+.chain-block.b1 { top: 10%; left: 0;    animation: float 4s ease-in-out infinite; }
+.chain-block.b2 { top: 38%; left: 22%;  animation: float 4s 1s ease-in-out infinite; }
+.chain-block.b3 { top: 66%; left: 5%;   animation: float 4s 2s ease-in-out infinite; }
+.chain-block.b4 { top: 20%; right: 5%;  animation: float 4s 0.5s ease-in-out infinite; }
+.chain-block.b5 { top: 55%; right: 0%;  animation: float 4s 1.5s ease-in-out infinite; }
+
+/* ── ROLES ────────────────────────────────────────────────── */
+.roles-section {
+    background: var(--ink-2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+.roles-inner { max-width: 1200px; margin: 0 auto; }
+.roles-header { text-align: center; margin-bottom: 4rem; }
+.roles-header p { color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto; }
+
+.roles-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+}
+.role-card {
+    background: var(--ink);
+    padding: 3rem 2.5rem;
+    position: relative; overflow: hidden;
+    cursor: default;
+    transition: background 0.3s, box-shadow 0.3s;
+}
+.role-card::before {
+    content: attr(data-num);
+    position: absolute; top: 1.5rem; right: 2rem;
+    font-family: var(--font-disp); font-size: 5rem;
+    color: rgba(79,70,229,0.04); line-height: 1;
+    transition: color 0.3s, transform 0.3s;
+}
+.role-card:hover { background: #fff; box-shadow: 0 8px 40px rgba(79,70,229,0.08); }
+.role-card:hover::before { color: rgba(79,70,229,0.08); transform: scale(1.1); }
+
+.role-card-icon {
+    width: 48px; height: 48px;
+    border: 1px solid var(--border); background: var(--ink-2);
+    display: grid; place-items: center; margin-bottom: 1.5rem;
+    transition: border-color 0.2s, background 0.2s;
+}
+.role-card:hover .role-card-icon { border-color: var(--indigo); background: var(--indigo-dim); }
+.role-card-icon svg {
+    width: 22px; height: 22px;
+    stroke: var(--indigo-dark); fill: none; stroke-width: 1.5;
+    stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s;
+}
+.role-card:hover .role-card-icon svg { stroke: var(--indigo); }
+
+.role-card h3 {
+    font-family: var(--font-disp);
+    font-size: 2rem; letter-spacing: 0.02em; margin-bottom: 0.75rem;
+    color: var(--text); transition: color 0.2s;
+}
+.role-card:hover h3 { color: var(--indigo); }
+.role-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 2rem; }
+
+.role-card-action {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--indigo); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    border-bottom: 1px solid rgba(79,70,229,0.3); padding-bottom: 2px;
+    transition: gap 0.2s;
+}
+.role-card-action:hover { gap: 0.7rem; }
+
+/* ── PROCESS ──────────────────────────────────────────────── */
+.process-section { max-width: 1200px; margin: 0 auto; }
+.process-steps {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    position: relative; margin-top: 4rem;
+}
+.process-steps::before {
+    content: '';
+    position: absolute; top: 28px; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--indigo), var(--teal), var(--indigo), transparent);
+    opacity: 0.2;
+}
+.process-step { text-align: center; padding: 0 1rem; }
+.step-num {
+    width: 56px; height: 56px;
+    border: 1px solid var(--border); background: #fff;
+    box-shadow: 0 2px 12px rgba(79,70,229,0.08);
+    border-radius: 50%;
+    display: grid; place-items: center; margin: 0 auto 1.5rem;
+    font-family: var(--font-disp); font-size: 1.4rem; color: var(--indigo);
+    position: relative; z-index: 1;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s;
+}
+.process-step:hover .step-num {
+    background: var(--indigo); border-color: var(--indigo);
+    color: #fff; transform: scale(1.1);
+}
+.step-title {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text); margin-bottom: 0.5rem;
+}
+.step-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+/* ── CTA ──────────────────────────────────────────────────── */
+.cta-section {
+    position: relative; overflow: hidden;
+    text-align: center; padding: 8rem 4rem;
+    background: var(--indigo-dark);
+    border-top: 1px solid var(--border);
+}
+.cta-section::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 60% at 50% 100%, rgba(245,158,11,0.15) 0%, transparent 70%);
+}
+.cta-grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 70% 80% at 50% 100%, black, transparent);
+}
+.cta-inner { position: relative; z-index: 2; max-width: 700px; margin: 0 auto; }
+.cta-eyebrow {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 1.5rem;
+}
+.cta-title {
+    font-family: var(--font-disp);
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 0.92; margin-bottom: 1.5rem; color: #fff;
+}
+.cta-title em { color: var(--warm-light); font-style: normal; }
+.cta-sub { font-size: 0.95rem; color: rgba(255,255,255,0.5); margin-bottom: 3rem; line-height: 1.7; }
+.cta-actions {
+    display: flex; align-items: center; justify-content: center;
+    gap: 1rem; flex-wrap: wrap;
+}
+.cta-section .btn-primary { background: var(--warm-light); color: var(--indigo-dark); }
+.cta-section .btn-primary:hover { background: #fff; }
+.cta-section .btn-outline { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.8); }
+.cta-section .btn-outline:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .hero { padding: 7rem 2rem 3rem; }
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .stat-cell:nth-child(2) { border-right: none; }
+    .about-section { grid-template-columns: 1fr; gap: 3rem; }
+    .chain-visual { display: none; }
+    .roles-grid { grid-template-columns: 1fr; }
+    .process-steps { grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .process-steps::before { display: none; }
+    .cta-section { padding: 5rem 2rem; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="public-landing">
-    <section class="flyer-banner">
-    <img src="{{ url_for('static', filename='images/flyer.jpeg') }}"
-         alt="AI Blockchain E-Democracy Flyer">
+
+<!-- ── HERO ──────────────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-label">
+            <span class="dot"></span>
+            System Active · Blockchain Verified
+        </div>
+
+        <h1 class="hero-title">
+            AI–Blockchain<br>
+            <span class="stroke">E-Demo</span><span class="accent">cracy</span>
+        </h1>
+
+        <div class="hero-subtitle-line">
+            <span class="sep"></span>
+            <span>Secure</span>
+            <span class="sep"></span>
+            <span>Transparent</span>
+            <span class="sep"></span>
+            <span>Accountable</span>
+            <span class="sep"></span>
+        </div>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('auth.login') }}" class="btn-primary">
+                Access Platform →
+            </a>
+            <a href="{{ url_for('public.election_schedule') }}" class="btn-outline">
+                <span>Election Schedule</span>
+            </a>
+            <a href="{{ url_for('public_results.dashboard') }}" class="btn-outline">
+                <span>Final Results</span>
+            </a>
+            <a href="{{ url_for('verify_vote.verify_vote_page') }}" class="btn-outline">
+                <span>Verify My Vote</span>
+            </a>
+            <a href="https://sepolia.etherscan.io/address/0x51bE814c9F2C2ec5799fA872A25A0735723fae0e"
+               target="_blank" rel="noopener noreferrer" class="btn-ghost">
+                Smart Contract
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
+                    <path d="M4 12L12 4M12 4H6M12 4v6"/>
+                </svg>
+            </a>
+        </div>
+    </div>
 </section>
-    <!-- =========================
-         HERO
-    ========================== -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>AI–Blockchain Integrated<br>E-Democracy System</h1>
 
-            <p class="hero-subtitle">
-                Secure • Transparent • Accountable Digital Elections
-            </p>
-
-            <div class="hero-actions">
-                <a href="{{ url_for('auth.login') }}" class="btn-primary">
-                    Login
-                </a>
-
-                <a href="{{ url_for('public.election_schedule') }}" class="btn-outline">
-                    Election Schedule
-                </a>
-
-                <a href="{{ url_for('public_results.dashboard') }}" class="btn-outline">
-                    Final Results
-                </a>
-
-                <a href="{{ url_for('verify_vote.verify_vote_page') }}" class="btn-outline">
-                    Verify My Vote
-                </a>
-
-                <a href="https://sepolia.etherscan.io/address/0x51bE814c9F2C2ec5799fA872A25A0735723fae0e"
-                   class="btn-link"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    View Smart Contract ↗
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- =========================
-         ABOUT
-    ========================== -->
-    <section class="about">
-        <h2>What is this Platform?</h2>
-        <p class="about-text">
-            A next-generation e-governance platform combining blockchain security
-            and AI-driven analytics to deliver transparent, tamper-proof elections.
-        </p>
-
-        <ul class="feature-list">
-            <li>✔ End-to-end verifiable voting</li>
-            <li>✔ Blockchain-backed vote receipts</li>
-            <li>✔ Constituency-wise accountability</li>
-            <li>✔ Public auditability & transparency</li>
-        </ul>
-    </section>
-
-    <!-- =========================
-         ROLES
-    ========================== -->
-    <section class="roles">
-        <h2>Who Uses This Platform?</h2>
-
-        <div class="role-grid">
-            <div class="role-card">
-                <h3>Citizens</h3>
-                <p>
-                    Vote securely, verify your vote using blockchain,
-                    and track election results transparently.
-                </p>
-            </div>
-
-            <div class="role-card">
-                <h3>Representatives</h3>
-                <p>
-                    Engage with constituents, publish updates,
-                    and maintain measurable accountability.
-                </p>
-            </div>
-
-            <div class="role-card">
-                <h3>Election Commission</h3>
-                <p>
-                    Manage elections end-to-end with complete
-                    auditability and tamper resistance.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- =========================
-         CTA
-    ========================== -->
-    <section class="cta">
-        <h2>Ready to Participate?</h2>
-        <p>Join the future of secure digital democracy.</p>
-
-        <a href="{{ url_for('auth.login') }}" class="btn-primary btn-large">
-            Access the Platform
-        </a>
-    </section>
-
+<!-- ── TICKER ─────────────────────────────────────────────── -->
+<div class="ticker-wrap">
+    <div class="ticker">
+        <span class="ticker-item"><span class="tag">LIVE</span> Blockchain-secured voting infrastructure online</span>
+        <span class="ticker-item"><span class="tag">AUDIT</span> Public smart contract verifiable on Sepolia Testnet</span>
+        <span class="ticker-item"><span class="tag">SECURE</span> End-to-end encrypted ballot submission</span>
+        <span class="ticker-item"><span class="tag">AI</span> Machine-learning anomaly detection active</span>
+        <span class="ticker-item"><span class="tag">OPEN</span> Constituency results updated in real time</span>
+        <!-- duplicate for seamless loop -->
+        <span class="ticker-item"><span class="tag">LIVE</span> Blockchain-secured voting infrastructure online</span>
+        <span class="ticker-item"><span class="tag">AUDIT</span> Public smart contract verifiable on Sepolia Testnet</span>
+        <span class="ticker-item"><span class="tag">SECURE</span> End-to-end encrypted ballot submission</span>
+        <span class="ticker-item"><span class="tag">AI</span> Machine-learning anomaly detection active</span>
+        <span class="ticker-item"><span class="tag">OPEN</span> Constituency results updated in real time</span>
+    </div>
 </div>
+
+<!-- ── STATS STRIP ─────────────────────────────────────────── -->
+<div class="stats-strip">
+    <div class="stat-cell">
+        <div class="stat-number" data-target="100" data-suffix="%">100%</div>
+        <div class="stat-label">Vote Verifiability</div>
+    </div>
+    <div class="stat-cell">
+        <div class="stat-number">0</div>
+        <div class="stat-label">Tamper Incidents</div>
+    </div>
+    <div class="stat-cell">
+        <div class="stat-number" data-target="3">3</div>
+        <div class="stat-label">User Roles Supported</div>
+    </div>
+    <div class="stat-cell">
+        <div class="stat-number">∞</div>
+        <div class="stat-label">Public Auditability</div>
+    </div>
+</div>
+
+<!-- ── ABOUT ───────────────────────────────────────────────── -->
+<section class="section" id="about">
+    <div class="about-section">
+        <div class="about-left reveal">
+            <div class="section-tag">What is this</div>
+            <h2 class="section-title">
+                Next-gen<br>
+                civic <em>infrastructure</em>
+            </h2>
+            <p>
+                A next-generation e-governance platform combining blockchain immutability
+                with AI-driven analytics — delivering elections that are transparent,
+                tamper-proof, and publicly auditable by anyone.
+            </p>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">✔</div>
+                    <div class="feature-text">
+                        <strong>E2E Verifiable</strong>
+                        Voters confirm their ballot was counted correctly
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⛓</div>
+                    <div class="feature-text">
+                        <strong>Blockchain Receipts</strong>
+                        Immutable vote records on a public chain
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚖</div>
+                    <div class="feature-text">
+                        <strong>Accountability</strong>
+                        Constituency-level tracking and reporting
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-text">
+                        <strong>Public Audit</strong>
+                        Anyone can verify the full election ledger
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-right reveal">
+            <div class="chain-visual">
+                <div class="chain-block b1">
+                    <div class="block-id">Block #00042</div>
+                    Voter ID: ••••••••<br>Timestamp: 14:32:07
+                    <div class="block-hash">0x3f7a...c829</div>
+                </div>
+                <div class="chain-block b2">
+                    <div class="block-id">Block #00043</div>
+                    Voter ID: ••••••••<br>Timestamp: 14:32:51
+                    <div class="block-hash">0xa12b...f044</div>
+                </div>
+                <div class="chain-block b3">
+                    <div class="block-id">Block #00044</div>
+                    Voter ID: ••••••••<br>Timestamp: 14:33:19
+                    <div class="block-hash">0x7e9c...1d5f</div>
+                </div>
+                <div class="chain-block b4">
+                    <div class="block-id">Block #00045</div>
+                    Voter ID: ••••••••<br>Timestamp: 14:33:44
+                    <div class="block-hash">0xbb3e...9a17</div>
+                </div>
+                <div class="chain-block b5">
+                    <div class="block-id">Block #00046</div>
+                    Voter ID: ••••••••<br>Timestamp: 14:34:02
+                    <div class="block-hash">0x4c8d...e630</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── ROLES ───────────────────────────────────────────────── -->
+<section class="section roles-section">
+    <div class="roles-inner">
+        <div class="roles-header reveal">
+            <div class="section-tag">Participants</div>
+            <h2 class="section-title">Who uses the platform?</h2>
+            <p>Three distinct roles, one unified system of democratic accountability.</p>
+        </div>
+        <div class="roles-grid">
+            <div class="role-card reveal" data-num="01">
+                <div class="role-card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
+                </div>
+                <h3>Citizens</h3>
+                <p>Vote securely, verify your ballot using on-chain receipts, and track election results in real time with complete transparency.</p>
+                <a href="{{ url_for('auth.login') }}" class="role-card-action">Cast Your Vote →</a>
+            </div>
+
+            <div class="role-card reveal" data-num="02">
+                <div class="role-card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <h3>Representatives</h3>
+                <p>Engage your constituents directly, publish updates, and maintain a verifiable record of your accountability commitments.</p>
+                <a href="{{ url_for('auth.login') }}" class="role-card-action">Representative Portal →</a>
+            </div>
+
+            <div class="role-card reveal" data-num="03">
+                <div class="role-card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3>Election Commission</h3>
+                <p>Manage elections end-to-end with immutable audit trails, tamper-evident records, and AI-powered anomaly detection.</p>
+                <a href="{{ url_for('auth.login') }}" class="role-card-action">Commission Dashboard →</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── PROCESS ─────────────────────────────────────────────── -->
+<section class="section">
+    <div class="process-section">
+        <div class="reveal" style="text-align:center; margin-bottom:1rem;">
+            <div class="section-tag" style="justify-content:center;">How it works</div>
+            <h2 class="section-title">From registration to result</h2>
+        </div>
+        <div class="process-steps reveal">
+            <div class="process-step">
+                <div class="step-num">1</div>
+                <div class="step-title">Register</div>
+                <div class="step-desc">Verify identity &amp; create your secure voter account</div>
+            </div>
+            <div class="process-step">
+                <div class="step-num">2</div>
+                <div class="step-title">Authenticate</div>
+                <div class="step-desc">Multi-factor login with cryptographic assurance</div>
+            </div>
+            <div class="process-step">
+                <div class="step-num">3</div>
+                <div class="step-title">Vote</div>
+                <div class="step-desc">Encrypted ballot submitted to the blockchain</div>
+            </div>
+            <div class="process-step">
+                <div class="step-num">4</div>
+                <div class="step-title">Verify</div>
+                <div class="step-desc">Retrieve your receipt and confirm it was counted</div>
+            </div>
+            <div class="process-step">
+                <div class="step-num">5</div>
+                <div class="step-title">Audit</div>
+                <div class="step-desc">Public results verifiable by anyone, anywhere</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── CTA ─────────────────────────────────────────────────── -->
+<section class="cta-section">
+    <div class="cta-grid-bg"></div>
+    <div class="cta-inner reveal">
+        <div class="cta-eyebrow">● System online and accepting participants</div>
+        <h2 class="cta-title">
+            The future of<br>
+            <em>democracy</em><br>
+            is verifiable.
+        </h2>
+        <p class="cta-sub">
+            Join a platform where every vote is cryptographically secured,<br>
+            publicly auditable, and permanently recorded.
+        </p>
+        <div class="cta-actions">
+            <a href="{{ url_for('auth.login') }}" class="btn-primary btn-large">
+                Access the Platform →
+            </a>
+            <a href="{{ url_for('public_results.dashboard') }}" class="btn-outline">
+                <span>View Live Results</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Counter animation for stats
+    const counters = document.querySelectorAll('.stat-number[data-target]');
+    const countObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (!e.isIntersecting) return;
+            const el     = e.target;
+            const target = parseInt(el.dataset.target, 10);
+            const suffix = el.dataset.suffix || '';
+            let current  = 0;
+            const step   = Math.max(1, Math.floor(target / 60));
+            const timer  = setInterval(() => {
+                current = Math.min(current + step, target);
+                el.textContent = current + suffix;
+                if (current >= target) clearInterval(timer);
+            }, 16);
+            countObs.unobserve(el);
+        });
+    }, { threshold: 0.5 });
+    counters.forEach(el => countObs.observe(el));
+</script>
 {% endblock %}

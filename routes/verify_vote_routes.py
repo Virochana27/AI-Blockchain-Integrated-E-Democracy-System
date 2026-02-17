@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template
 from models.vote_merkle_proof import get_merkle_proof
 from services.blockchain_service import verify_receipt_on_chain
+from models.election import get_all_elections
 
 bp = Blueprint("verify_vote", __name__, url_prefix="/verify-vote")
 
@@ -10,7 +11,8 @@ bp = Blueprint("verify_vote", __name__, url_prefix="/verify-vote")
 # -------------------------------
 @bp.route("", methods=["GET"])
 def verify_vote_page():
-    return render_template("evote/verify_vote.html")
+    elections=get_all_elections()
+    return render_template("evote/verify_vote.html",elections=elections)
 
 
 # -------------------------------

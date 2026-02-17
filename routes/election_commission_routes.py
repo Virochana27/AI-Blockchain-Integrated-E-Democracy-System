@@ -4,7 +4,7 @@ from services.election_service import (
     create_state_election,
     approve_state_election
 )
-from models.election import get_all_elections, get_elections_by_state
+from models.election import get_all_elections, get_elections_by_state,get_district_name_by_district_id
 from models.voter import (
     get_voters_by_constituency,
     get_voters_by_booth,
@@ -18,7 +18,7 @@ from datetime import datetime
 from models.election import add_constituency_to_election
 from models.constituency import get_constituencies_by_state
 from services.election_finalizer import finalize_election_if_needed
-
+from models.election import get_state_name_by_state_id
 
 bp = Blueprint("election_commission", __name__, url_prefix="/commission")
 
@@ -136,6 +136,8 @@ def approve_election(election_id):
 @role_required("CEC")
 def manage_ceo():
     ceos = get_users_by_role("CEO")
+    for ceo in ceos:
+        ceo["state"]=get_state_name_by_state_id(ceo["state_id"])
     return render_template("election_commission/cec/manage_ceo.html", ceos=ceos)
 
 @bp.route("/cec/approve-elections")
@@ -154,6 +156,9 @@ def approve_elections_page():
 @role_required("CEO")
 def manage_deo():
     deos = get_users_by_role("DEO")
+    for deo in deos:
+        district=get_district_name_by_district_id(deo["district_id"])
+        deo["district_name"]=district["district_name"]
     return render_template("election_commission/ceo/manage_deo.html", deos=deos)
 
 # =====================================================

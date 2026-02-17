@@ -36,8 +36,11 @@ def dashboard():
 
     return render_template(
         "representative/dashboard.html",
-        issues=issues
-    )
+        issues=issues,
+        role=session.get("role"),
+        user_id=session.get("user_id")
+)
+
 
 
 # -----------------------------

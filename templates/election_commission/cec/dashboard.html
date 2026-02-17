@@ -1,85 +1,573 @@
 {% extends "base.html" %}
 {% set title = "CEC Dashboard" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   CEC DASHBOARD
+═══════════════════════════════════════════════════════════ */
+
+.cec-dashboard {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+}
+
+/* ── TOP BAR ──────────────────────────────────────────────── */
+.dashboard-topbar {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 2rem; margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.greeting-eyebrow {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 0.5rem;
+}
+.greeting-eyebrow .dot {
+    width: 6px; height: 6px; background: var(--teal);
+    border-radius: 50%; animation: blink 1.4s ease-in-out infinite;
+}
+.greeting-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 0.95; color: var(--text); margin-bottom: 0.4rem;
+}
+.greeting-title em { font-style: normal; color: var(--indigo); }
+.greeting-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+.topbar-actions {
+    display: flex; flex-wrap: wrap; gap: 0.6rem;
+    align-items: center; justify-content: flex-end; flex-shrink: 0;
+}
+.btn-action {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; padding: 0.6rem 1.1rem;
+    border: 1px solid var(--border);
+    background: var(--ink); color: var(--text);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+.btn-action:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-dim); }
+.btn-action.primary {
+    background: var(--indigo); color: #fff; border-color: var(--indigo);
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+.btn-action.primary:hover { background: var(--indigo-dark); border-color: var(--indigo-dark); }
+
+/* ── STATS STRIP ──────────────────────────────────────────── */
+.stats-strip {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    border: 1px solid var(--border); background: var(--border);
+    gap: 1px; margin-bottom: 2rem;
+}
+.stat-cell {
+    background: var(--ink); padding: 1.5rem 1.25rem;
+    text-align: center; position: relative; overflow: hidden;
+    transition: background 0.2s; cursor: default;
+}
+.stat-cell::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+}
+.stat-cell:hover { background: #fafafe; }
+.stat-cell:hover::after { transform: scaleX(1); }
+.stat-cell.total::after    { background: var(--indigo); }
+.stat-cell.approved::after { background: var(--teal); }
+.stat-cell.active::after   { background: #16a34a; }
+.stat-cell.pending::after  { background: var(--warm); }
+.stat-cell.ended::after    { background: var(--muted); }
+.stat-val {
+    font-family: var(--font-disp); font-size: 2.2rem; line-height: 1;
+    margin-bottom: 0.25rem;
+}
+.stat-cell.total .stat-val    { color: var(--indigo); }
+.stat-cell.approved .stat-val { color: var(--teal); }
+.stat-cell.active .stat-val   { color: #16a34a; }
+.stat-cell.pending .stat-val  { color: var(--warm); }
+.stat-cell.ended .stat-val    { color: var(--muted); }
+.stat-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── MAIN GRID ────────────────────────────────────────────── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1.5rem; align-items: start;
+}
+
+/* ── TABLE CARD ───────────────────────────────────────────── */
+.table-card {
+    background: var(--ink); border: 1px solid var(--border);
+}
+.table-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.table-card-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.table-card-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+
+/* Filter tabs */
+.filter-tabs {
+    display: flex; border: 1px solid var(--border); overflow: hidden;
+}
+.filter-tab {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); padding: 0.4rem 0.85rem;
+    background: none; border: none; cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: color 0.2s, background 0.2s; white-space: nowrap;
+}
+.filter-tab:last-child { border-right: none; }
+.filter-tab:hover { color: var(--indigo); background: var(--indigo-dim); }
+.filter-tab.active { color: #fff; background: var(--indigo); }
+
+/* Table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead tr { border-bottom: 1px solid var(--border); }
+.data-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.7rem 1.25rem; text-align: left;
+    background: var(--ink-2); white-space: nowrap;
+}
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: #f8f8fd; }
+.data-table td { padding: 1rem 1.25rem; vertical-align: middle; }
+
+/* Election name cell */
+.td-name { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.td-sub  { font-family: var(--font-mono); font-size: 0.58rem; color: var(--muted); letter-spacing: 0.06em; margin-top: 0.15rem; }
+
+/* Type tag */
+.type-tag {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); background: var(--ink-2);
+    border: 1px solid var(--border); padding: 0.18rem 0.55rem;
+    white-space: nowrap;
+}
+
+/* Status pills */
+.status-pill {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 2px; white-space: nowrap;
+}
+.status-pill.approved  { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.status-pill.pending   { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.status-pill.active    { color: #16a34a; background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.2); }
+.status-pill.ended     { color: var(--muted);  background: var(--ink-3);      border: 1px solid var(--border); }
+.status-pill.scheduled { color: var(--indigo); background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2); }
+
+/* Date cell */
+.td-date {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    color: var(--muted); letter-spacing: 0.05em; white-space: nowrap;
+}
+.date-range {
+    display: flex; flex-direction: column; gap: 0.1rem;
+}
+.date-range .dr-label {
+    font-size: 0.52rem; color: var(--muted); opacity: 0.7; letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* Approve button */
+.btn-approve {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    background: var(--teal); color: #fff; border: none;
+    padding: 0.45rem 0.9rem; text-decoration: none;
+    transition: opacity 0.2s; white-space: nowrap;
+    clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+}
+.btn-approve:hover { opacity: 0.85; }
+
+.badge-approved {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--teal); background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.2);
+    padding: 0.2rem 0.55rem;
+}
+.badge-approved::before {
+    content: '✓'; font-size: 0.65rem;
+}
+
+/* Empty state */
+.table-empty {
+    padding: 4rem 2rem; text-align: center;
+}
+.table-empty-num {
+    font-family: var(--font-disp); font-size: 4rem; line-height: 1;
+    color: rgba(79,70,229,0.07); margin-bottom: 0.75rem;
+}
+.table-empty p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── SIDEBAR ──────────────────────────────────────────────── */
+.cec-sidebar {
+    position: sticky; top: calc(var(--nav-h) + 2rem);
+    display: flex; flex-direction: column; gap: 1.25rem;
+}
+.sidebar-card {
+    background: var(--ink); border: 1px solid var(--border); overflow: hidden;
+}
+.sidebar-card-header {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border); background: var(--ink-2);
+}
+.sidebar-card-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.sidebar-card-title::before { content: ''; width: 12px; height: 1px; background: var(--indigo); }
+.sidebar-card-body { padding: 1.25rem; }
+
+/* Quick nav */
+.quick-links { display: flex; flex-direction: column; gap: 2px; }
+.quick-link {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    padding: 0.65rem 0.75rem; border-radius: 2px;
+    transition: color 0.2s, background 0.2s;
+}
+.quick-link:hover { color: var(--indigo); background: var(--indigo-dim); }
+.quick-link svg { opacity: 0.4; transition: opacity 0.2s, transform 0.2s; }
+.quick-link:hover svg { opacity: 1; transform: translateX(2px); }
+
+/* Status legend */
+.status-legend { display: flex; flex-direction: column; gap: 0.65rem; }
+.legend-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.legend-desc { font-size: 0.78rem; color: var(--muted); }
+
+/* Authority card */
+.authority-card {
+    background: var(--indigo-dark);
+    border-color: rgba(79,70,229,0.3); padding: 1.5rem;
+    position: relative; overflow: hidden;
+}
+.authority-card::before {
+    content: ''; position: absolute; bottom: -20px; right: -20px;
+    width: 100px; height: 100px; border-radius: 50%;
+    background: rgba(245,158,11,0.06);
+}
+.auth-eyebrow {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--warm-light); margin-bottom: 0.4rem;
+}
+.auth-headline {
+    font-family: var(--font-disp); font-size: 1.4rem; line-height: 1;
+    color: #fff; margin-bottom: 0.6rem;
+}
+.auth-body {
+    font-size: 0.78rem; color: rgba(255,255,255,0.4);
+    line-height: 1.6; margin-bottom: 1rem;
+}
+.auth-links { display: flex; flex-direction: column; gap: 0.5rem; }
+.auth-link {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.55); text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: background 0.2s, color 0.2s;
+}
+.auth-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.auth-link svg { opacity: 0.5; }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1200px) { .stats-strip { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1024px) {
+    .cec-dashboard { padding: 2rem 2rem 4rem; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .cec-sidebar { position: static; }
+}
+@media (max-width: 768px) {
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .dashboard-topbar { flex-direction: column; }
+    .topbar-actions { justify-content: flex-start; }
+    .data-table thead { display: none; }
+    .data-table td { display: block; padding: 0.4rem 1rem; }
+    .data-table tbody tr { display: block; padding: 0.75rem 0; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="ec-dashboard">
+<div class="cec-dashboard">
 
-    <h2>Chief Election Commissioner Dashboard</h2>
+    <!-- ── Top Bar ─────────────────────────────────────────── -->
+    <div class="dashboard-topbar">
+        <div>
+            <div class="greeting-eyebrow">
+                <span class="dot"></span>
+                Chief Election Commissioner
+            </div>
+            <h1 class="greeting-title">Election <em>Control</em></h1>
+            <p class="greeting-sub">
+                Manage elections, approve submissions, oversee CEOs, and monitor live results.
+            </p>
+        </div>
 
-    <!-- =========================
-         Quick Actions
-    ========================== -->
-    <div class="action-bar">
-        <a href="{{ url_for('election_commission.manage_ceo') }}" class="btn-primary">
-            Manage CEOs
-        </a>
-
-        <a href="{{ url_for('results.dashboard') }}" class="btn-secondary">
-    View Live Results
-</a>
-
-
-        <a href="{{ url_for('election_commission.approve_elections_page') }}" class="btn-secondary">
-            Approve Elections
-        </a>
-
-        <a href="{{ url_for('admin.audit_logs') }}" class="btn-secondary">
-            View Audit Logs
-        </a>
+        <div class="topbar-actions">
+            <a href="{{ url_for('admin.audit_logs') }}" class="btn-action">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Audit Logs
+            </a>
+            <a href="{{ url_for('results.dashboard') }}" class="btn-action">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Live Results
+            </a>
+            <a href="{{ url_for('election_commission.approve_elections_page') }}" class="btn-action">
+                Approve Elections
+            </a>
+            <a href="{{ url_for('election_commission.manage_ceo') }}" class="btn-action primary">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Manage CEOs
+            </a>
+        </div>
     </div>
 
-    <!-- =========================
-         Elections Overview
-    ========================== -->
-    <section class="table-section">
-        <h3>All Elections</h3>
+    <!-- ── Stats Strip ─────────────────────────────────────── -->
+    <div class="stats-strip">
+        <div class="stat-cell total">
+            <div class="stat-val">{{ elections|length if elections else 0 }}</div>
+            <div class="stat-label">Total Elections</div>
+        </div>
+        <div class="stat-cell approved">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','Approved')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-cell active">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','Active')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-cell pending">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','Draft')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Pending Approval</div>
+        </div>
+        <div class="stat-cell ended">
+            <div class="stat-val">{{ elections|selectattr('status','equalto','COMPLETED')|list|length if elections else 0 }}</div>
+            <div class="stat-label">Ended</div>
+        </div>
+    </div>
 
-        {% if elections and elections|length > 0 %}
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Election Name</th>
-                        <th>Type</th>
-                        <th>State</th>
-                        <th>Status</th>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for election in elections %}
+    <!-- ── Main Grid ───────────────────────────────────────── -->
+    <div class="dashboard-grid">
+
+        <!-- Elections Table -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <span class="table-card-title">All Elections</span>
+                <div class="filter-tabs" id="filterTabs">
+                    <button class="filter-tab active" data-filter="all">All</button>
+                    <button class="filter-tab" data-filter="draft">Pending</button>
+                    <button class="filter-tab" data-filter="approved">Approved</button>
+                    <button class="filter-tab" data-filter="active">Active</button>
+                    <button class="filter-tab" data-filter="completed">Ended</button>
+                </div>
+            </div>
+
+            {% if elections and elections|length > 0 %}
+                <table class="data-table" id="electionsTable">
+                    <thead>
                         <tr>
-                            <td>{{ election.election_name }}</td>
-                            <td>{{ election.election_type }}</td>
-                            <td>{{ election.state_id }}</td>
-                            <td>
-                                <span class="status {{ election.status|lower }}">
-                                    {{ election.status }}
-                                </span>
-                            </td>
-                            <td>{{ election.start_time }}</td>
-                            <td>{{ election.end_time }}</td>
-                            <td>
-                                {% if election.status != "Approved" %}
-                                    <a
-                                        href="{{ url_for('election_commission.approve_election', election_id=election.id) }}"
-                                        class="btn-small"
-                                    >
-                                        Approve
-                                    </a>
-                                {% else %}
-                                    <span class="badge-approved">Approved</span>
-                                {% endif %}
-                            </td>
+                            <th>Election</th>
+                            <th>Type</th>
+                            <th>State</th>
+                            <th>Status</th>
+                            <th>Schedule</th>
+                            <th>Action</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No elections available.</p>
-        {% endif %}
-    </section>
+                    </thead>
+                    <tbody>
+                        {% for election in elections %}
+                            <tr data-status="{{ election.status|lower }}">
 
+                                <!-- Name -->
+                                <td>
+                                    <div class="td-name">{{ election.election_name }}</div>
+                                </td>
+
+                                <!-- Type -->
+                                <td>
+                                    <span class="type-tag">{{ election.election_type }}</span>
+                                </td>
+
+                                <!-- State -->
+                                <td class="td-date">{{ election.state_name }}</td>
+
+                                <!-- Status -->
+                                <td>
+                                    <span class="status-pill {{ election.status|lower }}">{{ election.status }}</span>
+                                </td>
+
+                                <!-- Schedule -->
+                                <td>
+                                    <div class="date-range td-date">
+                                        <span><span class="dr-label">Start </span>{{ election.start_time }}</span>
+                                        <span><span class="dr-label">End &nbsp; </span>{{ election.end_time }}</span>
+                                    </div>
+                                </td>
+
+                                <!-- Action -->
+                                <td>
+                                    {% if election.status != "Approved" and election.status != "Active" and election.status != "COMPLETED" %}
+                                        <a
+                                            href="{{ url_for('election_commission.approve_election', election_id=election.id) }}"
+                                            class="btn-approve"
+                                        >
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            Approve
+                                        </a>
+                                    {% else %}
+                                        <span class="badge-approved">Approved</span>
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            {% else %}
+                <div class="table-empty">
+                    <div class="table-empty-num">0</div>
+                    <p>No elections have been created yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ── Sidebar ──────────────────────────────────────── -->
+        <div class="cec-sidebar">
+
+            <!-- Quick Nav -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <span class="sidebar-card-title">Quick Navigation</span>
+                </div>
+                <div class="sidebar-card-body" style="padding:0.5rem 0;">
+                    <div class="quick-links">
+                        <a href="{{ url_for('election_commission.manage_ceo') }}" class="quick-link">
+                            Manage CEOs
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="{{ url_for('election_commission.approve_elections_page') }}" class="quick-link">
+                            Approve Elections
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="{{ url_for('results.dashboard') }}" class="quick-link">
+                            Live Results
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="{{ url_for('admin.audit_logs') }}" class="quick-link">
+                            Audit Logs
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Legend -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <span class="sidebar-card-title">Status Guide</span>
+                </div>
+                <div class="sidebar-card-body">
+                    <div class="status-legend">
+                        <div class="legend-row">
+                            <span class="status-pill pending">Pending</span>
+                            <span class="legend-desc">Awaiting CEC approval</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill approved">Approved</span>
+                            <span class="legend-desc">Cleared to proceed</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill active">Active</span>
+                            <span class="legend-desc">Voting currently open</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill ended">Ended</span>
+                            <span class="legend-desc">Voting period closed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authority Card -->
+            <div class="sidebar-card authority-card">
+                <div class="auth-eyebrow">CEC Authority</div>
+                <div class="auth-headline">Full Control Centre</div>
+                <p class="auth-body">
+                    As Chief Election Commissioner, you have supreme oversight over all electoral operations.
+                </p>
+                <div class="auth-links">
+                    <a href="{{ url_for('election_commission.manage_ceo') }}" class="auth-link">
+                        Manage CEOs
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="{{ url_for('admin.audit_logs') }}" class="auth-link">
+                        Audit Logs
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="{{ url_for('results.dashboard') }}" class="auth-link">
+                        Live Results
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const filter = tab.dataset.filter;
+            document.querySelectorAll('#electionsTable tbody tr').forEach(row => {
+                row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+            });
+        });
+    });
+</script>
 {% endblock %}

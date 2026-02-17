@@ -10,162 +10,495 @@
 {% extends "base.html" %}
 {% set title = "Citizen Dashboard" %}
 
-{% block content %}
-<div class="citizen-dashboard">
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   CITIZEN DASHBOARD
+═══════════════════════════════════════════════════════════ */
 
-    <!-- =========================
-         Header
-    ========================== -->
-    <div class="dashboard-header">
-        <div>
-            <h2>👋 Welcome back</h2>
-            <p class="subtext">
-                Track issues, raise concerns, and engage with your constituency
+.dashboard-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+}
+
+/* ── TOP BAR ──────────────────────────────────────────────── */
+.dashboard-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.dashboard-greeting {}
+
+.greeting-eyebrow {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 0.6rem;
+}
+.greeting-eyebrow .dot {
+    width: 6px; height: 6px;
+    background: var(--teal); border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+.greeting-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 0.95;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+}
+.greeting-title em { font-style: normal; color: var(--indigo); }
+
+.greeting-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    max-width: 440px;
+    line-height: 1.65;
+}
+
+/* Quick action buttons */
+.dashboard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.btn-action {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.6rem 1.1rem;
+    border: 1px solid var(--border);
+    background: var(--ink);
+    color: var(--text);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+.btn-action:hover {
+    border-color: var(--indigo);
+    color: var(--indigo);
+    background: var(--indigo-dim);
+}
+.btn-action.primary {
+    background: var(--indigo);
+    color: #fff;
+    border-color: var(--indigo);
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+.btn-action.primary:hover { background: var(--indigo-dark); border-color: var(--indigo-dark); }
+
+/* ── MAIN GRID ────────────────────────────────────────────── */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ── CARDS ────────────────────────────────────────────────── */
+.d-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.25s;
+}
+.d-card:hover { box-shadow: 0 4px 24px rgba(79,70,229,0.07); }
+
+/* Top accent bar */
+.d-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--indigo), transparent);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.35s ease;
+}
+.d-card:hover::before { transform: scaleX(1); }
+
+/* Card highlight (brief) */
+.d-card.highlight {
+    grid-column: 1 / -1;
+    background: var(--indigo-dark);
+    border-color: rgba(79,70,229,0.3);
+}
+.d-card.highlight::before {
+    background: linear-gradient(90deg, var(--warm-light), transparent);
+    transform: scaleX(1);
+}
+
+/* Full-width cards */
+.d-card.full { grid-column: 1 / -1; }
+
+.card-inner { padding: 1.75rem 2rem; }
+
+/* Card header */
+.card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+.d-card.highlight .card-header { border-bottom-color: rgba(255,255,255,0.1); }
+
+.card-title {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.d-card.highlight .card-title { color: var(--warm-light); }
+.card-title::before { content: ''; width: 14px; height: 1px; background: currentColor; }
+
+.card-badge {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+}
+.card-badge.live {
+    color: var(--teal); background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.25);
+    display: flex; align-items: center; gap: 0.4rem;
+}
+.card-badge.live::before {
+    content: '';
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal);
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+/* ── AI BRIEF ─────────────────────────────────────────────── */
+.brief-text {
+    font-size: 0.92rem;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.85;
+    font-style: italic;
+    border-left: 2px solid var(--warm-light);
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
+/* ── ISSUE ROWS ───────────────────────────────────────────── */
+.issue-list { display: flex; flex-direction: column; gap: 0; }
+
+.issue-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.issue-row:last-child { border-bottom: none; padding-bottom: 0; }
+.issue-row:first-child { padding-top: 0; }
+
+.issue-row:hover { background: transparent; }
+
+.issue-row-link {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    flex: 1;
+    transition: color 0.2s;
+    line-height: 1.4;
+}
+.issue-row-link:hover { color: var(--indigo); }
+
+.issue-row-meta {
+    display: flex; align-items: center; gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Status pills */
+.status-pill {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    white-space: nowrap;
+}
+.status-pill.open      { color: var(--indigo); background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2); }
+.status-pill.pending   { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.status-pill.resolved  { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.status-pill.closed    { color: var(--muted);  background: var(--ink-3);      border: 1px solid var(--border); }
+.status-pill.in_progress { color: #9333ea; background: rgba(147,51,234,0.08); border: 1px solid rgba(147,51,234,0.2); }
+
+.category-tag {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* Empty state */
+.empty-state {
+    padding: 2rem 0 0.5rem;
+    text-align: center;
+}
+.empty-state p {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* ── POLICY ROWS ──────────────────────────────────────────── */
+.policy-row {
+    display: flex; align-items: center; gap: 1.25rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.policy-row:last-child { border-bottom: none; padding-bottom: 0; }
+.policy-row:first-child { padding-top: 0; }
+
+.policy-num {
+    font-family: var(--font-disp);
+    font-size: 1.8rem;
+    color: rgba(79,70,229,0.12);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 2rem;
+    text-align: right;
+    transition: color 0.2s;
+}
+.policy-row:hover .policy-num { color: rgba(79,70,229,0.25); }
+
+.policy-body { flex: 1; min-width: 0; }
+.policy-link {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.2rem;
+    transition: color 0.2s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.policy-link:hover { color: var(--indigo); }
+.policy-meta {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .dashboard-page { padding: 2rem 2rem 4rem; }
+    .dashboard-topbar { flex-direction: column; }
+    .dashboard-actions { justify-content: flex-start; }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .d-card.highlight, .d-card.full { grid-column: 1; }
+    .dashboard-page { padding: 1.5rem 1rem 3rem; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="dashboard-page">
+
+    <!-- ── TOP BAR ─────────────────────────────────────────── -->
+    <div class="dashboard-topbar">
+        <div class="dashboard-greeting">
+            <div class="greeting-eyebrow">
+                <span class="dot"></span>
+                Citizen Portal
+            </div>
+            <h1 class="greeting-title">Welcome <em>Back</em></h1>
+            <p class="greeting-sub">
+                Track issues, raise concerns, and engage with your constituency representative.
             </p>
         </div>
 
         <div class="dashboard-actions">
-            <a href="{{ url_for('citizen.new_issue') }}" class="btn-primary">
-                ➕ Raise Issue
+            <a href="{{ url_for('citizen.new_issue') }}" class="btn-action primary">
+                + Raise Issue
             </a>
-            <a href="{{ url_for('citizen.issues_feed') }}" class="btn-secondary">
-                🌍 All Issues
+            <a href="{{ url_for('citizen.issues_feed') }}" class="btn-action">
+                All Issues
             </a>
-            <a href="{{ url_for('citizen.my_issues') }}" class="btn-secondary">
-                🧑‍⚖️ My Issues
+            <a href="{{ url_for('citizen.my_issues') }}" class="btn-action">
+                My Issues
             </a>
-            <a href="{{ url_for('rep_policy.policy_feed') }}" class="btn-secondary">
-                📜All Policies
+            <a href="{{ url_for('rep_policy.policy_feed') }}" class="btn-action">
+                All Policies
             </a>
-            <a href="{{ url_for('citizen.representatives') }}" class="btn-secondary">
-                🏛 Representatives
+            <a href="{{ url_for('citizen.representatives') }}" class="btn-action">
+                Representatives
             </a>
         </div>
     </div>
 
-    <!-- =========================
-         Main Grid
-    ========================== -->
+    <!-- ── MAIN GRID ────────────────────────────────────────── -->
     <div class="dashboard-grid">
-        <section class="dashboard-card highlight">
-    <div class="card-header">
-        <h3>🧠 Live Constituency Brief</h3>
 
-        {% if last_updated_minutes is not none %}
-        <span class="updated-time">
-            Updated {{ last_updated_minutes }} min ago
-        </span>
-        {% endif %}
-    </div>
-
-    <p class="summary-text">
-        {{ live_summary }}
-    </p>
-</section>
-
+        <!-- AI Constituency Brief (full width) -->
+        <div class="d-card highlight">
+            <div class="card-inner">
+                <div class="card-header">
+                    <span class="card-title">Live Constituency Brief</span>
+                    {% if last_updated_minutes is not none %}
+                        <span class="card-badge live">
+                            Updated {{ last_updated_minutes }} min ago
+                        </span>
+                    {% endif %}
+                </div>
+                <p class="brief-text">{{ live_summary }}</p>
+            </div>
+        </div>
 
         <!-- Trending Issues -->
-        <section class="dashboard-card">
-            <h3>🔥 Trending Issues</h3>
+        <div class="d-card reveal">
+            <div class="card-inner">
+                <div class="card-header">
+                    <span class="card-title">Trending Issues</span>
+                </div>
 
-            {% if trending_issues %}
-                {% for issue in trending_issues %}
-                    <div class="issue-mini-card">
-                        <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}">
-                            {{ issue.title }}
-                        </a>
-
-                        <div class="meta">
-                            <span class="status status-{{ issue.status|lower }}">
-                                {{ issue.status }}
-                            </span>
-                            <span class="category">
-                                {{ issue.category }}
-                            </span>
-                        </div>
+                {% if trending_issues %}
+                    <div class="issue-list">
+                        {% for issue in trending_issues %}
+                            <div class="issue-row">
+                                <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}"
+                                   class="issue-row-link">
+                                    {{ issue.title }}
+                                </a>
+                                <div class="issue-row-meta">
+                                    <span class="status-pill {{ issue.status|lower|replace(' ', '_') }}">
+                                        {{ issue.status }}
+                                    </span>
+                                    <span class="category-tag">{{ issue.category }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endfor %}
-            {% else %}
-                <p class="empty-text">No trending issues yet.</p>
-            {% endif %}
-        </section>
+                {% else %}
+                    <div class="empty-state"><p>No trending issues yet.</p></div>
+                {% endif %}
+            </div>
+        </div>
 
         <!-- My Issues -->
-        <section class="dashboard-card">
-            <h3>🧑‍⚖️ My Issues</h3>
-
-            {% if my_issues %}
-                {% for issue in my_issues %}
-                    <div class="issue-mini-card">
-                        <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}">
-                            {{ issue.title }}
-                        </a>
-
-                        <span class="status status-{{ issue.status|lower }}">
-                            {{ issue.status }}
-                        </span>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p class="empty-text">
-                    You haven’t raised any issues yet.
-                </p>
-            {% endif %}
-        </section>
-
-    </div>
-
-    <!-- =========================
-         Recently Resolved
-    ========================== -->
-    <section class="dashboard-card">
-        <h3>✅ Recently Resolved</h3>
-
-        {% if resolved_issues %}
-            <div class="issue-mini-card">
-                {% for issue in resolved_issues %}
-                    <a
-                        href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}"
-                        class="resolved-item"
-                    >
-                        {{ issue.title }}
-                        <span class="status status-{{ issue.status|lower }}">
-                            {{ issue.status }}
-                        </span>
-                    </a>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="empty-text">
-                No issues resolved recently.
-            </p>
-        {% endif %}
-    </section>
-    <!-- Latest Policies -->
-<section class="dashboard-card">
-    <div class="card-header">
-        <h3>📜 Latest Policies</h3>
-    </div>
-
-    {% if policy_posts %}
-        {% for post in policy_posts %}
-            <div class="issue-mini-card">
-                <a href="{{ url_for('rep_policy.view_policy', post_id=post.id) }}">
-                    {{ post.title }}
-                </a>
-
-                <div class="meta">
-                    <span class="category">
-                        {{ post.author_name }} • {{ post.party_name }}
-                    </span>
+        <div class="d-card reveal">
+            <div class="card-inner">
+                <div class="card-header">
+                    <span class="card-title">My Issues</span>
                 </div>
+
+                {% if my_issues %}
+                    <div class="issue-list">
+                        {% for issue in my_issues %}
+                            <div class="issue-row">
+                                <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}"
+                                   class="issue-row-link">
+                                    {{ issue.title }}
+                                </a>
+                                <div class="issue-row-meta">
+                                    <span class="status-pill {{ issue.status|lower|replace(' ', '_') }}">
+                                        {{ issue.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state"><p>No issues raised yet.</p></div>
+                {% endif %}
             </div>
-        {% endfor %}
-    {% else %}
-        <p class="empty-text">No policies posted yet.</p>
-    {% endif %}
-</section>
+        </div>
 
+        <!-- Recently Resolved (full width) -->
+        <div class="d-card full reveal">
+            <div class="card-inner">
+                <div class="card-header">
+                    <span class="card-title">Recently Resolved</span>
+                    {% if resolved_issues %}
+                        <span class="card-badge live" style="--teal:#16a34a; background:rgba(22,163,74,0.08); border-color:rgba(22,163,74,0.2);">
+                            Resolved
+                        </span>
+                    {% endif %}
+                </div>
 
+                {% if resolved_issues %}
+                    <div class="issue-list">
+                        {% for issue in resolved_issues %}
+                            <div class="issue-row">
+                                <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}"
+                                   class="issue-row-link">
+                                    {{ issue.title }}
+                                </a>
+                                <div class="issue-row-meta">
+                                    <span class="status-pill resolved">{{ issue.status }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state"><p>No issues resolved recently.</p></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Latest Policies (full width) -->
+        <div class="d-card full reveal">
+            <div class="card-inner">
+                <div class="card-header">
+                    <span class="card-title">Latest Policies</span>
+                </div>
+
+                {% if policy_posts %}
+                    <div class="issue-list">
+                        {% for post in policy_posts %}
+                            <div class="policy-row">
+                                <span class="policy-num">{{ "%02d"|format(loop.index) }}</span>
+                                <div class="policy-body">
+                                    <a href="{{ url_for('rep_policy.view_policy', post_id=post.id) }}"
+                                       class="policy-link">
+                                        {{ post.title }}
+                                    </a>
+                                    <span class="policy-meta">
+                                        {{ post.author_name }} &nbsp;·&nbsp; {{ post.party_name }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state"><p>No policies posted yet.</p></div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
 </div>
 {% endblock %}

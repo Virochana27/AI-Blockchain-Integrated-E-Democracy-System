@@ -1,57 +1,493 @@
 {% extends "base.html" %}
-{% set title = "Manage Chief Electoral Officers (CEO)" %}
+{% set title = "Manage Chief Electoral Officers" %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   MANAGE CEO PAGE
+═══════════════════════════════════════════════════════════ */
+
+.manage-ceo-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ── PAGE HEADER ──────────────────────────────────────────── */
+.page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 2rem; margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.page-header-left {}
+.back-link {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    margin-bottom: 1rem; transition: color 0.2s;
+}
+.back-link:hover { color: var(--indigo); }
+.back-link svg { transition: transform 0.2s; }
+.back-link:hover svg { transform: translateX(-3px); }
+.page-header-tag {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--indigo); margin-bottom: 0.5rem;
+}
+.page-header-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    line-height: 0.95; color: var(--text); margin-bottom: 0.4rem;
+}
+.page-title em { font-style: normal; color: var(--indigo); }
+.page-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+/* ── STATS ROW ────────────────────────────────────────────── */
+.ceo-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border); background: var(--border);
+    gap: 1px; margin-bottom: 1.5rem;
+}
+.ceo-stat {
+    background: var(--ink); padding: 1.4rem 1.5rem;
+    text-align: center; position: relative; overflow: hidden;
+    transition: background 0.2s;
+}
+.ceo-stat::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+}
+.ceo-stat:hover { background: #fafafe; }
+.ceo-stat:hover::after { transform: scaleX(1); }
+.ceo-stat.total::after  { background: var(--indigo); }
+.ceo-stat.active::after { background: var(--teal); }
+.ceo-stat.inactive::after { background: var(--muted); }
+.ceo-stat-val {
+    font-family: var(--font-disp); font-size: 2.2rem; line-height: 1; margin-bottom: 0.2rem;
+}
+.ceo-stat.total .ceo-stat-val    { color: var(--indigo); }
+.ceo-stat.active .ceo-stat-val   { color: var(--teal); }
+.ceo-stat.inactive .ceo-stat-val { color: var(--muted); }
+.ceo-stat-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── TABLE CARD ───────────────────────────────────────────── */
+.table-card {
+    background: var(--ink); border: 1px solid var(--border);
+}
+.table-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.table-card-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.table-card-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+
+/* Search input */
+.table-search {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--border); background: var(--ink);
+    overflow: hidden;
+}
+.table-search svg { margin: 0 0.65rem; color: var(--muted); flex-shrink: 0; }
+.table-search input {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.05em; color: var(--text);
+    background: none; border: none; outline: none;
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    width: 180px;
+}
+.table-search input::placeholder { color: rgba(107,114,128,0.45); }
+
+/* Filter tabs */
+.filter-tabs {
+    display: flex; border: 1px solid var(--border); overflow: hidden;
+}
+.filter-tab {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); padding: 0.4rem 0.85rem;
+    background: none; border: none; cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: color 0.2s, background 0.2s; white-space: nowrap;
+}
+.filter-tab:last-child { border-right: none; }
+.filter-tab:hover { color: var(--indigo); background: var(--indigo-dim); }
+.filter-tab.active { color: #fff; background: var(--indigo); }
+
+.table-controls {
+    display: flex; align-items: center; gap: 0.75rem;
+}
+
+/* Data table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead tr { border-bottom: 1px solid var(--border); }
+.data-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.7rem 1.5rem; text-align: left;
+    background: var(--ink-2); white-space: nowrap;
+}
+.data-table th.sortable { cursor: pointer; user-select: none; transition: color 0.2s; }
+.data-table th.sortable:hover { color: var(--indigo); }
+.data-table th .sort-icon { opacity: 0.3; margin-left: 0.3rem; font-size: 0.55rem; }
+.data-table th.sort-asc .sort-icon::after  { content: ' ▲'; opacity: 1; }
+.data-table th.sort-desc .sort-icon::after { content: ' ▼'; opacity: 1; }
+
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: #f8f8fd; }
+.data-table td { padding: 1.1rem 1.5rem; vertical-align: middle; }
+
+/* Row number */
+.td-num {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: rgba(79,70,229,0.2); width: 2.5rem;
+    font-weight: 700; letter-spacing: 0.05em;
+}
+
+/* Email cell */
+.td-email {
+    font-family: var(--font-mono); font-size: 0.78rem;
+    color: var(--indigo); letter-spacing: 0.04em;
+}
+
+/* State cell */
+.state-tag {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text); background: var(--ink-2);
+    border: 1px solid var(--border); padding: 0.2rem 0.65rem;
+}
+.state-tag svg { color: var(--muted); opacity: 0.6; }
+
+/* Status pills */
+.status-pill {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 2px; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+}
+.status-pill::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.status-pill.active   {
+    color: var(--teal); background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.2);
+}
+.status-pill.active::before {
+    background: var(--teal);
+    animation: blink 1.4s ease-in-out infinite;
+}
+.status-pill.inactive {
+    color: var(--muted); background: var(--ink-3);
+    border: 1px solid var(--border);
+}
+.status-pill.inactive::before { background: var(--muted); }
+
+/* Empty state */
+.table-empty {
+    padding: 4rem 2rem; text-align: center;
+}
+.table-empty-num {
+    font-family: var(--font-disp); font-size: 4rem; line-height: 1;
+    color: rgba(79,70,229,0.07); margin-bottom: 0.75rem;
+}
+.table-empty p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* No results row */
+.no-results-row td {
+    padding: 2rem 1.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-align: center;
+}
+
+/* ── INFO STRIP ───────────────────────────────────────────── */
+.info-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border); background: var(--border);
+    gap: 1px; margin-top: 1.25rem;
+}
+.info-cell {
+    background: var(--ink); padding: 1.25rem 1.5rem;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+}
+.info-cell-icon {
+    width: 28px; height: 28px; flex-shrink: 0;
+    background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.15);
+    display: grid; place-items: center; color: var(--indigo); margin-top: 1px;
+}
+.info-cell-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text); font-weight: 700; margin-bottom: 0.2rem;
+}
+.info-cell-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.55; }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .manage-ceo-page { padding: 2rem 2rem 4rem; }
+    .ceo-stats { grid-template-columns: repeat(3, 1fr); }
+    .info-strip { grid-template-columns: 1fr; }
+    .page-header { flex-direction: column; }
+    .table-controls { flex-wrap: wrap; }
+}
+@media (max-width: 640px) {
+    .manage-ceo-page { padding: 1.5rem 1rem 3rem; }
+    .ceo-stats { grid-template-columns: 1fr 1fr; }
+    .data-table thead { display: none; }
+    .data-table td { display: block; padding: 0.4rem 1rem; }
+    .data-table tbody tr { display: block; padding: 0.75rem 0; }
+}
+</style>
+{% endblock %}
+
 
 {% block content %}
-<div class="ec-manage">
+<div class="manage-ceo-page">
 
-    <h2>Manage Chief Electoral Officers (CEO)</h2>
-
-    <!-- =========================
-         Navigation
-    ========================== -->
-    <div class="action-bar">
-        <a href="{{ url_for('election_commission.dashboard') }}" class="btn-secondary">
-            ← Back to CEC Dashboard
-        </a>
+    <!-- ── Page Header ─────────────────────────────────────── -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <a href="{{ url_for('election_commission.dashboard') }}" class="back-link">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                CEC Dashboard
+            </a>
+            <div class="page-header-tag">Commission Management</div>
+            <h1 class="page-title">Chief Electoral <em>Officers</em></h1>
+            <p class="page-sub">
+                View and manage all registered Chief Electoral Officers across states.
+            </p>
+        </div>
     </div>
 
-    <!-- =========================
-         CEO List
-    ========================== -->
-    <section class="table-section">
-        <h3>Registered CEOs</h3>
+    {% if ceos and ceos|length > 0 %}
 
-        {% if ceos and ceos|length > 0 %}
-            <table class="data-table">
+        <!-- ── Stats Row ───────────────────────────────────── -->
+        <div class="ceo-stats">
+            <div class="ceo-stat total">
+                <div class="ceo-stat-val">{{ ceos|length }}</div>
+                <div class="ceo-stat-label">Total CEOs</div>
+            </div>
+            <div class="ceo-stat active">
+                <div class="ceo-stat-val">{{ ceos|selectattr('is_active')|list|length }}</div>
+                <div class="ceo-stat-label">Active</div>
+            </div>
+            <div class="ceo-stat inactive">
+                <div class="ceo-stat-val">{{ ceos|rejectattr('is_active')|list|length }}</div>
+                <div class="ceo-stat-label">Inactive</div>
+            </div>
+        </div>
+
+        <!-- ── CEO Table ────────────────────────────────────── -->
+        <div class="table-card">
+            <div class="table-card-header">
+                <span class="table-card-title">Registered CEOs</span>
+                <div class="table-controls">
+                    <!-- Search -->
+                    <div class="table-search">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input
+                            type="text"
+                            id="ceoSearch"
+                            placeholder="Search by email or state…"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <!-- Filter tabs -->
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">All</button>
+                        <button class="filter-tab" data-filter="active">Active</button>
+                        <button class="filter-tab" data-filter="inactive">Inactive</button>
+                    </div>
+                </div>
+            </div>
+
+            <table class="data-table" id="ceoTable">
                 <thead>
                     <tr>
-                        <th>Email</th>
-                        <th>State</th>
+                        <th style="width:3rem;">#</th>
+                        <th class="sortable" data-col="email">Email <span class="sort-icon"></span></th>
+                        <th class="sortable" data-col="state">State <span class="sort-icon"></span></th>
                         <th>Status</th>
-                        <th>Created At</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="ceoTableBody">
                     {% for ceo in ceos %}
-                        <tr>
-                            <td>{{ ceo.email }}</td>
-                            <td>{{ ceo.state_id }}</td>
+                        <tr
+                            data-status="{{ 'active' if ceo.is_active else 'inactive' }}"
+                            data-email="{{ ceo.email|lower }}"
+                            data-state="{{ ceo.state.state_name|lower }}"
+                        >
+                            <td class="td-num">{{ '%02d' % loop.index }}</td>
+
+                            <td class="td-email">{{ ceo.email }}</td>
+
+                            <td>
+                                <span class="state-tag">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    {{ ceo.state.state_name }}
+                                </span>
+                            </td>
+
                             <td>
                                 {% if ceo.is_active %}
-                                    <span class="status active">Active</span>
+                                    <span class="status-pill active">Active</span>
                                 {% else %}
-                                    <span class="status inactive">Inactive</span>
+                                    <span class="status-pill inactive">Inactive</span>
                                 {% endif %}
                             </td>
-                            <td>{{ ceo.created_at }}</td>
                         </tr>
                     {% endfor %}
+                    <!-- No results placeholder -->
+                    <tr id="noResults" style="display:none;">
+                        <td colspan="4">No CEOs match your search.</td>
+                    </tr>
                 </tbody>
             </table>
-        {% else %}
-            <p>No Chief Electoral Officers found.</p>
-        {% endif %}
-    </section>
+        </div>
+
+        <!-- ── Info strip ──────────────────────────────────── -->
+        <div class="info-strip">
+            <div class="info-cell">
+                <div class="info-cell-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="info-cell-title">State Authority</div>
+                    <p class="info-cell-desc">Each CEO oversees all electoral operations within their assigned state.</p>
+                </div>
+            </div>
+            <div class="info-cell">
+                <div class="info-cell-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="info-cell-title">Access Control</div>
+                    <p class="info-cell-desc">Only active CEOs can log in and manage state-level electoral operations.</p>
+                </div>
+            </div>
+            <div class="info-cell">
+                <div class="info-cell-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="info-cell-title">Monitored Activity</div>
+                    <p class="info-cell-desc">All CEO actions are logged in the audit trail and visible to the CEC.</p>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="table-card">
+            <div class="table-empty">
+                <div class="table-empty-num">0</div>
+                <p>No Chief Electoral Officers registered yet.</p>
+            </div>
+        </div>
+    {% endif %}
 
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // ── Live search ────────────────────────────────────────────
+    const searchInput = document.getElementById('ceoSearch');
+    const noResults   = document.getElementById('noResults');
+
+    function applyFilters() {
+        const query      = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const activeTab  = document.querySelector('.filter-tab.active');
+        const filterVal  = activeTab ? activeTab.dataset.filter : 'all';
+        const rows       = document.querySelectorAll('#ceoTableBody tr:not(#noResults)');
+
+        let visible = 0;
+        rows.forEach(row => {
+            const email  = row.dataset.email  || '';
+            const state  = row.dataset.state  || '';
+            const status = row.dataset.status || '';
+
+            const matchSearch = !query || email.includes(query) || state.includes(query);
+            const matchFilter = filterVal === 'all' || status === filterVal;
+
+            const show = matchSearch && matchFilter;
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+
+    // ── Filter tabs ────────────────────────────────────────────
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            applyFilters();
+        });
+    });
+
+    // ── Sortable columns ───────────────────────────────────────
+    let sortCol = null; let sortAsc = true;
+
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (sortCol === col) { sortAsc = !sortAsc; }
+            else { sortCol = col; sortAsc = true; }
+
+            document.querySelectorAll('th.sortable').forEach(t => {
+                t.classList.remove('sort-asc', 'sort-desc');
+            });
+            th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+
+            const tbody = document.getElementById('ceoTableBody');
+            const rows  = [...tbody.querySelectorAll('tr:not(#noResults)')];
+
+            rows.sort((a, b) => {
+                const av = a.dataset[col] || '';
+                const bv = b.dataset[col] || '';
+                return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+            });
+
+            rows.forEach(r => tbody.insertBefore(r, noResults));
+        });
+    });
+</script>
 {% endblock %}

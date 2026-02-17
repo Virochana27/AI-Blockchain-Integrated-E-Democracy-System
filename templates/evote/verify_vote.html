@@ -1,48 +1,552 @@
 {% extends "base.html" %}
-{% block title %}Verify Vote{% endblock %}
+{% set title = "Verify Vote | E-Democracy System" %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════
+   VERIFY VOTE PAGE
+═══════════════════════════════════════════════════ */
+.verify-page {
+    min-height: calc(100vh - var(--nav-h));
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* ── LEFT PANEL ─────────────────────────────── */
+.verify-left {
+    position: relative;
+    background: var(--indigo-dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4rem;
+    overflow: hidden;
+}
+.verify-left::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 90% 90% at 30% 50%, black 20%, transparent 80%);
+}
+.verify-left::after {
+    content: '';
+    position: absolute; bottom: -10%; right: -10%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(13,148,136,0.14) 0%, transparent 65%);
+    pointer-events: none;
+}
+.verify-left-top { position: relative; z-index: 2; }
+
+.verify-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 2.5rem;
+}
+.verify-eyebrow .dot {
+    width: 6px; height: 6px; background: var(--teal);
+    border-radius: 50%; animation: blink 1.4s ease-in-out infinite;
+}
+.verify-headline {
+    font-family: var(--font-disp);
+    font-size: clamp(2.8rem, 4vw, 4.5rem);
+    line-height: 0.92; color: #fff; margin-bottom: 1.5rem;
+}
+.verify-headline em { font-style: normal; color: var(--warm-light); }
+.verify-sub {
+    font-size: 0.9rem; color: rgba(255,255,255,0.45);
+    line-height: 1.75; max-width: 340px; margin-bottom: 3rem;
+}
+
+/* How it works */
+.how-it-works { display: flex; flex-direction: column; gap: 0; }
+.how-step {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.how-step:last-child { border-bottom: none; }
+.how-step-num {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.15);
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: rgba(255,255,255,0.4); font-weight: 700;
+}
+.how-step-label {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+}
+.how-step-desc { font-size: 0.78rem; color: rgba(255,255,255,0.35); line-height: 1.4; }
+
+/* Chain blocks */
+.verify-left-bottom {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; gap: 0.6rem;
+}
+.chain-mini {
+    display: flex; align-items: center; gap: 1rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 0.7rem 1rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: rgba(255,255,255,0.3); transition: border-color 0.2s;
+}
+.chain-mini:hover { border-color: rgba(255,255,255,0.18); }
+.chain-mini .cm-id { color: var(--teal); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.15em; flex-shrink: 0; }
+.chain-mini .cm-hash { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,0.18); }
+.chain-mini .cm-ok { color: var(--teal); font-size: 0.55rem; flex-shrink: 0; }
+
+/* ── RIGHT PANEL ────────────────────────────── */
+.verify-right {
+    display: flex; align-items: center; justify-content: center;
+    padding: 4rem; background: var(--ink); position: relative;
+    overflow-y: auto;
+}
+.verify-right::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px; opacity: 0.5;
+}
+.verify-card { position: relative; z-index: 2; width: 100%; max-width: 420px; }
+.verify-card-header { margin-bottom: 2.5rem; }
+.verify-card-tag {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--teal); display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+.verify-card-tag::before { content: ''; width: 20px; height: 1px; background: var(--teal); }
+.verify-card-title { font-family: var(--font-disp); font-size: 3rem; line-height: 0.95; color: var(--text); margin-bottom: 0.5rem; }
+.verify-card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+.verify-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-group label {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── SEARCHABLE SELECT ──────────────────────── */
+#election_id { display: none; }
+
+.custom-select-wrap { position: relative; }
+.select-search-box {
+    width: 100%; background: var(--ink-2);
+    border: 1px solid var(--border); color: var(--text);
+    font-family: var(--font-mono); font-size: 0.78rem;
+    padding: 0.85rem 2.5rem 0.85rem 1rem;
+    outline: none; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    user-select: none;
+}
+.select-search-box:focus,
+.custom-select-wrap.open .select-search-box {
+    border-color: var(--indigo); background: #fff;
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+.select-placeholder { color: rgba(107,114,128,0.5); }
+.select-value { color: var(--text); }
+.select-chevron {
+    position: absolute; right: 1rem; top: 50%;
+    transform: translateY(-50%); pointer-events: none;
+    transition: transform 0.2s; color: var(--muted);
+}
+.custom-select-wrap.open .select-chevron { transform: translateY(-50%) rotate(180deg); }
+
+.select-dropdown {
+    position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+    z-index: 50; background: #fff;
+    border: 1px solid var(--indigo);
+    box-shadow: 0 8px 32px rgba(79,70,229,0.12);
+    display: none; flex-direction: column; max-height: 280px; overflow: hidden;
+}
+.custom-select-wrap.open .select-dropdown { display: flex; }
+
+.select-search-input {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    color: var(--text); background: var(--ink-2);
+    border: none; border-bottom: 1px solid var(--border);
+    padding: 0.7rem 1rem; outline: none; flex-shrink: 0;
+}
+.select-search-input::placeholder { color: var(--muted); opacity: 0.5; }
+
+.select-options { overflow-y: auto; flex: 1; }
+.select-options::-webkit-scrollbar { width: 4px; }
+.select-options::-webkit-scrollbar-thumb { background: rgba(79,70,229,0.2); }
+
+.select-option {
+    padding: 0.75rem 1rem; font-family: var(--font-body); font-size: 0.85rem;
+    color: var(--text); cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s, color 0.12s;
+    display: flex; align-items: center; gap: 0.6rem;
+}
+.select-option:last-child { border-bottom: none; }
+.select-option:hover,
+.select-option.focused { background: var(--indigo-dim); color: var(--indigo); }
+.select-option.selected { background: var(--indigo-dim); color: var(--indigo); }
+.select-option-tag {
+    font-family: var(--font-mono); font-size: 0.55rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    background: var(--indigo-dim); color: var(--indigo);
+    padding: 0.1rem 0.4rem; flex-shrink: 0;
+}
+.select-no-results {
+    padding: 1.25rem 1rem;
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-align: center; display: none;
+}
+
+/* ── HASH INPUT ─────────────────────────────── */
+.hash-input-wrap { position: relative; }
+.hash-icon {
+    position: absolute; left: 1rem; top: 50%;
+    transform: translateY(-50%); color: var(--muted);
+    pointer-events: none; transition: color 0.2s;
+}
+.hash-input-wrap:focus-within .hash-icon { color: var(--indigo); }
+.hash-input {
+    background: var(--ink-2); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-mono); font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    padding: 0.85rem 1rem 0.85rem 2.75rem;
+    outline: none; width: 100%; -webkit-appearance: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.hash-input:focus { border-color: var(--indigo); background: #fff; box-shadow: 0 0 0 3px var(--indigo-dim); }
+.hash-input::placeholder { color: rgba(107,114,128,0.4); font-size: 0.72rem; }
+.hash-hint {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.08em; color: var(--muted); margin-top: 0.4rem;
+}
+
+/* Submit */
+.form-submit .btn-primary {
+    width: 100%; justify-content: center;
+    padding: 1rem 2rem; font-size: 0.8rem;
+    clip-path: none; border-radius: 0;
+    background: var(--teal);
+}
+.form-submit .btn-primary:hover { background: var(--teal); filter: brightness(0.88); transform: translateY(-1px); }
+
+/* ── RESULT PANEL ───────────────────────────── */
+.result-panel {
+    margin-top: 1.5rem;
+    border: 1px solid var(--border);
+    overflow: hidden; display: none;
+}
+.result-panel.visible {
+    display: block;
+    animation: fade-up 0.35s ease forwards;
+}
+.result-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.9rem 1.25rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+}
+.result-header.success { background: var(--teal-dim); border-bottom: 1px solid rgba(13,148,136,0.2); color: var(--teal); }
+.result-header.error   { background: rgba(220,38,38,0.06); border-bottom: 1px solid rgba(220,38,38,0.15); color: #dc2626; }
+.result-header.loading { background: var(--indigo-dim); border-bottom: 1px solid rgba(79,70,229,0.15); color: var(--indigo); }
+
+.result-body { padding: 1.25rem; background: #fff; }
+.result-row {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 0.65rem 0; border-bottom: 1px solid var(--border);
+}
+.result-row:last-child { border-bottom: none; }
+.result-row-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); min-width: 90px; flex-shrink: 0; padding-top: 2px;
+}
+.result-row-val { color: var(--text); font-size: 0.85rem; line-height: 1.5; word-break: break-all; }
+.hash-text { font-family: var(--font-mono); font-size: 0.72rem; color: var(--teal); letter-spacing: 0.04em; }
+
+.spinner {
+    width: 14px; height: 14px; flex-shrink: 0;
+    border: 2px solid rgba(79,70,229,0.2); border-top-color: var(--indigo);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+    .verify-page { grid-template-columns: 1fr; }
+    .verify-left { display: none; }
+    .verify-right { padding: 2.5rem 1.5rem; min-height: calc(100vh - var(--nav-h)); align-items: flex-start; }
+}
+</style>
+{% endblock %}
+
 
 {% block content %}
-<h2>Verify Your Vote</h2>
+<div class="verify-page">
 
-<form id="verify-form">
-    <label>Election ID</label>
-    <input type="text" id="election_id" required>
+    <!-- ── LEFT ──────────────────────────────────────── -->
+    <div class="verify-left">
+        <div class="verify-left-top">
+            <div class="verify-eyebrow">
+                <span class="dot"></span>
+                On-Chain Verification
+            </div>
+            <h2 class="verify-headline">
+                Verify<br>Your <em>Vote.</em>
+            </h2>
+            <p class="verify-sub">
+                Use your ballot receipt hash to confirm your vote was recorded
+                correctly on the blockchain — independently, without trusting anyone.
+            </p>
 
-    <label>Receipt Hash</label>
-    <input type="text" id="receipt_hash" required>
+            <div class="how-it-works">
+                <div class="how-step">
+                    <div class="how-step-num">1</div>
+                    <div>
+                        <div class="how-step-label">Select Election</div>
+                        <div class="how-step-desc">Choose the election you participated in</div>
+                    </div>
+                </div>
+                <div class="how-step">
+                    <div class="how-step-num">2</div>
+                    <div>
+                        <div class="how-step-label">Enter Receipt Hash</div>
+                        <div class="how-step-desc">Paste the hash from your voting receipt</div>
+                    </div>
+                </div>
+                <div class="how-step">
+                    <div class="how-step-num">3</div>
+                    <div>
+                        <div class="how-step-label">Confirm On-Chain</div>
+                        <div class="how-step-desc">We query the blockchain and return the result</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <button type="submit">Verify</button>
-</form>
+        <div class="verify-left-bottom">
+            <div class="chain-mini">
+                <span class="cm-id">Block #00891</span>
+                <span class="cm-hash">0xf3a2c91b7e04d65880fa3c…</span>
+                <span class="cm-ok">✔ Verified</span>
+            </div>
+            <div class="chain-mini">
+                <span class="cm-id">Block #00892</span>
+                <span class="cm-hash">0xb72e3d40c518f9a261dd7e…</span>
+                <span class="cm-ok">✔ Verified</span>
+            </div>
+            <div class="chain-mini">
+                <span class="cm-id">Block #00893</span>
+                <span class="cm-hash">0x1c9f5a82e3b047d6f3e1c2…</span>
+                <span class="cm-ok">✔ Verified</span>
+            </div>
+        </div>
+    </div>
 
-<div id="result" style="margin-top: 1rem;"></div>
+    <!-- ── RIGHT ─────────────────────────────────────── -->
+    <div class="verify-right">
+        <div class="verify-card">
 
+            <div class="verify-card-header">
+                <div class="verify-card-tag">Ballot Receipt Check</div>
+                <h1 class="verify-card-title">Verify<br>Your Vote</h1>
+                <p class="verify-card-desc">Confirm your ballot is recorded on the blockchain.</p>
+            </div>
+
+            <form class="verify-form" id="verify-form" autocomplete="off">
+
+                <!-- Election selector -->
+                <div class="form-group">
+                    <label>Select Election</label>
+
+                    <!-- Hidden real select -->
+                    <select id="election_id" name="election_id" required>
+                        <option value="">-- Select --</option>
+                        {% for election in elections %}
+                            <option value="{{ election.id }}">{{ election.election_name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Custom searchable UI -->
+                    <div class="custom-select-wrap" id="customSelectWrap">
+                        <div class="select-search-box" id="selectBox" tabindex="0" role="combobox" aria-expanded="false">
+                            <span id="selectDisplay" class="select-placeholder">Select an election…</span>
+                        </div>
+                        <svg class="select-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                        <div class="select-dropdown" id="selectDropdown">
+                            <input
+                                class="select-search-input"
+                                id="selectSearch"
+                                type="text"
+                                placeholder="Type to search elections…"
+                                autocomplete="off"
+                            >
+                            <div class="select-options" id="selectOptions">
+                                {% for election in elections %}
+                                <div class="select-option" data-value="{{ election.id }}" data-label="{{ election.election_name }}">
+                                    <span class="select-option-tag">{{ loop.index }}</span>
+                                    {{ election.election_name }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="select-no-results" id="noResults">No elections found</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipt hash -->
+                <div class="form-group">
+                    <label for="receipt_hash">Receipt Hash</label>
+                    <div class="hash-input-wrap">
+                        <span class="hash-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/>
+                                <line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
+                            </svg>
+                        </span>
+                        <input class="hash-input" type="text" id="receipt_hash" name="receipt_hash"
+                            placeholder="0x3f7a…c829" required spellcheck="false">
+                    </div>
+                    <div class="hash-hint">Paste the full hash from your voting receipt</div>
+                </div>
+
+                <div class="form-submit">
+                    <button type="submit" class="btn-primary">
+                        Verify on Blockchain →
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Result -->
+            <div class="result-panel" id="resultPanel">
+                <div class="result-header loading" id="resultHeader">
+                    <div class="spinner" id="resultSpinner"></div>
+                    <span id="resultHeaderText">Querying blockchain…</span>
+                </div>
+                <div class="result-body" id="resultBody"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
-document.getElementById("verify-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
+(function () {
 
-    const electionId = document.getElementById("election_id").value;
-    const receiptHash = document.getElementById("receipt_hash").value;
-    const resultEl = document.getElementById("result");
+    /* ── Searchable Select ─────────────────────── */
+    const wrap       = document.getElementById('customSelectWrap');
+    const box        = document.getElementById('selectBox');
+    const display    = document.getElementById('selectDisplay');
+    const search     = document.getElementById('selectSearch');
+    const optionsEl  = document.getElementById('selectOptions');
+    const noResults  = document.getElementById('noResults');
+    const realSelect = document.getElementById('election_id');
+    const allOpts    = Array.from(optionsEl.querySelectorAll('.select-option'));
 
-    resultEl.innerHTML = "🔍 Verifying...";
+    const open  = () => { wrap.classList.add('open'); box.setAttribute('aria-expanded','true'); search.value=''; filter(''); setTimeout(()=>search.focus(),10); };
+    const close = () => { wrap.classList.remove('open'); box.setAttribute('aria-expanded','false'); };
 
-    const res = await fetch("/verify-vote/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            election_id: electionId,
-            receipt_hash: receiptHash
-        })
+    box.addEventListener('click', () => wrap.classList.contains('open') ? close() : open());
+    box.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } });
+    document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
+    search.addEventListener('input', () => filter(search.value));
+
+    function filter(q) {
+        const t = q.toLowerCase().trim();
+        let any = false;
+        allOpts.forEach(o => {
+            const match = o.dataset.label.toLowerCase().includes(t);
+            o.style.display = match ? '' : 'none';
+            if (match) any = true;
+        });
+        noResults.style.display = any ? 'none' : '';
+    }
+
+    allOpts.forEach(opt => {
+        opt.addEventListener('click', () => {
+            allOpts.forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            realSelect.value  = opt.dataset.value;
+            display.textContent = opt.dataset.label;
+            display.className = 'select-value';
+            close();
+        });
     });
 
-    const data = await res.json();
+    /* ── Verify Form ───────────────────────────── */
+    const form        = document.getElementById('verify-form');
+    const resultPanel = document.getElementById('resultPanel');
+    const resultHeader= document.getElementById('resultHeader');
+    const resultHText = document.getElementById('resultHeaderText');
+    const resultSpinner = document.getElementById('resultSpinner');
+    const resultBody  = document.getElementById('resultBody');
 
-    if (data.valid) {
-        resultEl.innerHTML = "✅ " + (data.message || "Vote verified");
-    } else {
-        resultEl.innerHTML = "❌ " + (data.message || "Verification failed");
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const electionId  = realSelect.value;
+        const receiptHash = document.getElementById('receipt_hash').value.trim();
+        if (!electionId || !receiptHash) return;
+
+        // Loading state
+        resultPanel.classList.add('visible');
+        resultHeader.className  = 'result-header loading';
+        resultSpinner.style.display = '';
+        resultHText.textContent = 'Querying blockchain…';
+        resultBody.innerHTML    = '';
+
+        try {
+            const res  = await fetch('/verify-vote/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ election_id: electionId, receipt_hash: receiptHash })
+            });
+            const data = await res.json();
+            resultSpinner.style.display = 'none';
+
+            if (data.valid) {
+                resultHeader.className = 'result-header success';
+                resultHText.textContent = 'Vote Verified On-Chain';
+                resultBody.innerHTML = row('Status',
+                    `<span style="color:var(--teal);font-family:var(--font-mono);font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;">✔ Confirmed</span>`)
+                  + row('Message', data.message || 'Your vote has been successfully recorded on the blockchain.')
+                  + row('Receipt Hash', `<span class="hash-text">${escHtml(receiptHash)}</span>`);
+            } else {
+                resultHeader.className = 'result-header error';
+                resultHText.textContent = 'Verification Failed';
+                resultBody.innerHTML = row('Status',
+                    `<span style="color:#dc2626;font-family:var(--font-mono);font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;">✗ Not Found</span>`)
+                  + row('Message', data.message || 'No matching vote record found. Check your receipt hash and try again.')
+                  + row('Receipt Hash', `<span class="hash-text">${escHtml(receiptHash)}</span>`);
+            }
+        } catch (_) {
+            resultSpinner.style.display = 'none';
+            resultHeader.className = 'result-header error';
+            resultHText.textContent = 'Network Error';
+            resultBody.innerHTML = row('Error', 'Could not reach the verification server. Please try again.');
+        }
+
+        resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    function row(label, val) {
+        return `<div class="result-row"><span class="result-row-label">${label}</span><span class="result-row-val">${val}</span></div>`;
     }
-});
-</script>
+    function escHtml(s) {
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
 
+})();
+</script>
 {% endblock %}

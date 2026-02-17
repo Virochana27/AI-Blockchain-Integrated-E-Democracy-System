@@ -1,85 +1,394 @@
 {% extends "base.html" %}
 {% set title = "My Representatives" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   REPRESENTATIVES PAGE
+═══════════════════════════════════════════════════════════ */
+
+.representatives-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ── PAGE HEADER ──────────────────────────────────────────── */
+.page-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.page-header-tag {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--indigo); margin-bottom: 0.6rem;
+}
+.page-header-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 0.95; color: var(--text); margin-bottom: 0.5rem;
+}
+.page-title em { font-style: normal; color: var(--indigo); }
+.page-sub {
+    font-size: 0.85rem; color: var(--muted);
+    line-height: 1.65; max-width: 500px;
+}
+
+/* ── REP GRID ─────────────────────────────────────────────── */
+.rep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+}
+
+/* ── REP CARD ─────────────────────────────────────────────── */
+.rep-card {
+    background: var(--ink);
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    transition: background 0.25s, box-shadow 0.25s;
+}
+.rep-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    transition: opacity 0.3s;
+}
+.rep-card.elected::before   { background: linear-gradient(90deg, var(--indigo), var(--teal)); opacity: 1; }
+.rep-card.opposition::before { background: linear-gradient(90deg, var(--warm), #f97316); opacity: 1; }
+
+.rep-card:hover {
+    background: #fafafe;
+    box-shadow: 0 8px 40px rgba(79,70,229,0.07);
+}
+
+/* Card top: photo + identity */
+.rep-card-top {
+    display: flex; align-items: flex-start; gap: 1.5rem;
+    padding: 2rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Photo */
+.rep-photo-wrap {
+    position: relative; flex-shrink: 0;
+}
+.rep-photo {
+    width: 72px; height: 72px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--ink-2);
+    display: grid; place-items: center;
+}
+.rep-photo img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    filter: grayscale(0.2);
+    transition: filter 0.25s;
+}
+.rep-card:hover .rep-photo img { filter: grayscale(0); }
+.rep-photo-placeholder {
+    width: 72px; height: 72px;
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.15);
+    display: grid; place-items: center;
+    color: var(--indigo);
+}
+
+/* Role badge floated on photo */
+.rep-role-flag {
+    position: absolute;
+    bottom: -1px; left: -1px;
+    font-family: var(--font-mono); font-size: 0.48rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.15rem 0.4rem;
+    font-weight: 700; white-space: nowrap;
+}
+.rep-role-flag.elected   { background: var(--indigo); color: #fff; }
+.rep-role-flag.opposition { background: var(--warm);   color: #fff; }
+
+/* Identity */
+.rep-identity { flex: 1; min-width: 0; }
+.rep-name {
+    font-family: var(--font-disp);
+    font-size: 1.6rem; line-height: 1; color: var(--text);
+    margin-bottom: 0.5rem;
+    transition: color 0.2s;
+}
+.rep-card:hover .rep-name { color: var(--indigo); }
+
+.rep-party-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+.rep-party-pill {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.18rem 0.55rem; white-space: nowrap;
+}
+
+.rep-term-row {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.07em; color: var(--muted);
+}
+.rep-term-row svg { flex-shrink: 0; opacity: 0.5; }
+.term-sep {
+    width: 16px; height: 1px; background: var(--border); display: inline-block;
+    vertical-align: middle; margin: 0 0.2rem;
+}
+
+/* Card body: note */
+.rep-card-body {
+    padding: 1.25rem 2rem;
+    flex: 1;
+}
+.rep-note {
+    font-size: 0.85rem; color: var(--muted); line-height: 1.7;
+    border-left: 2px solid var(--border); padding-left: 1rem;
+    transition: border-color 0.2s;
+}
+.rep-card:hover .rep-note { border-color: rgba(79,70,229,0.2); }
+
+/* Card footer: actions */
+.rep-card-footer {
+    padding: 1.25rem 2rem;
+    border-top: 1px solid var(--border);
+    background: var(--ink-2);
+    display: flex; align-items: center; gap: 0.75rem;
+}
+
+.rep-action-btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; padding: 0.55rem 1.1rem;
+    border: 1px solid rgba(79,70,229,0.25);
+    color: var(--indigo); background: var(--indigo-dim);
+    transition: background 0.2s, border-color 0.2s;
+}
+.rep-action-btn:hover {
+    background: var(--indigo-mid); border-color: var(--indigo);
+}
+.rep-action-btn svg { transition: transform 0.2s; }
+.rep-action-btn:hover svg { transform: translateX(2px); }
+
+.rep-action-secondary {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    background: none; border: none; cursor: pointer; padding: 0;
+    transition: color 0.2s;
+}
+.rep-action-secondary:hover { color: var(--text); }
+
+/* ── EMPTY STATE ──────────────────────────────────────────── */
+.empty-state {
+    background: var(--ink); border: 1px solid var(--border);
+    padding: 5rem 2rem; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+}
+.empty-num {
+    font-family: var(--font-disp); font-size: 5rem; line-height: 1;
+    color: rgba(79,70,229,0.08);
+}
+.empty-state p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── INFO STRIP ───────────────────────────────────────────── */
+.info-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border); background: var(--border);
+    gap: 1px; margin-top: 1.25rem;
+}
+.info-cell {
+    background: var(--ink);
+    padding: 1.25rem 1.5rem;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+}
+.info-cell-icon {
+    width: 28px; height: 28px; flex-shrink: 0;
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.15);
+    display: grid; place-items: center;
+    color: var(--indigo); margin-top: 1px;
+}
+.info-cell-body {}
+.info-cell-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text); font-weight: 700; margin-bottom: 0.2rem;
+}
+.info-cell-desc {
+    font-size: 0.78rem; color: var(--muted); line-height: 1.55;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .representatives-page { padding: 2rem 2rem 4rem; }
+    .rep-grid { grid-template-columns: 1fr; }
+    .info-strip { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+    .representatives-page { padding: 1.5rem 1rem 3rem; }
+    .rep-card-top { flex-direction: column; gap: 1rem; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
 <div class="representatives-page">
 
-    <!-- =========================
-         Page Header
-    ========================== -->
+    <!-- ── Page Header ─────────────────────────────────────── -->
     <div class="page-header">
-        <h2>🏛️ Your Constituency Representatives</h2>
-        <p class="page-subtext">
-            These are the officially recognized representatives for your constituency.
+        <div class="page-header-tag">Your Constituency</div>
+        <h1 class="page-title">Your <em>Representatives</em></h1>
+        <p class="page-sub">
+            Officially recognized representatives assigned to your constituency.
+            All activity is publicly recorded on the blockchain.
         </p>
     </div>
 
     {% if representatives %}
-        <div class="rep-list">
-            {% for rep in representatives %}
-                <div class="rep-card">
 
-                    <!-- Role Badge -->
-                    <div class="rep-role rep-role-{{ rep.type|lower }}">
-                        {% if rep.type == "ELECTED_REP" %}
-                            🧑‍⚖️ Elected Representative
-                        {% else %}
-                            ⚖️ Opposition Representative
-                        {% endif %}
+        <div class="rep-grid">
+            {% for rep in representatives %}
+
+                {% set is_elected = rep.type == "ELECTED_REP" %}
+
+                <div class="rep-card reveal {% if is_elected %}elected{% else %}opposition{% endif %}">
+
+                    <!-- ── Card Top: Photo + Identity ──────── -->
+                    <div class="rep-card-top">
+
+                        <!-- Photo -->
+                        <div class="rep-photo-wrap">
+                            {% if rep.photo_url %}
+                                <div class="rep-photo">
+                                    <img src="{{ rep.photo_url }}" alt="{{ rep.candidate_name or 'Representative' }}">
+                                </div>
+                            {% else %}
+                                <div class="rep-photo-placeholder">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <span class="rep-role-flag {% if is_elected %}elected{% else %}opposition{% endif %}">
+                                {% if is_elected %}Elected{% else %}Opposition{% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Identity -->
+                        <div class="rep-identity">
+                            <div class="rep-name">
+                                {{ rep.candidate_name or "Name Unavailable" }}
+                            </div>
+
+                            <div class="rep-party-row">
+                                <span class="rep-party-pill">
+                                    {{ rep.party_name or "Independent" }}
+                                </span>
+                            </div>
+
+                            <div class="rep-term-row">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                {{ rep.term_start }}
+                                <span class="term-sep"></span>
+                                {{ rep.term_end or "Ongoing" }}
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- Representative Info -->
-                    <div class="rep-info">
+                    <!-- ── Card Body: Note ─────────────────── -->
+                    <div class="rep-card-body">
+                        <p class="rep-note">
+                            {% if is_elected %}
+                                Responsible for addressing and resolving civic issues
+                                raised within the constituency. All responses are
+                                publicly logged.
+                            {% else %}
+                                Participates in debate and provides oversight of
+                                governance and policy decisions for this constituency.
+                            {% endif %}
+                        </p>
+                    </div>
 
-    <p class="rep-name">
-        <strong>{{ rep.candidate_name or "Name not available" }}</strong>
-    </p>
-    <div class="rep-photo">
-    <img
-        src="{{ rep.photo_url or url_for('static', filename='img/default-avatar.png') }}"
-        alt="Representative photo"
-    >
-</div>
-
-
-    <p class="rep-party">
-        🏛 {{ rep.party_name or "Independent" }}
-    </p>
-
-    <p class="rep-term">
-        📅 Term:
-        {{ rep.term_start}}
-        →
-        {{ rep.term_end or "Ongoing"}}
-    </p>
-
-    <p class="rep-note">
-        {% if rep.type == "ELECTED_REP" %}
-            Responsible for addressing and resolving civic issues.
-        {% else %}
-            Participates in debate and oversight of governance.
-        {% endif %}
-    </p>
-
-</div>
-
-
-                    <!-- Actions -->
-                    <div class="rep-actions">
+                    <!-- ── Card Footer: Actions ────────────── -->
+                    <div class="rep-card-footer">
                         <a
                             href="{{ url_for('rep_policy.policy_feed_for_rep', rep_user_id=rep.user_id) }}"
-
-                            class="btn-secondary"
+                            class="rep-action-btn"
                         >
                             View Updates
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
                         </a>
                     </div>
 
                 </div>
             {% endfor %}
         </div>
+
+        <!-- ── Info strip ──────────────────────────────────── -->
+        <div class="info-strip">
+            <div class="info-cell">
+                <div class="info-cell-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div class="info-cell-body">
+                    <div class="info-cell-title">Verified Roles</div>
+                    <p class="info-cell-desc">All representatives are verified and assigned by the Election Commission.</p>
+                </div>
+            </div>
+            <div class="info-cell">
+                <div class="info-cell-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div class="info-cell-body">
+                    <div class="info-cell-title">Public Record</div>
+                    <p class="info-cell-desc">All interactions between citizens and representatives are permanently logged.</p>
+                </div>
+            </div>
+            <div class="info-cell">
+                <div class="info-cell-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                </div>
+                <div class="info-cell-body">
+                    <div class="info-cell-title">Direct Engagement</div>
+                    <p class="info-cell-desc">Raise issues directly — your representative is notified immediately.</p>
+                </div>
+            </div>
+        </div>
+
     {% else %}
         <div class="empty-state">
+            <div class="empty-num">0</div>
             <p>No representatives found for your constituency.</p>
         </div>
     {% endif %}

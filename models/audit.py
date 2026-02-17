@@ -1,5 +1,5 @@
 from supabase_db.db import insert_record, fetch_all
-from utils.helpers import generate_uuid, utc_now
+from utils.helpers import generate_uuid, utc_now,format_datetime
 
 
 # -----------------------------
@@ -31,7 +31,10 @@ def create_audit_log(
 
 
 def get_audit_logs():
-    return fetch_all(AUDIT_LOGS_TABLE)
+    audits=fetch_all(AUDIT_LOGS_TABLE)
+    for audit in audits:
+        audit["timestamp"]=format_datetime(audit["timestamp"])
+    return audits
 
 
 def get_audit_logs_by_user(user_id: str):

@@ -1,5 +1,5 @@
 from supabase_db.db import fetch_one, fetch_all, insert_record, update_record
-from utils.helpers import generate_uuid, utc_now
+from utils.helpers import generate_uuid, utc_now, format_datetime
 
 
 # -----------------------------
@@ -36,18 +36,32 @@ def create_election(
     }
     return insert_record(ELECTIONS_TABLE, payload, use_admin=True)
 
+def get_state_name_by_state_id(state_id):
+    return fetch_one("states", {"id": state_id})
 
 def get_election_by_id(election_id: str):
-    return fetch_one(ELECTIONS_TABLE, {"id": election_id})
+    election=fetch_one(ELECTIONS_TABLE, {"id": election_id})
+    state=get_state_name_by_state_id(election['state_id'])
+    election["state_name"]=state["state_name"]
+    return election
 
 
 def get_elections_by_state(state_id: str):
-    return fetch_all(ELECTIONS_TABLE, {"state_id": state_id})
-
+    elections=fetch_all(ELECTIONS_TABLE, {"state_id": state_id})
+    for election in elections:
+        election["start_time"]=format_datetime(election["start_time"])
+        election["end_time"]=format_datetime(election["end_time"])
+    return elections
 
 def get_all_elections():
-    return fetch_all(ELECTIONS_TABLE)
-
+    elections=fetch_all(ELECTIONS_TABLE)
+    for election in elections:
+        state=get_state_name_by_state_id(election['state_id'])
+        election["state_name"]=state["state_name"]
+        election["_end_time"]=election["end_time"]
+        election["start_time"]=format_datetime(election["start_time"])
+        election["end_time"]=format_datetime(election["end_time"])
+    return elections
 
 
 def approve_election(election_id: str, approved_by: str):
@@ -181,3 +195,6 @@ def mark_election_completed(election_id: str):
         },
         use_admin=True
     )
+
+def get_district_name_by_district_id(district_id):
+    return fetch_one("districts", {"id": district_id})

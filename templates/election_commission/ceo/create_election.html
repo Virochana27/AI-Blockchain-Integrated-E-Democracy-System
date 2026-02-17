@@ -1,110 +1,660 @@
 {% extends "base.html" %}
 {% set title = "Create Election" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════
+   CREATE ELECTION PAGE
+═══════════════════════════════════════════════════ */
+.create-election-page {
+    min-height: 100vh;
+    padding: 3rem 4rem 6rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ── PAGE HEADER ─────────────────────────────────── */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 3.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.page-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.page-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    margin-bottom: 0.5rem;
+}
+.page-breadcrumb:hover { color: var(--indigo); }
+.page-breadcrumb svg {
+    width: 10px; height: 10px;
+    transition: transform 0.2s;
+}
+.page-breadcrumb:hover svg { transform: translateX(-2px); }
+
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 0.92;
+    color: var(--text);
+    letter-spacing: 0.01em;
+}
+.page-title span { color: var(--indigo); }
+
+.page-title-sub {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.page-title-sub::before {
+    content: '';
+    width: 20px; height: 1px;
+    background: var(--indigo);
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--warm);
+    background: var(--warm-dim);
+    border: 1px solid rgba(245,158,11,0.25);
+    padding: 0.5rem 1rem;
+    align-self: flex-start;
+    margin-top: 0.25rem;
+}
+.status-pill .dot {
+    width: 5px; height: 5px;
+    background: var(--warm);
+    border-radius: 50%;
+    animation: blink 1.8s ease-in-out infinite;
+}
+
+/* ── FORM LAYOUT ─────────────────────────────────── */
+.election-form-wrap {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2rem;
+    align-items: start;
+}
+
+.form-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+/* ── FORM SECTIONS ───────────────────────────────── */
+.form-section {
+    padding: 2rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.form-section:last-child { border-bottom: none; }
+
+.form-section-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.form-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── FORM FIELDS ─────────────────────────────────── */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+}
+
+.form-group input[type="text"],
+.form-group input[type="datetime-local"],
+.form-group select {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--ink);
+    border: 1px solid rgba(30,40,80,0.15);
+    padding: 0.8rem 1rem;
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    width: 100%;
+}
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.08);
+    background: #fff;
+}
+.form-group input::placeholder { color: var(--muted); opacity: 0.6; }
+
+/* Custom select arrow */
+.select-wrap {
+    position: relative;
+}
+.select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 1rem; top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--muted);
+    pointer-events: none;
+    transition: border-top-color 0.2s;
+}
+.select-wrap:focus-within::after { border-top-color: var(--indigo); }
+
+/* datetime styling */
+.form-group input[type="datetime-local"] {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: var(--text);
+}
+.form-group input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    opacity: 0.4;
+    cursor: pointer;
+    filter: none;
+}
+
+/* ── CONSTITUENCIES ──────────────────────────────── */
+.constituency-search {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text);
+    background: var(--ink);
+    border: 1px solid rgba(30,40,80,0.15);
+    border-bottom: none;
+    padding: 0.65rem 1rem;
+    outline: none;
+    width: 100%;
+    letter-spacing: 0.04em;
+    transition: border-color 0.2s;
+}
+.constituency-search:focus { border-color: var(--indigo); }
+.constituency-search::placeholder { color: var(--muted); opacity: 0.5; }
+
+.constituency-grid {
+    border: 1px solid rgba(30,40,80,0.15);
+    max-height: 280px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(30,40,80,0.06);
+    transition: border-color 0.2s;
+}
+.constituency-grid:focus-within { border-color: var(--indigo); }
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    color: var(--text);
+    background: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+    line-height: 1.3;
+}
+.checkbox-item:hover { background: var(--indigo-dim); color: var(--indigo); }
+
+.checkbox-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border: 1px solid rgba(30,40,80,0.25);
+    background: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.15s, background 0.15s;
+}
+.checkbox-item input[type="checkbox"]:checked {
+    background: var(--indigo);
+    border-color: var(--indigo);
+}
+.checkbox-item input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 4px;
+    width: 4px; height: 7px;
+    border: 1.5px solid #fff;
+    border-top: none; border-left: none;
+    transform: rotate(45deg);
+}
+
+.constituency-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.constituency-meta .count { color: var(--indigo); font-weight: 700; }
+
+/* ── FORM ACTIONS ────────────────────────────────── */
+.form-actions-bar {
+    padding: 1.75rem 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--ink-2);
+    border-top: 1px solid var(--border);
+}
+
+/* ── SIDEBAR ─────────────────────────────────────── */
+.form-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: calc(var(--nav-h) + 2rem);
+}
+
+.sidebar-card {
+    border: 1px solid var(--border);
+    background: #fff;
+    overflow: hidden;
+}
+.sidebar-card-head {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--ink-2);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.sidebar-card-head svg {
+    width: 12px; height: 12px;
+    stroke: var(--indigo); fill: none;
+    stroke-width: 1.5;
+}
+.sidebar-card-body {
+    padding: 1.25rem;
+}
+
+.info-note {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.info-note-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+.info-note-item .note-icon {
+    width: 20px; height: 20px;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    background: var(--warm-dim);
+    border: 1px solid rgba(245,158,11,0.2);
+    font-size: 0.6rem;
+    margin-top: 1px;
+}
+.info-note-item p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.6;
+}
+.info-note-item strong { color: var(--text); }
+
+/* Status flow */
+.status-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.status-flow-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.status-flow-item:last-child { border-bottom: none; }
+.flow-num {
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    display: grid; place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--indigo);
+    font-weight: 700;
+}
+.flow-num.active {
+    background: var(--indigo);
+    color: #fff;
+    border-color: var(--indigo);
+}
+.flow-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.flow-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+}
+.flow-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.4;
+}
+
+/* Scrollbar for constituency grid */
+.constituency-grid::-webkit-scrollbar { width: 4px; }
+.constituency-grid::-webkit-scrollbar-track { background: var(--ink-2); }
+.constituency-grid::-webkit-scrollbar-thumb { background: rgba(79,70,229,0.3); }
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 900px) {
+    .create-election-page { padding: 2rem 1.5rem 4rem; }
+    .election-form-wrap { grid-template-columns: 1fr; }
+    .form-sidebar { position: static; }
+    .form-row { grid-template-columns: 1fr; }
+    .constituency-grid { grid-template-columns: 1fr; }
+    .page-header { flex-direction: column; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="ec-create-election">
+<div class="create-election-page">
 
-    <h2>Create New Election</h2>
-
-    <!-- =========================
-         Navigation
-    ========================== -->
-    <div class="action-bar">
-        <a href="{{ url_for('election_commission.dashboard') }}" class="btn-secondary">
-            ← Back to CEO Dashboard
-        </a>
+    <!-- ── PAGE HEADER ────────────────────────────────── -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <a href="{{ url_for('election_commission.dashboard') }}" class="page-breadcrumb">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M10 12L6 8l4-4"/>
+                </svg>
+                EC Dashboard
+            </a>
+            <h1 class="page-title">Create<br><span>Election</span></h1>
+            <div class="page-title-sub">Election Commission · Privileged Action</div>
+        </div>
+        <div class="status-pill">
+            <span class="dot"></span>
+            Will be saved as Draft
+        </div>
     </div>
 
-    <!-- =========================
-         Create Election Form
-    ========================== -->
-    <form method="POST" class="form-card">
+    <!-- ── FORM + SIDEBAR ────────────────────────────── -->
+    <form method="POST">
+    <div class="election-form-wrap">
 
-        <div class="form-group">
-            <label for="name">Election Name</label>
-            <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Eg: Karnataka Assembly Election 2026"
-                required
-            >
-        </div>
+        <!-- MAIN FORM -->
+        <div class="form-main">
 
-        <div class="form-group">
-            <label for="type">Election Type</label>
-            <select id="type" name="type" required>
-                <option value="">Select Type</option>
-                <option value="VIDHAN_SABHA">Vidhan Sabha</option>
-                <option value="LOK_SABHA">Lok Sabha</option>
-                <option value="LOCAL_BODY">Local Body</option>
-            </select>
-        </div>
+            <!-- Section 1: Basic Info -->
+            <div class="form-section">
+                <div class="form-section-label">01 · Basic Information</div>
+                <div class="form-group">
+                    <label for="name">Election Name</label>
+                    <input
+                        type="text"
+                        id="name" name="name"
+                        placeholder="e.g. Karnataka Assembly Election 2026"
+                        required
+                    >
+                </div>
+            </div>
 
-        <div class="form-group">
-            <label for="start_time">Start Date & Time</label>
-            <input
-                type="datetime-local"
-                id="start_time"
-                name="start_time"
-                required
-            >
-        </div>
+            <!-- Section 2: Election Type -->
+            <div class="form-section">
+                <div class="form-section-label">02 · Classification</div>
+                <div class="form-group">
+                    <label for="type">Election Type</label>
+                    <div class="select-wrap">
+                        <select id="type" name="type" required>
+                            <option value="">Select Type</option>
+                            <option value="VIDHAN_SABHA">Vidhan Sabha</option>
+                            <option value="LOK_SABHA">Lok Sabha</option>
+                            <option value="LOCAL_BODY">Local Body</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-<div class="form-group">
-    <label for="end_time">End Date & Time</label>
-    <input
-        type="datetime-local"
-        id="end_time"
-        name="end_time"
-        required
-    >
-</div>
+            <!-- Section 3: Schedule -->
+            <div class="form-section">
+                <div class="form-section-label">03 · Schedule</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="start_time">Start Date &amp; Time</label>
+                        <input type="datetime-local" id="start_time" name="start_time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_time">End Date &amp; Time</label>
+                        <input type="datetime-local" id="end_time" name="end_time" required>
+                    </div>
+                </div>
+            </div>
 
-<!-- =========================
-     Select Constituencies
-========================== -->
-<div class="form-group">
-    <label>Select Constituencies</label>
-
-    <div class="checkbox-group">
-        {% for c in constituencies %}
-            <label class="checkbox-item">
+            <!-- Section 4: Constituencies -->
+            <div class="form-section">
+                <div class="form-section-label">04 · Constituencies</div>
                 <input
-                    type="checkbox"
-                    name="constituencies"
-                    value="{{ c.id }}"
+                    type="text"
+                    class="constituency-search"
+                    id="constSearch"
+                    placeholder="Search constituencies..."
+                    autocomplete="off"
                 >
-                {{ c.constituency_name }}
-            </label>
-        {% endfor %}
+                <div class="constituency-grid" id="constGrid">
+                    {% for c in constituencies %}
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="constituencies" value="{{ c.id }}">
+                        {{ c.constituency_name }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="constituency-meta">
+                    <span>Select all that apply</span>
+                    <span><span class="count" id="selectedCount">0</span> selected</span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions-bar">
+                <button type="submit" class="btn-primary">
+                    Create Election →
+                </button>
+                <a href="{{ url_for('election_commission.dashboard') }}" class="btn-ghost">
+                    Cancel
+                </a>
+            </div>
+
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="form-sidebar">
+
+            <!-- Status flow -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-head">
+                    <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M12 2l2 3h3l-1.5 3 1.5 3h-3l-2 3-2-3H7l1.5-3L7 5h3z"/></svg>
+                    Election Lifecycle
+                </div>
+                <div class="sidebar-card-body">
+                    <div class="status-flow">
+                        <div class="status-flow-item">
+                            <div class="flow-num active">1</div>
+                            <div class="flow-text">
+                                <span class="flow-label">Draft</span>
+                                <span class="flow-desc">Created by EC Officer, awaiting CEC approval</span>
+                            </div>
+                        </div>
+                        <div class="status-flow-item">
+                            <div class="flow-num">2</div>
+                            <div class="flow-text">
+                                <span class="flow-label">Approved</span>
+                                <span class="flow-desc">CEC approves, candidate nominations open</span>
+                            </div>
+                        </div>
+                        <div class="status-flow-item">
+                            <div class="flow-num">3</div>
+                            <div class="flow-text">
+                                <span class="flow-label">Active</span>
+                                <span class="flow-desc">Voting window live, blockchain recording</span>
+                            </div>
+                        </div>
+                        <div class="status-flow-item">
+                            <div class="flow-num">4</div>
+                            <div class="flow-text">
+                                <span class="flow-label">Completed</span>
+                                <span class="flow-desc">Results published, audit trail sealed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-head">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                    Important Notes
+                </div>
+                <div class="sidebar-card-body">
+                    <div class="info-note">
+                        <div class="info-note-item">
+                            <div class="note-icon">!</div>
+                            <p>Election will be saved as <strong>Draft</strong> and must be approved by the Chief Election Commissioner before going live.</p>
+                        </div>
+                        <div class="info-note-item">
+                            <div class="note-icon">⛓</div>
+                            <p>Once approved, all votes are <strong>recorded on-chain</strong> and cannot be modified or deleted.</p>
+                        </div>
+                        <div class="info-note-item">
+                            <div class="note-icon">✓</div>
+                            <p>Constituency assignments are <strong>final after approval</strong>. Choose carefully before submitting.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
-
-    <small>
-        Select all constituencies covered by this election
-    </small>
-</div>
-
-
-<div class="form-actions">
-    <button type="submit" class="btn-primary">
-        Create Election
-    </button>
-</div>
-
-
     </form>
 
-    <!-- =========================
-         Info Note
-    ========================== -->
-    <div class="info-note">
-        <p>
-            <strong>Note:</strong>
-            The election will remain in <em>Draft</em> status
-            until approved by the Chief Election Commissioner (CEC).
-        </p>
-    </div>
-
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Constituency search filter
+    const searchInput = document.getElementById('constSearch');
+    const constGrid   = document.getElementById('constGrid');
+    const items       = constGrid ? Array.from(constGrid.querySelectorAll('.checkbox-item')) : [];
+    const countEl     = document.getElementById('selectedCount');
+
+    function updateCount() {
+        const checked = constGrid.querySelectorAll('input[type="checkbox"]:checked').length;
+        if (countEl) countEl.textContent = checked;
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase().trim();
+            items.forEach(item => {
+                const match = item.textContent.toLowerCase().includes(q);
+                item.style.display = match ? '' : 'none';
+            });
+        });
+    }
+
+    if (constGrid) {
+        constGrid.addEventListener('change', updateCount);
+    }
+
+    // Animate form sections on load
+    document.querySelectorAll('.form-section').forEach((el, i) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(12px)';
+        el.style.transition = `opacity 0.4s ease ${i * 0.07}s, transform 0.4s ease ${i * 0.07}s`;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'none';
+        }));
+    });
+</script>
 {% endblock %}

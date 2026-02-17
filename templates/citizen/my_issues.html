@@ -1,108 +1,389 @@
 {% extends "base.html" %}
 {% set title = "My Issues" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   MY ISSUES PAGE
+═══════════════════════════════════════════════════════════ */
+
+.my-issues-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* ── PAGE HEADER ──────────────────────────────────────────── */
+.page-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.page-header-left {}
+.page-header-tag {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin-bottom: 0.5rem;
+}
+.page-header-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 0.95;
+    color: var(--text);
+}
+.page-title em { font-style: normal; color: var(--indigo); }
+
+/* ── STATS BAR ────────────────────────────────────────────── */
+.my-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border);
+    background: var(--border);
+    gap: 1px;
+    margin-bottom: 1.5rem;
+}
+.my-stat {
+    background: var(--ink);
+    padding: 1.25rem 1.5rem;
+    display: flex; flex-direction: column; gap: 0.2rem;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.my-stat::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: var(--indigo);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s;
+}
+.my-stat:hover { background: #fafafe; }
+.my-stat:hover::after { transform: scaleX(1); }
+
+.my-stat-val {
+    font-family: var(--font-disp);
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--indigo);
+}
+.my-stat-val.teal   { color: var(--teal); }
+.my-stat-val.warm   { color: var(--warm); }
+.my-stat-val.purple { color: #9333ea; }
+
+.my-stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* ── ISSUE LIST ───────────────────────────────────────────── */
+.issue-list {
+    display: flex; flex-direction: column;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+}
+
+/* ── ISSUE CARD ───────────────────────────────────────────── */
+.issue-card {
+    display: flex;
+    background: var(--ink);
+    position: relative;
+    transition: background 0.2s;
+}
+.issue-card::after {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--indigo);
+    transform: scaleY(0); transform-origin: top;
+    transition: transform 0.3s ease;
+}
+.issue-card:hover { background: #fafafe; }
+.issue-card:hover::after { transform: scaleY(1); }
+
+/* Resolution attention banner */
+.issue-card.needs-confirm {
+    border-left: 2px solid var(--teal);
+}
+.issue-card.needs-confirm::after { background: var(--teal); transform: scaleY(1); }
+
+/* Vote column */
+.vote-column {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0.35rem;
+    padding: 1.5rem 1rem 1.5rem 1.5rem;
+    flex-shrink: 0; width: 64px;
+    border-right: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.vote-btn {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    background: none; border: 1px solid var(--border);
+    cursor: pointer; color: var(--muted); padding: 0;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.vote-btn:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-dim); }
+.vote-btn.up.active   { border-color: var(--indigo); color: #fff; background: var(--indigo); }
+.vote-btn.down.active { border-color: #dc2626;       color: #fff; background: #dc2626; }
+.vote-score {
+    font-family: var(--font-disp);
+    font-size: 1.2rem; line-height: 1; color: var(--text); text-align: center;
+}
+.vote-score.positive { color: var(--indigo); }
+.vote-score.negative { color: #dc2626; }
+
+/* Content */
+.issue-content {
+    flex: 1; padding: 1.5rem 1.75rem 1.5rem 1.25rem;
+    min-width: 0;
+}
+
+.issue-meta-top {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+.issue-username {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--indigo);
+}
+.meta-sep { color: var(--border); font-size: 0.7rem; }
+.issue-time {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--muted); letter-spacing: 0.05em;
+}
+.status-pill {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.18rem 0.55rem; border-radius: 2px; white-space: nowrap;
+}
+.status-pill.open        { color: var(--indigo); background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2); }
+.status-pill.pending     { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.status-pill.resolved    { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.status-pill.closed      { color: var(--muted);  background: var(--ink-3);      border: 1px solid var(--border); }
+.status-pill.in_progress { color: #9333ea; background: rgba(147,51,234,0.08); border: 1px solid rgba(147,51,234,0.2); }
+
+.issue-title-link {
+    display: block;
+    font-size: 1rem; font-weight: 600;
+    color: var(--text); text-decoration: none; line-height: 1.4;
+    margin-bottom: 0.5rem; transition: color 0.2s;
+}
+.issue-title-link:hover { color: var(--indigo); }
+
+.issue-image-preview {
+    margin-bottom: 0.65rem;
+    overflow: hidden; max-height: 160px;
+    border: 1px solid var(--border);
+}
+.issue-image-preview img {
+    width: 100%; display: block; object-fit: cover; max-height: 160px;
+    filter: brightness(0.96); transition: filter 0.2s, transform 0.3s;
+}
+.issue-card:hover .issue-image-preview img { filter: brightness(1); transform: scale(1.01); }
+
+.issue-preview {
+    font-size: 0.84rem; color: var(--muted); line-height: 1.7;
+    margin-bottom: 0.9rem;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Footer */
+.issue-footer {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.issue-footer-item {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    background: none; border: none; cursor: pointer; padding: 0;
+    transition: color 0.2s;
+}
+.issue-footer-item:hover { color: var(--indigo); }
+
+/* "Awaiting confirmation" nudge */
+.confirm-nudge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--teal);
+    background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.25);
+    padding: 0.2rem 0.65rem;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.confirm-nudge::before {
+    content: '';
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal);
+    animation: blink 1.4s ease-in-out infinite;
+}
+.confirm-nudge:hover { background: rgba(13,148,136,0.15); }
+
+/* ── EMPTY STATE ──────────────────────────────────────────── */
+.empty-state {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    padding: 5rem 2rem;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+}
+.empty-state-num {
+    font-family: var(--font-disp);
+    font-size: 5rem; line-height: 1;
+    color: rgba(79,70,229,0.08);
+}
+.empty-state p {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .my-issues-page { padding: 2rem 1.5rem 4rem; }
+    .my-stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .vote-column { padding: 1rem 0.75rem; width: 52px; }
+    .issue-content { padding: 1rem 1rem 1rem 0.75rem; }
+}
+@media (max-width: 480px) {
+    .my-issues-page { padding: 1.5rem 1rem 3rem; }
+    .my-stats-bar { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
 <div class="my-issues-page">
 
+    <!-- ── Page Header ─────────────────────────────────────── -->
     <div class="page-header">
-        <h2>🧑‍⚖️ My Raised Issues</h2>
+        <div class="page-header-left">
+            <div class="page-header-tag">Your Activity</div>
+            <h1 class="page-title">My <em>Issues</em></h1>
+        </div>
         <a href="{{ url_for('citizen.new_issue') }}" class="btn-primary">
-            Raise New Issue
+            + Raise New Issue
         </a>
     </div>
 
     {% if issues %}
-        {% for issue in issues %}
-            <div class="issue-card">
 
-    <!-- Voting Column -->
-    <div class="vote-column">
-        <button
-            class="vote-btn up {% if issue.user_vote == 'up' %}active{% endif %}"
-            onclick="voteIssue('{{ issue.id }}', 'up')"
-        >
-            ▲
-        </button>
-
-        <div class="vote-score">
-            {{ issue.score }}
-        </div>
-
-        <button
-            class="vote-btn down {% if issue.user_vote == 'down' %}active{% endif %}"
-            onclick="voteIssue('{{ issue.id }}', 'down')"
-        >
-            ▼
-        </button>
-    </div>
-
-    <div class="issue-content">
-
-        <!-- Top Meta -->
-        <div class="issue-meta-top">
-            <span class="username">
-                u/{{ issue.username }}
-            </span>
-
-            •
-
-            <span class="status status-{{ issue.status|lower }}">
-                {{ issue.status }}
-            </span>
-
-            •
-
-            <span class="time">
-                {{ issue.time_ago }}
-            </span>
-        </div>
-
-        <!-- Title -->
-        <a
-            href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}"
-            class="issue-title"
-        >
-            {{ issue.title }}
-        </a>
-
-        <!-- Image -->
-        {% if issue.first_image %}
-            <div class="issue-image-preview">
-                <img src="{{ issue.first_image }}">
+        <!-- ── Stats bar ───────────────────────────────────── -->
+        <div class="my-stats-bar">
+            <div class="my-stat">
+                <span class="my-stat-val">{{ issues|length }}</span>
+                <span class="my-stat-label">Total Raised</span>
             </div>
-        {% endif %}
-
-        <!-- Description -->
-        <p class="issue-preview">
-            {{ issue.description[:180] }}
-            {% if issue.description|length > 180 %}...{% endif %}
-        </p>
-
-        <!-- Footer -->
-        <div class="issue-footer">
-            💬 {{ issue.comment_count }} comments
-
-            {% if issue.status == "Resolved" %}
-                <span class="resolved-indicator">
-                    • Awaiting your confirmation
-                </span>
-            {% endif %}
+            <div class="my-stat">
+                <span class="my-stat-val teal">{{ issues|selectattr('status', 'equalto', 'Resolved')|list|length }}</span>
+                <span class="my-stat-label">Resolved</span>
+            </div>
+            <div class="my-stat">
+                <span class="my-stat-val purple">{{ issues|selectattr('status', 'equalto', 'In Progress')|list|length }}</span>
+                <span class="my-stat-label">In Progress</span>
+            </div>
+            <div class="my-stat">
+                <span class="my-stat-val warm">{{ issues|selectattr('status', 'equalto', 'Open')|list|length }}</span>
+                <span class="my-stat-label">Open</span>
+            </div>
         </div>
 
-    </div>
-</div>
+        <!-- ── Issue list ──────────────────────────────────── -->
+        <div class="issue-list">
+            {% for issue in issues %}
+                <div class="issue-card {% if issue.status == 'Resolved' %}needs-confirm{% endif %}" reveal>
 
-        {% endfor %}
+                    <!-- Vote column -->
+                    <div class="vote-column">
+                        <button
+                            class="vote-btn up {% if issue.user_vote == 'up' %}active{% endif %}"
+                            onclick="voteIssue('{{ issue.id }}', 'up')"
+                            aria-label="Upvote"
+                        >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
+                        </button>
+                        <span class="vote-score {% if issue.score > 0 %}positive{% elif issue.score < 0 %}negative{% endif %}">
+                            {{ issue.score }}
+                        </span>
+                        <button
+                            class="vote-btn down {% if issue.user_vote == 'down' %}active{% endif %}"
+                            onclick="voteIssue('{{ issue.id }}', 'down')"
+                            aria-label="Downvote"
+                        >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="issue-content">
+                        <div class="issue-meta-top">
+                            <span class="issue-username">u/{{ issue.username }}</span>
+                            <span class="meta-sep">·</span>
+                            <span class="status-pill {{ issue.status|lower|replace(' ', '_') }}">{{ issue.status }}</span>
+                            <span class="meta-sep">·</span>
+                            <span class="issue-time">{{ issue.time_ago }}</span>
+                        </div>
+
+                        <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="issue-title-link">
+                            {{ issue.title }}
+                        </a>
+
+                        {% if issue.first_image %}
+                            <div class="issue-image-preview">
+                                <img src="{{ issue.first_image }}" alt="{{ issue.title }}" loading="lazy">
+                            </div>
+                        {% endif %}
+
+                        <p class="issue-preview">
+                            {{ issue.description[:180] }}{% if issue.description|length > 180 %}…{% endif %}
+                        </p>
+
+                        <div class="issue-footer">
+                            <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="issue-footer-item">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                {{ issue.comment_count }} Comments
+                            </a>
+
+                            {% if issue.status == "Resolved" %}
+                                <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="confirm-nudge">
+                                    Awaiting your confirmation
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+
     {% else %}
+        <!-- ── Empty state ─────────────────────────────────── -->
         <div class="empty-state">
-            <p>You haven’t raised any issues yet.</p>
-            <a href="{{ url_for('citizen.new_issue') }}" class="btn-secondary">
-                Raise Your First Issue
+            <div class="empty-state-num">0</div>
+            <p>You haven't raised any issues yet.</p>
+            <a href="{{ url_for('citizen.new_issue') }}" class="btn-primary">
+                Raise Your First Issue →
             </a>
         </div>
     {% endif %}
 
 </div>
-<script src="{{ url_for('static', filename='js/issue.js') }}"></script>
 
+<script src="{{ url_for('static', filename='js/issue.js') }}"></script>
 {% endblock %}

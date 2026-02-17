@@ -39,7 +39,7 @@
                         <tr>
                             <td>{{ election.election_name }}</td>
                             <td>{{ election.election_type }}</td>
-                            <td>{{ election.state_id }}</td>
+                            <td>{{ election.state_name }}</td>
                             <td>{{ election.start_time }}</td>
                             <td>{{ election.end_time }}</td>
                             <td>
@@ -48,7 +48,7 @@
                                 </span>
                             </td>
                             <td>
-                                {% if election.status != "Approved" %}
+                                {% if election.status != "Approved"  and election.status != "COMPLETED" %}
                                     <a
                                         href="{{ url_for('election_commission.approve_election', election_id=election.id) }}"
                                         class="btn-small"

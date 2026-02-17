@@ -1,113 +1,613 @@
 {% extends "base.html" %}
 {% set title = "Raise an Issue" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RAISE ISSUE PAGE
+═══════════════════════════════════════════════════════════ */
+
+.raise-issue-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3.5rem 4rem 5rem;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+/* ── LEFT: FORM COLUMN ────────────────────────────────────── */
+.form-column {}
+
+/* Page header */
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.page-header-tag {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin-bottom: 0.75rem;
+}
+.page-header-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2.2rem, 3.5vw, 3.5rem);
+    line-height: 0.95;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+}
+.page-title em { font-style: normal; color: var(--indigo); }
+
+.page-sub {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 500px;
+}
+
+/* Form card */
+.issue-form-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+}
+
+/* Form groups */
+.issue-form { display: flex; flex-direction: column; gap: 1.75rem; }
+
+.form-group { display: flex; flex-direction: column; gap: 0.45rem; }
+
+.form-group label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.label-required {
+    color: #dc2626;
+    font-size: 0.7rem;
+}
+
+/* Text inputs & textarea */
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group select,
+.form-group textarea {
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 0.85rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    border-radius: 0;
+    width: 100%;
+    -webkit-appearance: none;
+    resize: none;
+    line-height: 1.6;
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: rgba(107,114,128,0.45); font-size: 0.85rem; }
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--indigo);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+
+/* Select styling */
+.select-wrap { position: relative; }
+.select-wrap::after {
+    content: '';
+    position: absolute; right: 1rem; top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--muted);
+    pointer-events: none;
+    transition: border-top-color 0.2s;
+}
+.select-wrap:focus-within::after { border-top-color: var(--indigo); }
+.select-wrap select { cursor: pointer; padding-right: 2.5rem; }
+
+/* Char counter */
+.input-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+}
+.hint {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    line-height: 1.5;
+}
+.char-count {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.char-count.warn { color: var(--warm); }
+.char-count.over { color: #dc2626; }
+
+/* File upload */
+.file-upload-wrap {
+    position: relative;
+    border: 1px dashed rgba(79,70,229,0.3);
+    background: var(--indigo-dim);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.file-upload-wrap:hover {
+    border-color: var(--indigo);
+    background: var(--indigo-mid);
+}
+.file-upload-wrap input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.file-upload-icon {
+    display: flex; justify-content: center; margin-bottom: 0.75rem;
+    color: var(--indigo);
+    opacity: 0.6;
+}
+.file-upload-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin-bottom: 0.3rem;
+    display: block;
+}
+.file-upload-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+.file-preview-list {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;
+}
+.file-preview-item {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--indigo);
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    padding: 0.2rem 0.6rem;
+    display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* Form divider */
+.form-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.25rem 0;
+}
+
+/* Form actions */
+.form-actions {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+.form-actions .btn-primary {
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+}
+.btn-cancel {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 0.85rem 1rem;
+}
+.btn-cancel:hover { color: var(--text); }
+
+/* ── RIGHT: SIDEBAR ───────────────────────────────────────── */
+.form-sidebar {
+    position: sticky;
+    top: calc(var(--nav-h) + 2rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Sidebar cards */
+.sidebar-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.sidebar-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.sidebar-card-title {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.sidebar-card-title::before { content: ''; width: 12px; height: 1px; background: var(--indigo); }
+
+.sidebar-card-body { padding: 1.25rem; }
+
+/* Guidelines list */
+.guidelines-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 0.75rem;
+}
+.guidelines-list li {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.55;
+}
+.guideline-num {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--indigo);
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Privacy card */
+.privacy-card {
+    background: var(--indigo-dark);
+    border-color: rgba(79,70,229,0.3);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.privacy-card::before {
+    content: '';
+    position: absolute; bottom: -20px; right: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(245,158,11,0.08);
+}
+.privacy-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    display: grid; place-items: center;
+    margin-bottom: 0.85rem;
+}
+.privacy-icon svg { color: var(--warm-light); }
+.privacy-title {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--warm-light);
+    margin-bottom: 0.5rem;
+}
+.privacy-text {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.65;
+}
+
+/* Category icons preview */
+.category-pills {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+}
+.category-pill {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--ink-2);
+    cursor: default;
+    transition: border-color 0.2s, color 0.2s;
+}
+.category-pill:hover { border-color: var(--indigo); color: var(--indigo); }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .raise-issue-page {
+        grid-template-columns: 1fr;
+        padding: 2rem 2rem 4rem;
+    }
+    .form-sidebar { position: static; }
+}
+@media (max-width: 640px) {
+    .raise-issue-page { padding: 1.5rem 1rem 3rem; }
+    .issue-form-card { padding: 1.5rem; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
 <div class="raise-issue-page">
 
-    <!-- =========================
-         Page Header
-    ========================== -->
-    <div class="page-header">
-        <h2>🧑‍⚖️ Raise a Civic Issue</h2>
-        <p class="page-subtext">
-            Report an issue affecting your constituency.
-            Your identity will remain anonymous.
-        </p>
+    <!-- ── LEFT: FORM COLUMN ──────────────────────────────── -->
+    <div class="form-column">
+
+        <div class="page-header">
+            <div class="page-header-tag">Citizen Action</div>
+            <h1 class="page-title">Raise a<br><em>Civic Issue</em></h1>
+            <p class="page-sub">
+                Report a problem affecting your constituency.
+                Your identity remains completely anonymous to the public.
+            </p>
+        </div>
+
+        <div class="issue-form-card">
+            <form method="POST" enctype="multipart/form-data" class="issue-form" id="issueForm">
+
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title">
+                        Issue Title <span class="label-required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="e.g. Potholes on Main Road near Bus Stand"
+                        maxlength="120"
+                        required
+                    >
+                    <div class="input-footer">
+                        <span class="hint">Be short and specific — this appears as the headline.</span>
+                        <span class="char-count" id="titleCount">0 / 120</span>
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div class="form-group">
+                    <label for="category">
+                        Category <span class="label-required">*</span>
+                    </label>
+                    <div class="select-wrap">
+                        <select id="category" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="Roads">Roads</option>
+                            <option value="Water">Water</option>
+                            <option value="Electricity">Electricity</option>
+                            <option value="Health">Health</option>
+                            <option value="Education">Education</option>
+                            <option value="Sanitation">Sanitation</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label for="description">
+                        Detailed Description <span class="label-required">*</span>
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="7"
+                        placeholder="Describe the problem, exact location, how long it has persisted, and how it affects residents..."
+                        required
+                    ></textarea>
+                    <div class="input-footer">
+                        <span class="hint">Include location, frequency, and impact on citizens.</span>
+                        <span class="char-count" id="descCount">0 chars</span>
+                    </div>
+                </div>
+
+                <!-- File Upload -->
+                <div class="form-group">
+                    <label>Upload Images <span style="color:var(--muted); font-weight:400;">(Optional)</span></label>
+                    <div class="file-upload-wrap" id="dropZone">
+                        <input
+                            type="file"
+                            name="images"
+                            accept="image/*"
+                            multiple
+                            id="imageInput"
+                        >
+                        <div class="file-upload-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <span class="file-upload-label">Click to upload or drag & drop</span>
+                        <span class="file-upload-sub">PNG, JPG, WEBP up to 10MB each</span>
+                        <div class="file-preview-list" id="filePreview"></div>
+                    </div>
+                </div>
+
+                <div class="form-divider"></div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        Submit Issue →
+                    </button>
+                    <a href="{{ url_for('citizen.dashboard') }}" class="btn-cancel">
+                        ← Cancel
+                    </a>
+                </div>
+
+            </form>
+        </div>
     </div>
 
-    <!-- =========================
-         Issue Form
-    ========================== -->
-    <form method="POST" enctype="multipart/form-data" class="issue-form">
-
-        <!-- Issue Title -->
-        <div class="form-group">
-            <label for="title">Issue Title</label>
-            <input
-                type="text"
-                id="title"
-                name="title"
-                placeholder="Example: Potholes on Main Road near Bus Stand"
-                maxlength="120"
-                required
-            >
-            <small class="hint">
-                Be short and specific. This helps representatives understand the issue quickly.
-            </small>
-        </div>
-
-        <!-- Category -->
-        <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="category" required>
-                <option value="">Select category</option>
-                <option value="Roads">🚧 Roads</option>
-                <option value="Water">🚰 Water</option>
-                <option value="Electricity">💡 Electricity</option>
-                <option value="Health">🏥 Health</option>
-                <option value="Education">🎓 Education</option>
-                <option value="Sanitation">🧹 Sanitation</option>
-                <option value="Other">📌 Other</option>
-            </select>
-        </div>
-
-        <!-- Description -->
-        <div class="form-group">
-            <label for="description">Detailed Description</label>
-            <textarea
-                id="description"
-                name="description"
-                rows="6"
-                placeholder="Describe the problem, location, and how long it has existed..."
-                required
-            ></textarea>
-            <small class="hint">
-                Include location, frequency, and impact on citizens.
-            </small>
-        </div>
-
-        <div class="form-group">
-    <label>Upload Images (Optional)</label>
-    <input
-        type="file"
-        name="images"
-        accept="image/*"
-        multiple
-    >
-</div>
-
-
+    <!-- ── RIGHT: SIDEBAR ────────────────────────────────── -->
+    <div class="form-sidebar">
 
         <!-- Guidelines -->
-        <div class="guidelines-box">
-            <h4>📋 Guidelines</h4>
-            <ul>
-                <li>Raise issues related to your constituency only</li>
-                <li>Avoid personal attacks or political slogans</li>
-                <li>One issue per submission</li>
-                <li>False or abusive reports may be moderated</li>
-            </ul>
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <span class="sidebar-card-title">Submission Guidelines</span>
+            </div>
+            <div class="sidebar-card-body">
+                <ul class="guidelines-list">
+                    <li>
+                        <span class="guideline-num">01</span>
+                        Raise issues related to your own constituency only.
+                    </li>
+                    <li>
+                        <span class="guideline-num">02</span>
+                        Avoid personal attacks or political slogans.
+                    </li>
+                    <li>
+                        <span class="guideline-num">03</span>
+                        One distinct issue per submission for clarity.
+                    </li>
+                    <li>
+                        <span class="guideline-num">04</span>
+                        False or abusive reports may be moderated or removed.
+                    </li>
+                </ul>
+            </div>
         </div>
 
-        <!-- Submit -->
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">
-                Submit Issue
-            </button>
-            <a href="{{ url_for('citizen.dashboard') }}" class="btn-secondary">
-                Cancel
-            </a>
+        <!-- Categories -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <span class="sidebar-card-title">Issue Categories</span>
+            </div>
+            <div class="sidebar-card-body">
+                <div class="category-pills">
+                    <span class="category-pill">Roads</span>
+                    <span class="category-pill">Water</span>
+                    <span class="category-pill">Electricity</span>
+                    <span class="category-pill">Health</span>
+                    <span class="category-pill">Education</span>
+                    <span class="category-pill">Sanitation</span>
+                    <span class="category-pill">Other</span>
+                </div>
+            </div>
         </div>
 
-    </form>
+        <!-- Privacy -->
+        <div class="sidebar-card privacy-card">
+            <div class="privacy-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </div>
+            <div class="privacy-title">Your Identity is Protected</div>
+            <p class="privacy-text">
+                Your real identity is never shown publicly.
+                Only authorized election officials can access
+                voter records when legally required.
+            </p>
+        </div>
 
-    <!-- =========================
-         Privacy Note
-    ========================== -->
-    <div class="privacy-note">
-        🔐 Your real identity is never shown publicly.
-        Only authorized election officials can access voter records.
     </div>
 
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Title character counter
+    const titleInput = document.getElementById('title');
+    const titleCount = document.getElementById('titleCount');
+    titleInput.addEventListener('input', () => {
+        const len = titleInput.value.length;
+        const max = 120;
+        titleCount.textContent = `${len} / ${max}`;
+        titleCount.className = 'char-count' + (len > max * 0.9 ? (len >= max ? ' over' : ' warn') : '');
+    });
+
+    // Description character counter
+    const descInput = document.getElementById('description');
+    const descCount = document.getElementById('descCount');
+    descInput.addEventListener('input', () => {
+        descCount.textContent = `${descInput.value.length} chars`;
+    });
+
+    // File upload preview
+    const imageInput   = document.getElementById('imageInput');
+    const filePreview  = document.getElementById('filePreview');
+    const dropZone     = document.getElementById('dropZone');
+
+    function renderFiles(files) {
+        filePreview.innerHTML = '';
+        Array.from(files).forEach(f => {
+            const item = document.createElement('span');
+            item.className = 'file-preview-item';
+            item.innerHTML = `
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                    <polyline points="13 2 13 9 20 9"/>
+                </svg>
+                ${f.name}
+            `;
+            filePreview.appendChild(item);
+        });
+    }
+
+    imageInput.addEventListener('change', () => renderFiles(imageInput.files));
+
+    // Drag & drop
+    dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--indigo)';
+        dropZone.style.background  = 'var(--indigo-mid)';
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '';
+        dropZone.style.background  = '';
+    });
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.style.borderColor = '';
+        dropZone.style.background  = '';
+        imageInput.files = e.dataTransfer.files;
+        renderFiles(e.dataTransfer.files);
+    });
+
+    // Category pill click → sets select value
+    document.querySelectorAll('.category-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const select = document.getElementById('category');
+            select.value = pill.textContent.trim();
+            document.querySelectorAll('.category-pill').forEach(p => {
+                p.style.borderColor = '';
+                p.style.color = '';
+            });
+            pill.style.borderColor = 'var(--indigo)';
+            pill.style.color = 'var(--indigo)';
+        });
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+{% set title = "Verify OTP | E-Democracy System" %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════
+   REUSE LOGIN PAGE LAYOUT
+═══════════════════════════════════════════════════ */
+.login-page {
+    min-height: calc(100vh - var(--nav-h));
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+.login-left {
+    position: relative;
+    background: var(--indigo-dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4rem;
+    overflow: hidden;
+}
+.login-left::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 90% 90% at 30% 50%, black 20%, transparent 80%);
+}
+.login-left::after {
+    content: '';
+    position: absolute;
+    bottom: -10%; right: -10%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 65%);
+    pointer-events: none;
+}
+.login-left-top { position: relative; z-index: 2; }
+.login-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 2.5rem;
+}
+.login-eyebrow .dot {
+    width: 6px; height: 6px;
+    background: var(--teal); border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+}
+.login-headline {
+    font-family: var(--font-disp);
+    font-size: clamp(2.8rem, 4vw, 4.5rem);
+    line-height: 0.92;
+    color: #fff;
+    margin-bottom: 1.5rem;
+}
+.login-headline em { font-style: normal; color: var(--warm-light); }
+.login-sub {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.75;
+    max-width: 340px;
+}
+.login-right {
+    display: flex; align-items: center; justify-content: center;
+    padding: 4rem;
+    background: var(--ink);
+    position: relative;
+}
+.login-right::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.5;
+}
+.login-card { position: relative; z-index: 2; width: 100%; max-width: 400px; }
+.login-card-header { margin-bottom: 2.5rem; }
+.login-card-tag {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+.login-card-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+.login-card-title { font-family: var(--font-disp); font-size: 3rem; line-height: 0.95; color: var(--text); margin-bottom: 0.5rem; }
+.login-card-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-group label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.form-submit { margin-top: 0.25rem; }
+.form-submit .btn-primary {
+    width: 100%; justify-content: center;
+    padding: 1rem 2rem; font-size: 0.8rem;
+    clip-path: none; border-radius: 0;
+}
+
+/* ── OTP SPECIFIC ───────────────────────────── */
+
+/* Email destination display */
+.otp-destination {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.18);
+    margin-bottom: 0.25rem;
+}
+.otp-destination-icon {
+    width: 28px; height: 28px;
+    flex-shrink: 0;
+    background: var(--indigo);
+    display: grid; place-items: center;
+}
+.otp-destination-icon svg {
+    width: 13px; height: 13px;
+    stroke: #fff; fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+.otp-destination-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+.otp-destination-label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--indigo);
+}
+.otp-destination-email {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text);
+    letter-spacing: 0.04em;
+}
+
+/* 6-box OTP input */
+.otp-boxes {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: space-between;
+}
+.otp-box {
+    flex: 1;
+    height: 64px;
+    font-family: var(--font-disp);
+    font-size: 2rem;
+    text-align: center;
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.1s;
+    caret-color: var(--indigo);
+    border-radius: 0;
+    -webkit-appearance: none;
+    /* hide number spinners */
+    -moz-appearance: textfield;
+}
+.otp-box::-webkit-outer-spin-button,
+.otp-box::-webkit-inner-spin-button { -webkit-appearance: none; }
+.otp-box:focus {
+    border-color: var(--indigo);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+    transform: translateY(-2px);
+    z-index: 1;
+}
+.otp-box.filled {
+    border-color: var(--indigo);
+    background: var(--indigo-dim);
+    color: var(--indigo);
+}
+.otp-box.error {
+    border-color: #dc2626;
+    background: rgba(220,38,38,0.05);
+    animation: shake 0.3s ease;
+}
+
+/* Hidden real input that gets submitted */
+.otp-hidden { display: none; }
+
+/* Timer + resend */
+.otp-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: -0.25rem;
+}
+.otp-timer {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+.otp-timer-count {
+    font-weight: 700;
+    color: var(--warm);
+    transition: color 0.3s;
+    min-width: 2.8ch;
+}
+.otp-timer-count.urgent { color: #dc2626; animation: blink 0.8s ease-in-out infinite; }
+
+.resend-btn {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: not-allowed;
+    opacity: 0.4;
+    transition: color 0.2s, opacity 0.2s;
+    padding: 0;
+    text-decoration: none;
+}
+.resend-btn.ready {
+    color: var(--indigo);
+    opacity: 1;
+    cursor: pointer;
+}
+.resend-btn.ready:hover { text-decoration: underline; }
+
+/* Security note */
+.security-note {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    background: var(--ink-2);
+    display: flex; align-items: flex-start; gap: 0.75rem;
+}
+.security-note-icon {
+    width: 20px; height: 20px; flex-shrink: 0;
+    background: var(--warm-dim);
+    border: 1px solid rgba(245,158,11,0.25);
+    display: grid; place-items: center;
+    font-size: 0.6rem; margin-top: 1px;
+}
+.security-note p {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    line-height: 1.65;
+}
+.security-note p strong { color: var(--text); }
+
+/* Back link */
+.back-to-login {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    margin-top: 1.5rem;
+    transition: color 0.2s;
+}
+.back-to-login svg { transition: transform 0.2s; }
+.back-to-login:hover { color: var(--indigo); }
+.back-to-login:hover svg { transform: translateX(-3px); }
+
+/* Steps on left panel */
+.recovery-steps {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    gap: 0; margin-top: 3rem;
+}
+.recovery-step {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.recovery-step:last-child { border-bottom: none; }
+.recovery-step-num {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.15);
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: rgba(255,255,255,0.4); font-weight: 700;
+}
+.recovery-step.done .recovery-step-num {
+    background: rgba(13,148,136,0.3);
+    border-color: var(--teal);
+    color: var(--teal);
+}
+.recovery-step.current .recovery-step-num {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+}
+.recovery-step-label {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+}
+.recovery-step.done .recovery-step-label,
+.recovery-step.current .recovery-step-label { color: rgba(255,255,255,0.85); }
+.recovery-step-desc { font-size: 0.78rem; color: rgba(255,255,255,0.2); line-height: 1.4; }
+.recovery-step.done .recovery-step-desc,
+.recovery-step.current .recovery-step-desc { color: rgba(255,255,255,0.4); }
+
+/* Shake animation */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-4px); }
+    75%       { transform: translateX(4px); }
+}
+
+@media (max-width: 768px) {
+    .login-page { grid-template-columns: 1fr; }
+    .login-left { display: none; }
+    .login-right { padding: 2.5rem 1.5rem; min-height: calc(100vh - var(--nav-h)); }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="login-page">
+
+    <!-- ── LEFT: Branding Panel ─────────────────────── -->
+    <div class="login-left">
+        <div class="login-left-top">
+            <div class="login-eyebrow">
+                <span class="dot"></span>
+                Verification Required
+            </div>
+            <h2 class="login-headline">
+                One-Time<br>
+                <em>Verification</em>
+            </h2>
+            <p class="login-sub">
+                Enter the secure code sent to your email.
+                This ensures only you can reset your account password.
+            </p>
+
+            <div class="recovery-steps">
+                <div class="recovery-step done">
+                    <div class="recovery-step-num">✓</div>
+                    <div>
+                        <div class="recovery-step-label">Email Submitted</div>
+                        <div class="recovery-step-desc">Your registered email was accepted</div>
+                    </div>
+                </div>
+                <div class="recovery-step current">
+                    <div class="recovery-step-num">2</div>
+                    <div>
+                        <div class="recovery-step-label">Verify OTP</div>
+                        <div class="recovery-step-desc">Enter the 6-digit code from your inbox</div>
+                    </div>
+                </div>
+                <div class="recovery-step">
+                    <div class="recovery-step-num">3</div>
+                    <div>
+                        <div class="recovery-step-label">New Password</div>
+                        <div class="recovery-step-desc">Set a new secure password</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── RIGHT: OTP Form ───────────────────────────── -->
+    <div class="login-right">
+        <div class="login-card">
+
+            <div class="login-card-header">
+                <div class="login-card-tag">Security Check</div>
+                <h1 class="login-card-title">Verify<br>OTP</h1>
+                <p class="login-card-desc">Enter the 6-digit code sent to your email address.</p>
+            </div>
+
+            <!-- Email destination indicator -->
+            <div class="otp-destination">
+                <div class="otp-destination-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </div>
+                <div class="otp-destination-text">
+                    <span class="otp-destination-label">Code sent to</span>
+                    <span class="otp-destination-email">{{ email if email else "your registered email" }}</span>
+                </div>
+            </div>
+
+            <form method="POST" class="auth-form" autocomplete="off" id="otpForm">
+
+                <div class="form-group">
+                    <label>Enter 6-digit OTP</label>
+                    <!-- Visual 6-box input -->
+                    <div class="otp-boxes" id="otpBoxes">
+                        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]">
+                        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]">
+                        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]">
+                        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]">
+                        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]">
+                        <input class="otp-box" type="text" inputmode="numeric" maxlength="1" pattern="[0-9]">
+                    </div>
+                    <!-- Hidden input that actually submits the full OTP -->
+                    <input type="hidden" name="otp" id="otpHidden" class="otp-hidden">
+                </div>
+
+                <!-- Timer + Resend -->
+                <div class="otp-footer">
+                    <span class="otp-timer">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Expires in <span class="otp-timer-count" id="timerCount">10:00</span>
+                    </span>
+                    <button type="button" class="resend-btn" id="resendBtn" disabled>
+                        Resend OTP
+                    </button>
+                </div>
+
+                <div class="form-submit">
+                    <button type="submit" class="btn-primary" id="submitBtn" disabled>
+                        Verify Code →
+                    </button>
+                </div>
+
+            </form>
+
+            <div class="security-note">
+                <div class="security-note-icon">!</div>
+                <p>
+                    <strong>Do not share this code.</strong>
+                    The Election Commission will never ask for your OTP.
+                    This code is valid for 10 minutes only.
+                </p>
+            </div>
+
+            <a href="{{ url_for('auth.forgot_password') }}" class="back-to-login">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M10 12L6 8l4-4"/>
+                </svg>
+                Back to Email Entry
+            </a>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+    const boxes     = Array.from(document.querySelectorAll('.otp-box'));
+    const hidden    = document.getElementById('otpHidden');
+    const submitBtn = document.getElementById('submitBtn');
+    const resendBtn = document.getElementById('resendBtn');
+    const timerEl   = document.getElementById('timerCount');
+    const form      = document.getElementById('otpForm');
+
+    // ── OTP box behaviour ──────────────────────────
+    boxes.forEach((box, i) => {
+        box.addEventListener('input', e => {
+            const val = e.target.value.replace(/\D/g, '');
+            box.value = val.slice(-1);             // keep only last digit
+            box.classList.toggle('filled', !!box.value);
+            if (val && i < boxes.length - 1) boxes[i + 1].focus();
+            syncHidden();
+        });
+
+        box.addEventListener('keydown', e => {
+            if (e.key === 'Backspace' && !box.value && i > 0) {
+                boxes[i - 1].value = '';
+                boxes[i - 1].classList.remove('filled');
+                boxes[i - 1].focus();
+                syncHidden();
+            }
+            // Arrow key navigation
+            if (e.key === 'ArrowLeft'  && i > 0)              boxes[i - 1].focus();
+            if (e.key === 'ArrowRight' && i < boxes.length-1) boxes[i + 1].focus();
+        });
+
+        // Handle paste of full OTP
+        box.addEventListener('paste', e => {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData)
+                .getData('text').replace(/\D/g, '').slice(0, 6);
+            pasted.split('').forEach((ch, j) => {
+                if (boxes[j]) {
+                    boxes[j].value = ch;
+                    boxes[j].classList.add('filled');
+                }
+            });
+            const next = Math.min(pasted.length, boxes.length - 1);
+            boxes[next].focus();
+            syncHidden();
+        });
+    });
+
+    function syncHidden() {
+        const code = boxes.map(b => b.value).join('');
+        hidden.value = code;
+        submitBtn.disabled = code.length < 6;
+    }
+
+    // Focus first box on load
+    boxes[0].focus();
+
+    // ── Countdown timer ────────────────────────────
+    let seconds = 10 * 60; // 10 minutes
+
+    function formatTime(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    const ticker = setInterval(() => {
+        seconds--;
+        timerEl.textContent = formatTime(seconds);
+        if (seconds <= 60) timerEl.classList.add('urgent');
+        if (seconds <= 0) {
+            clearInterval(ticker);
+            timerEl.textContent = '00:00';
+            timerEl.classList.add('urgent');
+            resendBtn.disabled = false;
+            resendBtn.classList.add('ready');
+            // Disable submit once expired
+            submitBtn.disabled = true;
+            boxes.forEach(b => { b.disabled = true; b.classList.add('error'); });
+        }
+    }, 1000);
+
+    // ── Form submit: assemble hidden value ─────────
+    form.addEventListener('submit', e => {
+        const code = boxes.map(b => b.value).join('');
+        if (code.length < 6) {
+            e.preventDefault();
+            boxes.forEach(b => { if (!b.value) b.classList.add('error'); });
+            return;
+        }
+        hidden.value = code;
+    });
+})();
+</script>
+{% endblock %}

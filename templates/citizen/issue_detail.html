@@ -1,206 +1,703 @@
 {% extends "base.html" %}
 {% set title = issue.title %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ISSUE DETAIL PAGE
+═══════════════════════════════════════════════════════════ */
+
+.issue-detail-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 2rem;
+    padding: 3rem 4rem 5rem;
+    align-items: start;
+}
+
+/* ── MAIN COLUMN ──────────────────────────────────────────── */
+.issue-main {}
+
+/* Back link */
+.back-link {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 1.75rem;
+    transition: color 0.2s;
+}
+.back-link:hover { color: var(--indigo); }
+.back-link svg { transition: transform 0.2s; }
+.back-link:hover svg { transform: translateX(-3px); }
+
+/* ── ISSUE HEADER CARD ────────────────────────────────────── */
+.issue-header-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+.issue-header-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--indigo), var(--teal));
+}
+
+.issue-header-inner {
+    display: flex;
+    gap: 0;
+}
+
+/* Vote strip */
+.vote-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 2rem 1.25rem;
+    border-right: 1px solid var(--border);
+    background: var(--ink-2);
+    flex-shrink: 0;
+    width: 72px;
+}
+.vote-btn {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    background: none; border: 1px solid var(--border);
+    cursor: pointer; color: var(--muted);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    padding: 0;
+}
+.vote-btn:hover { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-dim); }
+.vote-btn.upvote.active  { border-color: var(--indigo); color: #fff; background: var(--indigo); }
+.vote-btn.downvote.active { border-color: #dc2626;    color: #fff; background: #dc2626; }
+.vote-score {
+    font-family: var(--font-disp);
+    font-size: 1.6rem; line-height: 1;
+    color: var(--text); text-align: center;
+}
+.vote-score.positive { color: var(--indigo); }
+.vote-score.negative { color: #dc2626; }
+
+/* Issue body */
+.issue-body { padding: 2rem 2.25rem; flex: 1; min-width: 0; }
+
+.issue-meta-row {
+    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+.issue-username {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--indigo);
+}
+.meta-sep { color: var(--border); }
+.issue-timestamp {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    color: var(--muted); letter-spacing: 0.06em;
+}
+.status-pill {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 2px; white-space: nowrap;
+}
+.status-pill.open        { color: var(--indigo); background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2); }
+.status-pill.pending     { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.status-pill.resolved    { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.status-pill.closed      { color: var(--muted);  background: var(--ink-3);      border: 1px solid var(--border); }
+.status-pill.in_progress { color: #9333ea; background: rgba(147,51,234,0.08); border: 1px solid rgba(147,51,234,0.2); }
+.category-tag {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); background: var(--ink-2);
+    border: 1px solid var(--border); padding: 0.2rem 0.6rem;
+}
+
+.issue-title {
+    font-family: var(--font-disp);
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+}
+
+/* Image gallery */
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.gallery-img-wrap {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    aspect-ratio: 16/10;
+    cursor: pointer;
+}
+.gallery-img-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    filter: brightness(0.96);
+    transition: filter 0.2s, transform 0.3s;
+}
+.gallery-img-wrap:hover img { filter: brightness(1); transform: scale(1.03); }
+
+/* Description */
+.issue-description {
+    font-size: 0.95rem;
+    color: var(--text);
+    line-height: 1.85;
+    border-left: 2px solid var(--border);
+    padding-left: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Resolution duration banner */
+.resolution-banner {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.25);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.25rem;
+}
+.resolution-banner svg { color: var(--teal); flex-shrink: 0; }
+.resolution-banner span {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    letter-spacing: 0.08em; color: var(--teal);
+}
+
+/* ── SECTION CARDS ────────────────────────────────────────── */
+.section-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+}
+.section-card-header {
+    padding: 1rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.section-card-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.section-card-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+.section-card-body { padding: 1.75rem; }
+
+/* ── TIMELINE ─────────────────────────────────────────────── */
+.timeline { list-style: none; position: relative; }
+.timeline::before {
+    content: '';
+    position: absolute; left: 11px; top: 8px; bottom: 8px;
+    width: 1px; background: var(--border);
+}
+.timeline-item {
+    display: flex; gap: 1.5rem;
+    padding-bottom: 2rem;
+    position: relative;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+
+.timeline-dot {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border: 1px solid var(--border);
+    background: var(--ink);
+    display: grid; place-items: center;
+    position: relative; z-index: 1;
+    margin-top: 1px;
+    transition: border-color 0.2s, background 0.2s;
+}
+.timeline-dot.active {
+    border-color: var(--indigo);
+    background: var(--indigo);
+}
+.timeline-dot.resolved {
+    border-color: var(--teal);
+    background: var(--teal);
+}
+.timeline-dot svg { color: #fff; }
+
+.timeline-content { flex: 1; min-width: 0; }
+.timeline-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 0.4rem; flex-wrap: wrap;
+}
+.timeline-status {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 700; color: var(--text);
+}
+.timeline-date {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--muted); letter-spacing: 0.06em;
+}
+.timeline-note {
+    font-size: 0.88rem; color: var(--muted); line-height: 1.7;
+    margin-bottom: 0.4rem;
+}
+.timeline-extra {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    color: var(--muted); letter-spacing: 0.06em; margin-top: 0.3rem;
+}
+.timeline-extra svg { flex-shrink: 0; }
+
+/* ── FEEDBACK ─────────────────────────────────────────────── */
+.feedback-display { display: flex; flex-direction: column; gap: 0.75rem; }
+.star-row { display: flex; gap: 0.25rem; }
+.star {
+    font-size: 1.1rem;
+    color: var(--border);
+    transition: color 0.1s;
+}
+.star.filled { color: var(--warm); }
+.feedback-review {
+    font-size: 0.9rem; color: var(--text); line-height: 1.75;
+    font-style: italic;
+    border-left: 2px solid var(--warm-dim);
+    padding-left: 1rem;
+}
+
+/* Feedback form */
+.feedback-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.rating-select-wrap {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+}
+.rating-opt { display: none; }
+.rating-label {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    background: var(--ink-2);
+    padding: 0.5rem 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.rating-opt:checked + .rating-label {
+    border-color: var(--warm);
+    color: var(--warm);
+    background: var(--warm-dim);
+}
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-group label {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+.form-group textarea {
+    background: var(--ink-2); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: 0.88rem;
+    padding: 0.85rem 1rem; outline: none; resize: none; width: 100%;
+    border-radius: 0; line-height: 1.65;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.form-group textarea:focus {
+    border-color: var(--indigo); background: #fff;
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+.form-group textarea::placeholder { color: rgba(107,114,128,0.45); }
+
+/* ── COMMENTS ─────────────────────────────────────────────── */
+.comments-list { display: flex; flex-direction: column; gap: 0; }
+
+/* Comment add form */
+.comment-compose {
+    display: flex; flex-direction: column; gap: 0.75rem;
+}
+.comment-compose textarea {
+    background: var(--ink-2); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-body); font-size: 0.88rem;
+    padding: 0.85rem 1rem; outline: none; resize: none; width: 100%;
+    border-radius: 0; line-height: 1.65;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.comment-compose textarea:focus {
+    border-color: var(--indigo); background: #fff;
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+.comment-compose-footer {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 0.75rem;
+}
+.comment-hint {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--muted); letter-spacing: 0.06em; flex: 1;
+}
+
+/* ── SIDEBAR ──────────────────────────────────────────────── */
+.issue-sidebar {
+    position: sticky;
+    top: calc(var(--nav-h) + 2rem);
+    display: flex; flex-direction: column; gap: 1.25rem;
+}
+.sidebar-card {
+    background: var(--ink); border: 1px solid var(--border); overflow: hidden;
+}
+.sidebar-card-header {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.sidebar-card-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.sidebar-card-title::before { content: ''; width: 12px; height: 1px; background: var(--indigo); }
+.sidebar-card-body { padding: 1.25rem; }
+
+.meta-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.meta-item {
+    display: flex; flex-direction: column; gap: 0.2rem;
+}
+.meta-key {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+.meta-val {
+    font-size: 0.88rem; color: var(--text); font-weight: 500;
+    line-height: 1.4;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .issue-detail-page { grid-template-columns: 1fr; padding: 2rem 2rem 4rem; }
+    .issue-sidebar { position: static; }
+}
+@media (max-width: 640px) {
+    .issue-detail-page { padding: 1.5rem 1rem 3rem; }
+    .vote-strip { padding: 1rem; width: 56px; }
+    .issue-body { padding: 1.25rem; }
+    .section-card-body { padding: 1.25rem; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="issue-detail">
+<div class="issue-detail-page">
 
-    <!-- =========================
-         Issue Header
-    ========================== -->
-    <div class="issue-header">
-        <div class="vote-panel">
+    <!-- ══════════════════════════════════════
+         MAIN COLUMN
+    ══════════════════════════════════════ -->
+    <div class="issue-main">
 
-    <!-- UPVOTE -->
-    <button
-        class="vote-btn upvote {% if user_vote == 'up' %}active{% endif %}"
-        onclick="voteIssue('{{ issue.id }}', 'up')"
-        aria-label="Upvote"
-    >
-        {% if user_vote == 'up' %}
-            ▲
-        {% else %}
-            △
-        {% endif %}
-    </button>
+        <a href="{{ url_for('citizen.issues_feed') }}" class="back-link">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Back to Issues
+        </a>
 
-    <!-- SCORE -->
-    <div class="score">{{ issue.score }}</div>
+        <!-- ── Issue Header Card ──────────────── -->
+        <div class="issue-header-card">
+            <div class="issue-header-inner">
 
-    <!-- DOWNVOTE -->
-    <button
-        class="vote-btn downvote {% if user_vote == 'down' %}active{% endif %}"
-        onclick="voteIssue('{{ issue.id }}', 'down')"
-        aria-label="Downvote"
-    >
-        {% if user_vote == 'down' %}
-            ▼
-        {% else %}
-            ▽
-        {% endif %}
-    </button>
+                <!-- Vote strip -->
+                <div class="vote-strip">
+                    <button
+                        class="vote-btn upvote {% if user_vote == 'up' %}active{% endif %}"
+                        onclick="voteIssue('{{ issue.id }}', 'up')"
+                        aria-label="Upvote"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
+                    </button>
+                    <span class="vote-score {% if issue.score > 0 %}positive{% elif issue.score < 0 %}negative{% endif %}" id="issue-score">
+                        {{ issue.score }}
+                    </span>
+                    <button
+                        class="vote-btn downvote {% if user_vote == 'down' %}active{% endif %}"
+                        onclick="voteIssue('{{ issue.id }}', 'down')"
+                        aria-label="Downvote"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
+                    </button>
+                </div>
 
-</div>
+                <!-- Issue body -->
+                <div class="issue-body">
+                    <div class="issue-meta-row">
+                        <span class="issue-username">u/{{ issue.username }}</span>
+                        <span class="meta-sep">·</span>
+                        <span class="status-pill {{ issue.status|lower|replace(' ', '_') }}">{{ issue.status }}</span>
+                        <span class="meta-sep">·</span>
+                        <span class="category-tag">{{ issue.category }}</span>
+                        <span class="meta-sep">·</span>
+                        <span class="issue-timestamp">{{ issue.created_at }}</span>
+                    </div>
 
-        <div class="issue-info">
-            <h2>{{ issue.title }}</h2>
+                    <h1 class="issue-title">{{ issue.title }}</h1>
 
-            {% if images %}
-<div class="issue-image-gallery">
-    {% for img in images %}
-        <img src="{{ img.image_url }}" alt="Issue image">
-    {% endfor %}
-</div>
-{% endif %}
-
-
-            <p class="meta">
-                <span class="category">{{ issue.category }}</span>
-                •
-                <span class="status status-{{ issue.status|lower }}">
-                    {{ issue.status }}
-                </span>
-            </p>
-
-            <p class="description">
-                {{ issue.description }}
-            </p>
-                <p class="meta">
-    Posted by <strong>u/{{ issue.username }}</strong>
-</p>
-
-
-            <p class="timestamp">
-                📅 Raised on {{ issue.created_at }}
-            </p>
-        </div>
-    </div>
-
-
-    <!-- =========================
-         Timeline Section
-    ========================== -->
-    <section class="timeline-section">
-        <h3>📍 Issue Timeline</h3>
-
-        {% if timeline %}
-            <ul class="timeline">
-                {% for step in timeline %}
-                    <li class="timeline-item">
-                        <div class="timeline-header">
-                            <strong>{{ step.status }}</strong>
-                            <span class="timeline-date">
-                                {{ step.created_at }}
-                            </span>
+                    {% if images %}
+                        <div class="image-gallery">
+                            {% for img in images %}
+                                <div class="gallery-img-wrap">
+                                    <img src="{{ img.image_url }}" alt="Issue image" loading="lazy">
+                                </div>
+                            {% endfor %}
                         </div>
+                    {% endif %}
 
-                        <p class="timeline-note">
-                            {{ step.note }}
-                        </p>
+                    <p class="issue-description">{{ issue.description }}</p>
+                </div>
 
-                        {% if step.estimated_start_at %}
-                            <p class="timeline-extra">
-                                🛠 Estimated Start: {{ step.estimated_start_at }}
-                            </p>
-                        {% endif %}
+            </div>
+        </div>
 
-                        {% if step.estimated_completion_at %}
-                            <p class="timeline-extra">
-                                ⏳ Estimated Completion: {{ step.estimated_completion_at }}
-                            </p>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No status updates yet.</p>
+        <!-- Resolution banner -->
+        {% if issue.status == "Resolved" or issue.status == "Closed" %}
+            {% for step in timeline %}
+                {% if step.status == "Resolved" %}
+                    <div class="resolution-banner">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <span>Resolution completed on {{ step.created_at }}</span>
+                    </div>
+                {% endif %}
+            {% endfor %}
         {% endif %}
-    </section>
 
+        <!-- ── Timeline ───────────────────────── -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <span class="section-card-title">Issue Timeline</span>
+                {% if timeline %}
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
+                        {{ timeline|length }} update{{ 's' if timeline|length != 1 }}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="section-card-body">
+                {% if timeline %}
+                    <ul class="timeline">
+                        {% for step in timeline %}
+                            <li class="timeline-item">
+                                <div class="timeline-dot {% if loop.last %}active{% endif %} {% if step.status == 'Resolved' %}resolved{% endif %}">
+                                    {% if step.status == 'Resolved' %}
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    {% elif loop.last %}
+                                        <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="6"/></svg>
+                                    {% else %}
+                                        <svg width="8" height="8" viewBox="0 0 24 24" fill="var(--border)"><circle cx="12" cy="12" r="6"/></svg>
+                                    {% endif %}
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-status">{{ step.status }}</span>
+                                        <span class="timeline-date">{{ step.created_at }}</span>
+                                    </div>
+                                    {% if step.note %}
+                                        <p class="timeline-note">{{ step.note }}</p>
+                                    {% endif %}
+                                    {% if step.estimated_start_at %}
+                                        <div class="timeline-extra">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                            Estimated Start: {{ step.estimated_start_at }}
+                                        </div>
+                                    {% endif %}
+                                    {% if step.estimated_completion_at %}
+                                        <div class="timeline-extra">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                            Estimated Completion: {{ step.estimated_completion_at }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">No status updates yet.</p>
+                {% endif %}
+            </div>
+        </div>
 
-    <!-- =========================
-         Resolution Duration
-    ========================== -->
-    {% if issue.status == "Resolved" or issue.status == "Closed" %}
-        {% set resolved_step = None %}
-        {% for step in timeline %}
-            {% if step.status == "Resolved" %}
-                {% set resolved_step = step %}
-            {% endif %}
-        {% endfor %}
-
-        {% if resolved_step %}
-            <div class="resolution-duration">
-                🕒 Resolution completed on {{ resolved_step.created_at }}
+        <!-- ── Citizen Feedback (display) ─────── -->
+        {% if feedback %}
+            <div class="section-card">
+                <div class="section-card-header">
+                    <span class="section-card-title">Citizen Feedback</span>
+                </div>
+                <div class="section-card-body">
+                    <div class="feedback-display">
+                        <div class="star-row">
+                            {% for i in range(1, 6) %}
+                                <span class="star {% if i <= feedback.rating %}filled{% endif %}">★</span>
+                            {% endfor %}
+                            <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);margin-left:0.5rem;">{{ feedback.rating }}/5</span>
+                        </div>
+                        {% if feedback.review %}
+                            <p class="feedback-review">"{{ feedback.review }}"</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         {% endif %}
-    {% endif %}
 
-
-    <!-- =========================
-         Feedback Section
-    ========================== -->
-    {% if feedback %}
-        <div class="feedback-box">
-            <h4>⭐ Citizen Feedback</h4>
-            <p>Rating: {{ feedback.rating }}/5</p>
-            {% if feedback.review %}
-                <p>{{ feedback.review }}</p>
-            {% endif %}
-        </div>
-    {% endif %}
-
-
-    <!-- =========================
-         Resolution Confirmation
-    ========================== -->
-    {% if issue.status == "Resolved" and is_issue_owner %}
-        <div class="resolution-box">
-            <form method="POST"
-                  action="{{ url_for('citizen.submit_issue_feedback', issue_id=issue.id) }}">
-                <label>Rate the resolution (1–5)</label>
-                <select name="rating" required>
-                    <option value="5">⭐⭐⭐⭐⭐</option>
-                    <option value="4">⭐⭐⭐⭐</option>
-                    <option value="3">⭐⭐⭐</option>
-                    <option value="2">⭐⭐</option>
-                    <option value="1">⭐</option>
-                </select>
-
-                <textarea name="review"
-                          placeholder="Write your feedback (optional)"></textarea>
-
-                <button class="btn-primary">
-                    Submit Feedback & Close Issue
-                </button>
-            </form>
-        </div>
-    {% endif %}
-
-
-    <!-- =========================
-         Comments Section
-    ========================== -->
-    <section class="comments-section">
-        <h3>💬 Discussion</h3>
-
-        {% if comments %}
-            {% for comment in comments %}
-                {% set level = 0 %}
-                {% set issue_id = issue.id %}
-                {% set comment = comment %}
-                {% include "citizen/_comment.html" %}
-            {% endfor %}
-        {% else %}
-            <p>No comments yet. Be the first to comment.</p>
+        <!-- ── Feedback Form (if owner + resolved) ── -->
+        {% if issue.status == "Resolved" and is_issue_owner and not feedback %}
+            <div class="section-card">
+                <div class="section-card-header">
+                    <span class="section-card-title">Rate the Resolution</span>
+                </div>
+                <div class="section-card-body">
+                    <form method="POST"
+                          action="{{ url_for('citizen.submit_issue_feedback', issue_id=issue.id) }}"
+                          class="feedback-form">
+                        <div class="form-group">
+                            <label>Your Rating</label>
+                            <div class="rating-select-wrap">
+                                {% for val, label in [('5','★★★★★'), ('4','★★★★'), ('3','★★★'), ('2','★★'), ('1','★')] %}
+                                    <input type="radio" name="rating" id="r{{ val }}" value="{{ val }}" class="rating-opt" {% if val == '5' %}checked{% endif %}>
+                                    <label for="r{{ val }}" class="rating-label">{{ label }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="review">Your Feedback <span style="color:var(--muted);font-weight:400;">(Optional)</span></label>
+                            <textarea id="review" name="review" rows="4" placeholder="Share your experience with how this issue was handled..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            Submit Feedback & Close Issue →
+                        </button>
+                    </form>
+                </div>
+            </div>
         {% endif %}
 
-        <form method="POST"
-              action="{{ url_for('citizen.add_issue_comment', issue_id=issue.id) }}">
-            <textarea name="comment" rows="3" required></textarea>
-            <button class="btn-primary">Add Comment</button>
-        </form>
-    </section>
-</div>
+        <!-- ── Comments ───────────────────────── -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <span class="section-card-title">Discussion</span>
+                {% if comments %}
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
+                        {{ comments|length }} comment{{ 's' if comments|length != 1 }}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="section-card-body">
 
+                <!-- Existing comments -->
+                {% if comments %}
+                    <div class="comments-list" style="margin-bottom:2rem;">
+                        {% for comment in comments recursive  %}
+                            {% set level = 0 %}
+                            {% set issue_id = issue.id %}
+                            {% set comment = comment %}
+    {% include "citizen/_comment.html" %}
+
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1.75rem;">
+                        No comments yet — be the first to weigh in.
+                    </p>
+                {% endif %}
+
+                <!-- Add comment -->
+                <form method="POST"
+                      action="{{ url_for('citizen.add_issue_comment', issue_id=issue.id) }}"
+                      class="comment-compose">
+                    <textarea name="comment" rows="4" placeholder="Share your thoughts or additional context about this issue..." required></textarea>
+                    <div class="comment-compose-footer">
+                        <span class="comment-hint">Your comment is public to other citizens.</span>
+                        <button type="submit" class="btn-primary">Post Comment →</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SIDEBAR
+    ══════════════════════════════════════ -->
+    <div class="issue-sidebar">
+
+        <!-- Issue metadata -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <span class="sidebar-card-title">Issue Details</span>
+            </div>
+            <div class="sidebar-card-body">
+                <div class="meta-list">
+                    <div class="meta-item">
+                        <span class="meta-key">Status</span>
+                        <span class="meta-val">
+                            <span class="status-pill {{ issue.status|lower|replace(' ', '_') }}">{{ issue.status }}</span>
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-key">Category</span>
+                        <span class="meta-val">{{ issue.category }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-key">Raised by</span>
+                        <span class="meta-val" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--indigo);">u/{{ issue.username }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-key">Date Raised</span>
+                        <span class="meta-val">{{ issue.created_at }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-key">Vote Score</span>
+                        <span class="meta-val" style="font-family:var(--font-disp);font-size:1.4rem;line-height:1;color:var(--indigo);">{{ issue.score }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-key">Comments</span>
+                        <span class="meta-val">{{ comments|length if comments else 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline progress -->
+        {% if timeline %}
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <span class="sidebar-card-title">Progress</span>
+            </div>
+            <div class="sidebar-card-body">
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    {% for step in timeline %}
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <div style="width:8px;height:8px;border-radius:50%;background:{% if step.status=='Resolved' %}var(--teal){% elif loop.last %}var(--indigo){% else %}var(--border){% endif %};flex-shrink:0;"></div>
+                            <span style="font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:{% if loop.last %}var(--text){% else %}var(--muted){% endif %};">{{ step.status }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Share -->
+        <div class="sidebar-card" style="background:var(--indigo-dark);border-color:rgba(79,70,229,0.3);padding:1.5rem;">
+            <div style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--warm-light);margin-bottom:0.5rem;">Share</div>
+            <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:1rem;">Help others find this issue and add their support.</p>
+            <button
+                onclick="navigator.clipboard.writeText(window.location.href).then(() => this.textContent = 'Copied! ✓')"
+                class="btn-primary"
+                style="width:100%;justify-content:center;clip-path:none;font-size:0.7rem;"
+            >
+                Copy Link →
+            </button>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
 <script src="{{ url_for('static', filename='js/issue.js') }}"></script>
 {% endblock %}
