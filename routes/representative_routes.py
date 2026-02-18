@@ -11,7 +11,7 @@ from services.representative_service import (
 from services.issue_service import (
     accept_issue,
     mark_in_progress,
-    resolve_issue,
+    _resolve_issue,
     reject_issue
 )
 from services.rep_policy_comment_service import add_comment,get_threaded_comments
@@ -137,7 +137,8 @@ def performance_score():
 @login_required
 @role_required("ELECTED_REP")
 def resolve_issue(issue_id):
-    resolve_issue(
+    print(session.get("user_id"))
+    _resolve_issue(
         issue_id=issue_id,
         resolved_by=session.get("user_id"),
         note=request.form.get("note")

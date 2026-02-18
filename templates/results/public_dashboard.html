@@ -354,6 +354,23 @@
     font-family: var(--font-mono); font-size: 0.65rem;
     letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
 }
+.runner-row {
+    background: rgba(79,70,229,0.02);
+}
+
+.runner-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #555;
+    background: #f3f4f6;
+    border: 1px solid var(--border);
+    padding: 0.15rem 0.5rem;
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── RESPONSIVE ──────────────────────────────── */
@@ -703,12 +720,13 @@
         const maxVotes = Math.max(...all.map(c => c.votes || 0), 1);
 
         tbody.innerHTML = all.map((c, i) => {
-            const isWinner = i === 0;
+            const isWinner = c.candidate_id === data.winner?.candidate_id;
+            const isRunner = c.candidate_id === data.runner_up?.candidate_id;
             const pct      = Math.round((c.votes / maxVotes) * 100);
             const initial  = (c.candidate_name || '?')[0].toUpperCase();
             return `
-            <tr class="${isWinner ? 'winner-row' : ''}">
-                <td class="rank-cell ${isWinner ? 'first' : ''}">${isWinner ? '●' : i + 1}</td>
+            <tr class="${isWinner ? 'winner-row' : ''} ${isRunner ? 'runner-row' : ''}">
+                <td class="rank-cell ${isWinner ? 'first' : ''}">${isWinner ? '●' : isRunner ? '2' : i + 1}</td>
                 <td>
                     <div class="candidate-cell">
                         <div class="candidate-avatar">${initial}</div>
@@ -724,7 +742,7 @@
                         <span class="vote-count">${(c.votes ?? 0).toLocaleString?.() ?? c.votes}</span>
                     </div>
                 </td>
-                <td>${isWinner ? '<span class="win-badge">✔ Winner</span>' : ''}</td>
+                <td>${isWinner ? '<span class="win-badge">✔ Winner</span>' : isRunner ? '<span class="runner-badge">Runner-up</span>' : ''}</td>
             </tr>`;
         }).join('');
 

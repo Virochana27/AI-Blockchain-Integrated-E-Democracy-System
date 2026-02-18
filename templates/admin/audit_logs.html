@@ -1,23 +1,500 @@
 {% extends "base.html" %}
 {% set title = "Audit Logs" %}
 
-{% block content %}
-<h2>Audit Logs</h2>
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   AUDIT LOGS PAGE
+═══════════════════════════════════════════════════════════ */
 
-<table>
-    <tr>
-        <th>User</th>
-        <th>Action</th>
-        <th>Entity</th>
-        <th>Time</th>
-    </tr>
-    {% for log in logs %}
-    <tr>
-        <td>{{ log.user_id }}</td>
-        <td>{{ log.action }}</td>
-        <td>{{ log.entity_type }} {{ log.entity_id }}</td>
-        <td>{{ log.timestamp }}</td>
-    </tr>
-    {% endfor %}
-</table>
+.audit-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+}
+
+/* ── PAGE HEADER ──────────────────────────────────────────── */
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.page-header-tag {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--indigo); margin-bottom: 0.5rem;
+}
+.page-header-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 0.95; color: var(--text); margin-bottom: 0.4rem;
+}
+.page-title em { font-style: normal; color: var(--indigo); }
+.page-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+/* ── FILTER BAR ───────────────────────────────────────────── */
+.filter-bar {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex; flex-direction: column; gap: 0.35rem;
+}
+.filter-label {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+.filter-input {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    letter-spacing: 0.03em; color: var(--text);
+    background: var(--ink-2); border: 1px solid var(--border);
+    padding: 0.6rem 0.85rem; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.filter-input:focus {
+    border-color: var(--indigo); box-shadow: 0 0 0 2px var(--indigo-dim);
+}
+
+.filter-actions {
+    display: flex; gap: 0.5rem; align-items: end;
+}
+.btn-filter {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    padding: 0.65rem 1.1rem; border: none; cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.btn-filter.primary {
+    background: var(--indigo); color: #fff;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+.btn-filter.primary:hover { background: var(--indigo-dark); }
+.btn-filter.secondary {
+    background: var(--ink-2); color: var(--muted);
+    border: 1px solid var(--border);
+}
+.btn-filter.secondary:hover { color: var(--text); background: var(--ink-3); }
+
+/* ── STATS ROW ────────────────────────────────────────────── */
+.audit-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border); background: var(--border);
+    gap: 1px; margin-bottom: 1.5rem;
+}
+.audit-stat {
+    background: var(--ink); padding: 1.25rem 1.5rem;
+    text-align: center; position: relative; overflow: hidden;
+    transition: background 0.2s;
+}
+.audit-stat::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+}
+.audit-stat:hover { background: #fafafe; }
+.audit-stat:hover::after { transform: scaleX(1); }
+.audit-stat.total::after  { background: var(--indigo); }
+.audit-stat.create::after { background: var(--teal); }
+.audit-stat.update::after { background: var(--warm); }
+.audit-stat.delete::after { background: #dc2626; }
+.audit-stat-val {
+    font-family: var(--font-disp); font-size: 2rem; line-height: 1; margin-bottom: 0.2rem;
+}
+.audit-stat.total .audit-stat-val  { color: var(--indigo); }
+.audit-stat.create .audit-stat-val { color: var(--teal); }
+.audit-stat.update .audit-stat-val { color: var(--warm); }
+.audit-stat.delete .audit-stat-val { color: #dc2626; }
+.audit-stat-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── TABLE CARD ───────────────────────────────────────────── */
+.table-card {
+    background: var(--ink); border: 1px solid var(--border);
+}
+.table-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.table-card-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.table-card-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+.table-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+/* Export button */
+.btn-export {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--indigo); background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    padding: 0.5rem 0.9rem; cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-export:hover { background: var(--indigo-mid); }
+
+/* Search */
+.table-search {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--border); background: var(--ink); overflow: hidden;
+}
+.table-search svg { margin: 0 0.65rem; color: var(--muted); flex-shrink: 0; }
+.table-search input {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.05em; color: var(--text);
+    background: none; border: none; outline: none;
+    padding: 0.5rem 0.75rem 0.5rem 0; width: 180px;
+}
+.table-search input::placeholder { color: rgba(107,114,128,0.45); }
+
+/* Audit table */
+.audit-table { width: 100%; border-collapse: collapse; }
+.audit-table thead tr { border-bottom: 1px solid var(--border); }
+.audit-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.7rem 1.25rem; text-align: left;
+    background: var(--ink-2); white-space: nowrap;
+}
+.audit-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.audit-table tbody tr:last-child { border-bottom: none; }
+.audit-table tbody tr:hover { background: #f8f8fd; }
+.audit-table td { padding: 0.9rem 1.25rem; vertical-align: middle; }
+
+/* Row num */
+.td-num {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: rgba(79,70,229,0.2); font-weight: 700; width: 2.5rem;
+}
+
+/* User ID cell */
+.td-user {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--indigo); letter-spacing: 0.04em;
+}
+
+/* Action pill */
+.action-pill {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 2px; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.3rem;
+}
+.action-pill.create { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.action-pill.update { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.action-pill.delete { color: #dc2626; background: rgba(220,38,38,0.07);  border: 1px solid rgba(220,38,38,0.2); }
+.action-pill.view   { color: var(--indigo); background: var(--indigo-dim); border: 1px solid rgba(79,70,229,0.2); }
+.action-pill svg { flex-shrink: 0; }
+
+/* Entity cell */
+.entity-row { display: flex; flex-direction: column; gap: 0.15rem; }
+.entity-type {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: var(--text); letter-spacing: 0.05em;
+}
+.entity-id {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    color: var(--muted); letter-spacing: 0.04em;
+}
+
+/* Time cell */
+.td-time {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    color: var(--muted); letter-spacing: 0.04em; white-space: nowrap;
+}
+
+/* Empty state */
+.table-empty {
+    padding: 4rem 2rem; text-align: center;
+}
+.table-empty-num {
+    font-family: var(--font-disp); font-size: 4rem; line-height: 1;
+    color: rgba(79,70,229,0.07); margin-bottom: 0.75rem;
+}
+.table-empty p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* No results row */
+.no-results-row td {
+    padding: 2rem 1.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-align: center;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .audit-page { padding: 2rem 2rem 4rem; }
+    .filter-bar { grid-template-columns: 1fr; }
+    .audit-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+    .audit-page { padding: 1.5rem 1rem 3rem; }
+    .audit-stats { grid-template-columns: 1fr 1fr; }
+    .audit-table thead { display: none; }
+    .audit-table td { display: block; padding: 0.4rem 1rem; }
+    .audit-table tbody tr { display: block; padding: 0.75rem 0; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="audit-page">
+
+    <!-- ── Page Header ─────────────────────────────────────── -->
+    <div class="page-header">
+        <div class="page-header-tag">System Monitoring</div>
+        <h1 class="page-title">Audit <em>Logs</em></h1>
+        <p class="page-sub">
+            Comprehensive record of all system actions, permanently logged for transparency and accountability.
+        </p>
+    </div>
+
+    <!-- ── Filter Bar ──────────────────────────────────────── -->
+    <!--<form method="GET" class="filter-bar">
+        <div class="filter-group">
+            <label class="filter-label" for="start_date">Start Date</label>
+            <input
+                type="datetime-local"
+                id="start_date"
+                name="start_date"
+                class="filter-input"
+                value="{{ request.args.get('start_date', '') }}"
+            >
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label" for="end_date">End Date</label>
+            <input
+                type="datetime-local"
+                id="end_date"
+                name="end_date"
+                class="filter-input"
+                value="{{ request.args.get('end_date', '') }}"
+            >
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn-filter primary">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                Apply
+            </button>
+            <a href="{{ url_for('admin.audit_logs') }}" class="btn-filter secondary">
+                Clear
+            </a>
+        </div>
+    </form>
+    -->
+    <!-- ── Stats Row ────────────────────────────────────────── -->
+    {% if logs %}
+        <div class="audit-stats">
+            <div class="audit-stat total">
+                <div class="audit-stat-val">{{ logs|length }}</div>
+                <div class="audit-stat-label">Total Logs</div>
+            </div>
+            <div class="audit-stat create">
+                <div class="audit-stat-val">{{ logs|selectattr('action','equalto','LOGIN')|list|length }}</div>
+                <div class="audit-stat-label">Login</div>
+            </div>
+            <div class="audit-stat update">
+                <div class="audit-stat-val">{{ logs|selectattr('action','equalto','CREATE_ELECTION')|list|length }}</div>
+                <div class="audit-stat-label">Create Election</div>
+            </div>
+            <div class="audit-stat delete">
+                <div class="audit-stat-val">{{ logs|selectattr('action','equalto','RESOLVE_ISSUE')|list|length }}</div>
+                <div class="audit-stat-label">Resolve Issue</div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- ── Audit Table ──────────────────────────────────────── -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <span class="table-card-title">Activity Log</span>
+            <div class="table-actions">
+                <!-- Search -->
+                <div class="table-search">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input
+                        type="text"
+                        id="logSearch"
+                        placeholder="Search logs…"
+                        autocomplete="off"
+                    >
+                </div>
+                <!-- Export -->
+                <button class="btn-export" onclick="exportLogs()">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export CSV
+                </button>
+            </div>
+        </div>
+
+        {% if logs and logs|length > 0 %}
+            <table class="audit-table" id="auditTable">
+                <thead>
+                    <tr>
+                        <th style="width:3rem;">#</th>
+                        <th>User ID</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="auditTableBody">
+                    {% for log in logs %}
+                        <tr
+                            data-user="{{ log.user_id|lower }}"
+                            data-action="{{ log.action|lower }}"
+                            data-entity="{{ (log.entity_type ~ ' ' ~ log.entity_id)|lower }}"
+                            data-time="{{ log.timestamp|string|lower }}"
+                        >
+
+                            <td class="td-num">{{ '%03d' % loop.index }}</td>
+
+                            <td class="td-user">{{ log.user_id }}</td>
+
+                            <td>
+                                <span class="action-pill {{ log.action|lower }}">
+                                    {% if log.action == "CREATE" %}
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    {% elif log.action == "UPDATE" %}
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                                    {% elif log.action == "DELETE" %}
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    {% else %}
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    {% endif %}
+                                    {{ log.action }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="entity-row">
+                                    <span class="entity-type">{{ log.entity_type }}</span>
+                                    <span class="entity-id">{{ log.entity_id }}</span>
+                                </div>
+                            </td>
+
+                            <td class="td-time">{{ log.timestamp }}</td>
+                        </tr>
+                    {% endfor %}
+
+                    <!-- No results placeholder -->
+                    <tr id="noResults" style="display:none;" class="no-results-row">
+                        <td colspan="5">No logs match your search.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        {% else %}
+            <div class="table-empty">
+                <div class="table-empty-num">0</div>
+                <p>No audit logs found for the selected time range.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // ── Live search ────────────────────────────────────────────
+    const searchInput = document.getElementById('logSearch');
+    const noResults   = document.getElementById('noResults');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase().trim();
+            const rows  = document.querySelectorAll('#auditTableBody tr:not(#noResults)');
+            let visible = 0;
+
+            rows.forEach(row => {
+                const user   = row.dataset.user   || '';
+                const action = row.dataset.action || '';
+                const entity = row.dataset.entity || '';
+                const time   = row.dataset.time   || '';
+
+
+                const match = !query ||
+                    user.includes(query) ||
+                    action.includes(query) ||
+                    entity.includes(query) ||
+                    time.includes(query);
+
+
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+
+            if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
+        });
+    }
+
+    // ── Export to CSV ──────────────────────────────────────────
+    function exportLogs() {
+        const rows = [...document.querySelectorAll('#auditTableBody tr:not(#noResults)')];
+        if (rows.length === 0) {
+            alert('No logs to export');
+            return;
+        }
+
+        let csv = 'User ID,Action,Entity Type,Entity ID,Timestamp\n';
+        rows.forEach(row => {
+            if (row.style.display === 'none') return; // skip hidden
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 5) return;
+
+            const user      = cells[1].textContent.trim();
+            const action    = cells[2].textContent.trim();
+            const entityRow = cells[3].querySelectorAll('span');
+            const eType     = entityRow[0]?.textContent.trim() || '';
+            const eId       = entityRow[1]?.textContent.trim() || '';
+            const time      = cells[4].textContent.trim();
+
+            csv += `"${user}","${action}","${eType}","${eId}","${time}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+</script>
 {% endblock %}

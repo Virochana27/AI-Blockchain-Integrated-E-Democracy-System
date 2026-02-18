@@ -222,7 +222,7 @@ def mark_in_progress(issue_id, rep_id, note, estimated_completion):
         estimated_completion_at=estimated_completion
     )
 
-def resolve_issue(issue_id: str, resolved_by: str,note: str):
+def _resolve_issue(issue_id: str, resolved_by: str,note: str):
     issue = get_issue_by_id(issue_id)
     if not issue:
         raise ValueError("Issue not found")

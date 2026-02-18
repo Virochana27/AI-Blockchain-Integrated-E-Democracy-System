@@ -62,7 +62,7 @@
 
 /* ── STATS STRIP ──────────────────────────────────────────── */
 .stats-strip {
-    display: grid; grid-template-columns: repeat(5, 1fr);
+    display: grid; grid-template-columns: repeat(7, 1fr);
     border: 1px solid var(--border); background: var(--border);
     gap: 1px; margin-bottom: 2rem;
 }
@@ -80,17 +80,22 @@
 .stat-cell.total::after    { background: var(--indigo); }
 .stat-cell.open::after     { background: var(--warm); }
 .stat-cell.progress::after { background: #9333ea; }
-.stat-cell.resolved::after { background: var(--teal); }
+.stat-cell.resolved::after { background: #edd500; }
 .stat-cell.urgent::after   { background: #dc2626; }
+.stat-cell.closed::after    { background: #047857; }
+.stat-cell.rejected::after    { background: #ef4444; }
 .stat-val {
     font-family: var(--font-disp); font-size: 2.2rem; line-height: 1;
     margin-bottom: 0.25rem;
 }
-.stat-cell.total .stat-val    { color: var(--indigo); }
-.stat-cell.open .stat-val     { color: var(--warm); }
-.stat-cell.progress .stat-val { color: #9333ea; }
-.stat-cell.resolved .stat-val { color: var(--teal); }
-.stat-cell.urgent .stat-val   { color: #dc2626; }
+.stat-cell.total .stat-val    { color:var(--indigo); }   
+.stat-cell.open .stat-val     { color: var(--warm); }   
+.stat-cell.urgent .stat-val   { color: #dc2626; }   
+.stat-cell.progress .stat-val { color:#9333ea; }   
+.stat-cell.pending .stat-val  { color: #0ea5e9; }   
+.stat-cell.resolved .stat-val { color:  #edd500; }  
+.stat-cell.closed .stat-val   { color: #047857; }   
+.stat-cell.rejected .stat-val { color: #ef4444; }   
 .stat-label {
     font-family: var(--font-mono); font-size: 0.6rem;
     letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
@@ -385,7 +390,7 @@
 
         <div class="topbar-actions">
             <a href="{{ url_for('representative.my_posts') }}" class="btn-action">My Posts</a>
-            <a href="{{ url_for('representative.performance_score') }}" class="btn-action">Performance Score</a>
+            <a href="{{ url_for('accountability.view_rep_accountability',rep_user_id=session.get('user_id')) }}" class="btn-action">Performance Score</a>
             {% if role == "ELECTED_REP" %}
                 <a href="{{ url_for('representative.issue_management') }}" class="btn-action primary">
                     All Issues
@@ -404,6 +409,10 @@
             <div class="stat-val">{{ issues|selectattr('status','equalto','Open')|list|length }}</div>
             <div class="stat-label">Open</div>
         </div>
+        <div class="stat-cell urgent">
+            <div class="stat-val">{{ issues|selectattr('status','equalto','Accepted')|list|length }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
         <div class="stat-cell progress">
             <div class="stat-val">{{ issues|selectattr('status','equalto','In Progress')|list|length }}</div>
             <div class="stat-label">In Progress</div>
@@ -412,9 +421,13 @@
             <div class="stat-val">{{ issues|selectattr('status','equalto','Resolved')|list|length }}</div>
             <div class="stat-label">Resolved</div>
         </div>
-        <div class="stat-cell urgent">
-            <div class="stat-val">{{ issues|selectattr('status','equalto','Pending')|list|length }}</div>
-            <div class="stat-label">Pending</div>
+        <div class="stat-cell closed">
+            <div class="stat-val">{{ issues|selectattr('status','equalto','Closed')|list|length }}</div>
+            <div class="stat-label">Closed</div>
+        </div>
+                <div class="stat-cell rejected">
+            <div class="stat-val">{{ issues|selectattr('status','equalto','Rejected')|list|length }}</div>
+            <div class="stat-label">Rejected</div>
         </div>
     </div>
 
@@ -428,8 +441,11 @@
                 <div class="filter-tabs" id="filterTabs">
                     <button class="filter-tab active" data-filter="all">All</button>
                     <button class="filter-tab" data-filter="open">Open</button>
+                    <button class="filter-tab" data-filter="accepted">Accepted</button>
                     <button class="filter-tab" data-filter="in_progress">In Progress</button>
                     <button class="filter-tab" data-filter="resolved">Resolved</button>
+                    <button class="filter-tab" data-filter="closed">Closed</button>
+                    <button class="filter-tab" data-filter="rejected">Rejected</button>
                 </div>
             </div>
 
@@ -504,7 +520,7 @@
                                             {% endif %}
 
                                             <!-- Mark In Progress -->
-                                            {% if issue.status == "Pending" %}
+                                            {% if issue.status == "Accepted" %}
                                             <div class="action-form">
                                                 <div class="action-form-header">
                                                     <span class="action-form-label progress">Mark In Progress</span>
@@ -522,7 +538,7 @@
                                             {% endif %}
 
                                             <!-- Resolve -->
-                                            {% if issue.status in ["Pending", "In Progress"] %}
+                                            {% if issue.status == "In Progress" %}
                                             <div class="action-form">
                                                 <div class="action-form-header">
                                                     <span class="action-form-label resolve">Resolve</span>

@@ -1,48 +1,524 @@
 {% extends "base.html" %}
 {% set title = "Election Schedule" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ELECTION SCHEDULE PAGE
+═══════════════════════════════════════════════════════════ */
+
+.schedule-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+}
+
+/* ── HERO BANNER ──────────────────────────────────────────── */
+.schedule-hero {
+    position: relative; overflow: hidden;
+    background: var(--indigo-dark);
+    padding: 4rem 4rem 3rem;
+    border-bottom: 1px solid rgba(79,70,229,0.3);
+}
+.schedule-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 70%);
+}
+.schedule-hero::after {
+    content: '';
+    position: absolute; top: 0; right: -10%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 60%);
+}
+.hero-inner {
+    position: relative; z-index: 2;
+    max-width: 1200px; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--warm-light);
+    margin-bottom: 1rem;
+}
+.hero-eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--warm-light);
+    animation: blink 1.4s ease-in-out infinite;
+}
+.hero-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 0.95; color: #fff; margin-bottom: 0.75rem;
+}
+.hero-title em { font-style: normal; color: var(--warm-light); }
+.hero-sub {
+    font-size: 0.9rem; color: rgba(255,255,255,0.45);
+    line-height: 1.7; max-width: 540px;
+}
+
+/* ── SEARCH + FILTER BAR ──────────────────────────────────── */
+.control-bar {
+    background: var(--ink);
+    border-bottom: 1px solid var(--border);
+    padding: 1.75rem 4rem;
+    position: sticky;
+    top: var(--nav-h);
+    z-index: 50;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+.control-bar-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem; align-items: center;
+}
+
+/* Search box */
+.search-box {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--border);
+    background: var(--ink-2);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-box:focus-within {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+.search-box svg { margin: 0 1rem; color: var(--muted); flex-shrink: 0; }
+.search-box input {
+    font-family: var(--font-mono); font-size: 0.75rem;
+    letter-spacing: 0.04em; color: var(--text);
+    background: none; border: none; outline: none;
+    padding: 0.75rem 1rem 0.75rem 0; flex: 1; min-width: 0;
+}
+.search-box input::placeholder { color: rgba(107,114,128,0.5); }
+
+/* State filter dropdown */
+.state-filter {
+    position: relative;
+}
+.state-filter-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text); background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.75rem 1.1rem; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+.state-filter-btn:hover { border-color: var(--indigo); background: var(--indigo-dim); }
+.state-filter-btn svg { transition: transform 0.2s; }
+.state-filter-btn.open svg { transform: rotate(180deg); }
+.state-dropdown {
+    display: none;
+    position: absolute; top: calc(100% + 4px); left: 0;
+    background: var(--ink); border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(30,40,80,0.12);
+    min-width: 200px; max-height: 320px; overflow-y: auto; z-index: 60;
+}
+.state-dropdown.visible { display: block; }
+.state-opt {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); background: none; border: none;
+    padding: 0.65rem 1rem; width: 100%; text-align: left; cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    border-bottom: 1px solid var(--border);
+}
+.state-opt:last-child { border-bottom: none; }
+.state-opt:hover { color: var(--indigo); background: var(--indigo-dim); }
+.state-opt.active { color: var(--indigo); background: var(--indigo-dim); font-weight: 700; }
+
+/* Status filter tabs */
+.status-tabs {
+    display: flex; border: 1px solid var(--border); overflow: hidden;
+}
+.status-tab {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); padding: 0.75rem 1rem;
+    background: none; border: none; cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: color 0.2s, background 0.2s; white-space: nowrap;
+}
+.status-tab:last-child { border-right: none; }
+.status-tab:hover { color: var(--indigo); background: var(--indigo-dim); }
+.status-tab.active { color: #fff; background: var(--indigo); }
+
+/* ── MAIN CONTENT ─────────────────────────────────────────── */
+.schedule-content {
+    padding: 2.5rem 4rem 5rem;
+    max-width: 1200px; margin: 0 auto;
+}
+
+/* Results count */
+.results-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+.results-count {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+.results-count strong { color: var(--indigo); font-weight: 700; }
+
+/* Election grid */
+.election-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+}
+
+/* Election card */
+.election-card {
+    background: var(--ink);
+    padding: 1.75rem 1.75rem 1.5rem;
+    position: relative; overflow: hidden;
+    transition: background 0.2s, box-shadow 0.25s;
+    cursor: default;
+}
+.election-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.35s ease;
+}
+.election-card.active::before   { background: #16a34a; transform: scaleX(1); }
+.election-card.approved::before { background: var(--teal); }
+.election-card.pending::before  { background: var(--warm); }
+.election-card:hover { background: #fafafe; box-shadow: 0 4px 24px rgba(79,70,229,0.06); }
+.election-card:hover::before { transform: scaleX(1); }
+
+/* Card header */
+.card-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 1rem; margin-bottom: 0.85rem;
+}
+.election-type {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); background: var(--ink-2);
+    border: 1px solid var(--border); padding: 0.2rem 0.6rem;
+}
+.status-pill {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 2px; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+}
+.status-pill::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.status-pill.active {
+    color: #16a34a; background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.2);
+}
+.status-pill.active::before {
+    background: #16a34a; animation: blink 1.4s ease-in-out infinite;
+}
+.status-pill.approved  { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.status-pill.approved::before { background: var(--teal); }
+.status-pill.pending   { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+.status-pill.pending::before { background: var(--warm); }
+.status-pill.ended     { color: var(--muted);  background: var(--ink-3);      border: 1px solid var(--border); }
+.status-pill.ended::before { background: var(--muted); }
+
+/* Election name */
+.election-name {
+    font-family: var(--font-body);
+    font-size: 1rem; font-weight: 600; color: var(--text);
+    line-height: 1.35; margin-bottom: 0.75rem;
+}
+
+/* State row */
+.election-state {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+.election-state svg { opacity: 0.5; }
+
+/* Dates */
+.election-dates {
+    display: flex; flex-direction: column; gap: 0.4rem;
+}
+.date-row {
+    display: flex; align-items: center; gap: 0.75rem;
+}
+.date-label {
+    font-family: var(--font-mono); font-size: 0.55rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); width: 3.5rem; flex-shrink: 0;
+}
+.date-val {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--text); letter-spacing: 0.04em;
+}
+.date-sep {
+    width: 20px; height: 1px; background: var(--border);
+    margin: 0 0.25rem;
+}
+
+/* Empty state */
+.empty-state {
+    background: var(--ink); border: 1px solid var(--border);
+    padding: 5rem 2rem; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+}
+.empty-num {
+    font-family: var(--font-disp); font-size: 5rem; line-height: 1;
+    color: rgba(79,70,229,0.08);
+}
+.empty-state p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .schedule-hero { padding: 3rem 2rem 2rem; }
+    .control-bar { padding: 1.5rem 2rem; }
+    .control-bar-inner { grid-template-columns: 1fr; gap: 0.75rem; }
+    .schedule-content { padding: 2rem 2rem 4rem; }
+}
+@media (max-width: 640px) {
+    .schedule-hero { padding: 2.5rem 1rem 2rem; }
+    .control-bar { padding: 1rem; }
+    .schedule-content { padding: 1.5rem 1rem 3rem; }
+    .election-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="public-elections">
+<div class="schedule-page">
 
-    <h2>Upcoming & Ongoing Elections</h2>
+    <!-- ── Hero Banner ─────────────────────────────────────── -->
+    <div class="schedule-hero">
+        <div class="hero-inner">
+            <div class="hero-eyebrow">
+                <span class="dot"></span>
+                Official Election Commission Schedule
+            </div>
+            <h1 class="hero-title">
+                Upcoming & <em>Ongoing</em><br>
+                Elections
+            </h1>
+            <p class="hero-sub">
+                Officially approved election schedules published by the Election Commission.
+                All dates and times are final and publicly auditable on the blockchain.
+            </p>
+        </div>
+    </div>
 
-    <p class="info-note">
-        This page displays officially approved election schedules
-        published by the Election Commission.
-    </p>
+    <!-- ── Control Bar ─────────────────────────────────────── -->
+    <div class="control-bar">
+        <div class="control-bar-inner">
 
-    {% if elections and elections|length > 0 %}
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Election Name</th>
-                    <th>Type</th>
-                    <th>State</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
+            <!-- Search -->
+            <div class="search-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                    type="text"
+                    id="electionSearch"
+                    placeholder="Search by name, state, or type…"
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- State filter -->
+            <div class="state-filter">
+                <button class="state-filter-btn" id="stateFilterBtn">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <span id="stateFilterLabel">All States</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                </button>
+                <div class="state-dropdown" id="stateDropdown">
+                    <button class="state-opt active" data-state="">All States</button>
+                    {% if elections %}
+                        {% set states = elections|map(attribute='state_name')|unique|sort %}
+                        {% for state in states %}
+                            <button class="state-opt" data-state="{{ state }}">{{ state }}</button>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status filter -->
+            <div class="status-tabs">
+                <button class="status-tab active" data-status="">All</button>
+                <button class="status-tab" data-status="active">Active</button>
+                <button class="status-tab" data-status="approved">Approved</button>
+                <button class="status-tab" data-status="draft">Pending</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Main Content ─────────────────────────────────────── -->
+    <div class="schedule-content">
+
+        <!-- Results bar -->
+        <div class="results-bar">
+            <div class="results-count">
+                Showing <strong id="visibleCount">{{ elections|length if elections else 0 }}</strong> election{{ 's' if (elections|length != 1) else '' }}
+            </div>
+        </div>
+
+        {% if elections and elections|length > 0 %}
+
+            <!-- Election grid -->
+            <div class="election-grid" id="electionGrid">
                 {% for election in elections %}
-                <tr>
-                    <td>{{ election.election_name }}</td>
-                    <td>{{ election.election_type }}</td>
-                    <td>{{ election.state_id }}</td>
-                    <td>{{ election.start_time }}</td>
-                    <td>{{ election.end_time }}</td>
-                    <td>
-                        <span class="status {{ election.status|lower }}">
-                            {{ election.status }}
-                        </span>
-                    </td>
-                </tr>
+                    <div
+                        class="election-card reveal {{ election.status|lower }}"
+                        data-name="{{ election.election_name|lower }}"
+                        data-state="{{ election.state_name|lower }}"
+                        data-type="{{ election.election_type|lower }}"
+                        data-status="{{ election.status|lower }}"
+                    >
+                        <div class="card-top">
+                            <span class="election-type">{{ election.election_type }}</span>
+                            <span class="status-pill {{ election.status|lower }}">{{ election.status }}</span>
+                        </div>
+
+                        <div class="election-name">{{ election.election_name }}</div>
+
+                        <div class="election-state">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            {{ election.state_name }}
+                        </div>
+
+                        <div class="election-dates">
+                            <div class="date-row">
+                                <span class="date-label">Start</span>
+                                <span class="date-sep"></span>
+                                <span class="date-val">{{ election.start_time }}</span>
+                            </div>
+                            <div class="date-row">
+                                <span class="date-label">End</span>
+                                <span class="date-sep"></span>
+                                <span class="date-val">{{ election.end_time }}</span>
+                            </div>
+                        </div>
+                    </div>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No elections scheduled at the moment.</p>
-    {% endif %}
+            </div>
+
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-num">0</div>
+                <p>No elections scheduled at the moment.</p>
+            </div>
+        {% endif %}
+
+    </div>
 
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // ── Filter state ───────────────────────────────────────────
+    let searchQuery  = '';
+    let filterState  = '';
+    let filterStatus = '';
+
+    // ── Apply all filters ──────────────────────────────────────
+    function applyFilters() {
+        const cards = document.querySelectorAll('.election-card');
+        let visible = 0;
+
+        cards.forEach(card => {
+            const name   = card.dataset.name   || '';
+            const state  = card.dataset.state  || '';
+            const type   = card.dataset.type   || '';
+            const status = card.dataset.status || '';
+
+            const matchSearch = !searchQuery ||
+                name.includes(searchQuery) ||
+                state.includes(searchQuery) ||
+                type.includes(searchQuery);
+
+            const matchState  = !filterState  || state === filterState;
+            const matchStatus = !filterStatus || status === filterStatus;
+
+            const show = matchSearch && matchState && matchStatus;
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        document.getElementById('visibleCount').textContent = visible;
+    }
+
+    // ── Search ─────────────────────────────────────────────────
+    document.getElementById('electionSearch').addEventListener('input', e => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        applyFilters();
+    });
+
+    // ── State dropdown ─────────────────────────────────────────
+    const stateBtn      = document.getElementById('stateFilterBtn');
+    const stateDropdown = document.getElementById('stateDropdown');
+    const stateLabel    = document.getElementById('stateFilterLabel');
+
+    stateBtn.addEventListener('click', () => {
+        const isOpen = stateDropdown.classList.contains('visible');
+        stateDropdown.classList.toggle('visible');
+        stateBtn.classList.toggle('open');
+    });
+
+    document.querySelectorAll('.state-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+            filterState = opt.dataset.state.toLowerCase();
+            stateLabel.textContent = opt.textContent.trim();
+
+            document.querySelectorAll('.state-opt').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+
+            stateDropdown.classList.remove('visible');
+            stateBtn.classList.remove('open');
+            applyFilters();
+        });
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.state-filter')) {
+            stateDropdown.classList.remove('visible');
+            stateBtn.classList.remove('open');
+        }
+    });
+
+    // ── Status tabs ────────────────────────────────────────────
+    document.querySelectorAll('.status-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            filterStatus = tab.dataset.status.toLowerCase();
+            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            applyFilters();
+        });
+    });
+</script>
 {% endblock %}
