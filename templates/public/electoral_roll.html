@@ -1,128 +1,791 @@
 {% extends "base.html" %}
 {% set title = "Public Electoral Roll" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   PUBLIC ELECTORAL ROLL PAGE
+═══════════════════════════════════════════════════════════ */
+
+.public-roll-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+}
+
+/* ── HERO BANNER ──────────────────────────────────────────── */
+.roll-hero {
+    position: relative; overflow: hidden;
+    background: var(--indigo-dark);
+    padding: 3.5rem 4rem 3rem;
+    border-bottom: 1px solid rgba(79,70,229,0.3);
+}
+.roll-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 70%);
+}
+.roll-hero::after {
+    content: '';
+    position: absolute; top: -10%; right: -5%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 60%);
+}
+.hero-inner {
+    position: relative; z-index: 2;
+    max-width: 1200px; margin: 0 auto;
+    text-align: center;
+}
+.hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--warm-light); margin-bottom: 0.75rem;
+}
+.hero-eyebrow svg { animation: blink 1.4s ease-in-out infinite; }
+.hero-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 0.95; color: #fff; margin-bottom: 0.6rem;
+}
+.hero-title em { font-style: normal; color: var(--warm-light); }
+.hero-sub {
+    font-size: 0.9rem; color: rgba(255,255,255,0.45);
+    line-height: 1.7; max-width: 560px; margin: 0 auto;
+}
+
+/* ── FILTER SECTION ───────────────────────────────────────── */
+.filter-section {
+    background: var(--ink);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 4rem;
+}
+.filter-inner {
+    max-width: 1200px; margin: 0 auto;
+}
+.filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 1rem; align-items: end;
+}
+.filter-group {
+    display: flex; flex-direction: column; gap: 0.4rem;
+}
+.filter-label {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+}
+.filter-select {
+    font-family: var(--font-mono); font-size: 0.75rem;
+    letter-spacing: 0.04em; color: var(--text);
+    background: var(--ink-2); border: 1px solid var(--border);
+    padding: 0.7rem 0.9rem; outline: none; width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+.filter-select:focus {
+    border-color: var(--indigo); box-shadow: 0 0 0 2px var(--indigo-dim);
+}
+.filter-select:disabled {
+    opacity: 0.5; cursor: not-allowed;
+}
+.btn-load {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    background: var(--indigo); color: #fff; border: none;
+    padding: 0.75rem 1.5rem; cursor: pointer;
+    transition: background 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.btn-load:hover { background: var(--indigo-dark); }
+.btn-load:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── CONTENT AREA ─────────────────────────────────────────── */
+.roll-content {
+    padding: 2.5rem 4rem 5rem;
+    max-width: 1200px; margin: 0 auto;
+}
+
+/* Roll header */
+.roll-header {
+    background: var(--ink); border: 1px solid var(--border);
+    padding: 1.75rem 2rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1.5rem; flex-wrap: wrap;
+}
+.roll-header-left {}
+.roll-election-name {
+    font-family: var(--font-disp); font-size: 1.8rem;
+    line-height: 1; color: var(--text); margin-bottom: 0.4rem;
+}
+.roll-type-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
+    padding: 0.3rem 0.75rem;
+}
+.roll-type-badge.draft {
+    color: var(--warm); background: var(--warm-dim);
+    border: 1px solid rgba(245,158,11,0.25);
+}
+.roll-type-badge.final {
+    color: var(--teal); background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.25);
+}
+.roll-type-badge svg { flex-shrink: 0; }
+
+/* Export buttons */
+.export-actions {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+}
+.btn-export {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    color: var(--indigo); background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    padding: 0.55rem 1rem; cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-export:hover { background: var(--indigo-mid); }
+.btn-export svg { flex-shrink: 0; }
+
+/* ── TABLE SECTION ────────────────────────────────────────── */
+.table-section {
+    background: var(--ink); border: 1px solid var(--border);
+}
+.table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+    gap: 1rem; flex-wrap: wrap;
+}
+.table-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.table-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+.voter-count {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+.voter-count strong { color: var(--indigo); font-weight: 700; }
+
+/* Table controls */
+.table-controls {
+    display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+}
+.table-search {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--border); background: var(--ink); overflow: hidden;
+}
+.table-search svg { margin: 0 0.65rem; color: var(--muted); flex-shrink: 0; }
+.table-search input {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.05em; color: var(--text);
+    background: none; border: none; outline: none;
+    padding: 0.5rem 0.75rem 0.5rem 0; width: 180px;
+}
+.table-search input::placeholder { color: rgba(107,114,128,0.45); }
+
+/* Booth filter */
+.booth-filter-wrap { position: relative; }
+.booth-filter-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text); background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.9rem; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+.booth-filter-btn:hover { border-color: var(--indigo); background: var(--indigo-dim); }
+.booth-filter-btn svg { transition: transform 0.2s; }
+.booth-filter-btn.open svg:last-child { transform: rotate(180deg); }
+.booth-dropdown {
+    display: none;
+    position: absolute; top: calc(100% + 4px); left: 0;
+    background: var(--ink); border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(30,40,80,0.12);
+    min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 60;
+}
+.booth-dropdown.visible { display: block; }
+.booth-opt {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); background: none; border: none;
+    padding: 0.65rem 1rem; width: 100%; text-align: left; cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+    border-bottom: 1px solid var(--border);
+}
+.booth-opt:last-child { border-bottom: none; }
+.booth-opt:hover { color: var(--indigo); background: var(--indigo-dim); }
+.booth-opt.active { color: var(--indigo); background: var(--indigo-dim); font-weight: 700; }
+
+/* Roll table */
+.roll-table { width: 100%; border-collapse: collapse; }
+.roll-table thead tr { border-bottom: 1px solid var(--border); }
+.roll-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.7rem 1.25rem; text-align: left;
+    background: var(--ink-2); white-space: nowrap;
+}
+.roll-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.roll-table tbody tr:last-child { border-bottom: none; }
+.roll-table tbody tr:hover { background: #f8f8fd; }
+.roll-table td { padding: 0.9rem 1.25rem; vertical-align: middle; }
+
+.td-num {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: rgba(79,70,229,0.2); font-weight: 700; width: 3rem;
+}
+.td-name { font-size: 0.88rem; font-weight: 500; color: var(--text); }
+.td-voter-id {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--indigo); letter-spacing: 0.04em;
+}
+.td-booth-num {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--muted); letter-spacing: 0.04em;
+}
+.td-booth-name {
+    font-size: 0.82rem; color: var(--text);
+}
+
+/* Empty/loading states */
+.empty-state {
+    padding: 5rem 2rem; text-align: center;
+}
+.empty-num {
+    font-family: var(--font-disp); font-size: 5rem; line-height: 1;
+    color: rgba(79,70,229,0.08); margin-bottom: 0.75rem;
+}
+.empty-state p {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+
+.loading-state {
+    padding: 3rem 2rem; text-align: center;
+}
+.spinner {
+    display: inline-block;
+    width: 40px; height: 40px; margin-bottom: 1rem;
+    border: 3px solid var(--border);
+    border-top-color: var(--indigo);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.no-results-row td {
+    padding: 2rem 1.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-align: center;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .roll-hero { padding: 3rem 2rem 2rem; }
+    .filter-section { padding: 1.5rem 2rem; }
+    .roll-content { padding: 2rem 2rem 4rem; }
+    .filter-grid { grid-template-columns: 1fr; }
+    .roll-header { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 640px) {
+    .roll-hero { padding: 2.5rem 1rem 2rem; }
+    .filter-section { padding: 1rem; }
+    .roll-content { padding: 1.5rem 1rem 3rem; }
+    .roll-table thead { display: none; }
+    .roll-table td { display: block; padding: 0.4rem 1rem; }
+    .roll-table tbody tr { display: block; padding: 0.75rem 0; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="public-roll">
+<div class="public-roll-page">
 
-    <h2>Public Electoral Roll</h2>
-
-    <!-- Election Selection -->
-    <div class="form-group">
-        <label>Select Election</label>
-        <select id="electionSelect">
-            <option value="">Select Election</option>
-            {% for e in elections %}
-                {% if e.draft_roll_released or e.final_roll_released %}
-                <option value="{{ e.id }}">
-                    {{ e.election_name }}
-                </option>
-                {% endif %}
-            {% endfor %}
-        </select>
+    <!-- ── Hero Banner ─────────────────────────────────────── -->
+    <div class="roll-hero">
+        <div class="hero-inner">
+            <div class="hero-eyebrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Public Electoral Roll
+            </div>
+            <h1 class="hero-title">
+                View <em>Electoral</em> Roll
+            </h1>
+            <p class="hero-sub">
+                Browse published electoral rolls by election and constituency.
+                All rolls are officially approved and publicly auditable.
+            </p>
+        </div>
     </div>
 
-    <!-- Constituency Selection -->
-    <div class="form-group">
-        <label>Select Constituency</label>
-        <select id="constituencySelect" disabled>
-            <option>Select election first</option>
-        </select>
+    <!-- ── Filter Section ──────────────────────────────────── -->
+    <div class="filter-section">
+        <div class="filter-inner">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label" for="electionSelect">Election</label>
+                    <select id="electionSelect" class="filter-select">
+                        <option value="">Select Election…</option>
+                        {% for e in elections %}
+                            {% if e.draft_roll_released or e.final_roll_released %}
+                                <option value="{{ e.id }}">{{ e.election_name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="constituencySelect">Constituency</label>
+                    <select id="constituencySelect" class="filter-select" disabled>
+                        <option>Select election first…</option>
+                    </select>
+                </div>
+
+                <button id="loadRollBtn" class="btn-load" disabled>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Load Roll
+                </button>
+            </div>
+        </div>
     </div>
 
-    <button id="loadRollBtn" class="btn-primary" disabled>
-        Load Electoral Roll
-    </button>
+    <!-- ── Content Area ─────────────────────────────────────── -->
+    <div class="roll-content">
 
-    <!-- Roll Header -->
-    <div id="rollHeader" style="margin-top:30px;"></div>
+        <!-- Initial empty state -->
+        <div id="initialState" class="empty-state">
+            <div class="empty-num">∅</div>
+            <p>Select an election and constituency to view the electoral roll.</p>
+        </div>
 
-    <!-- Roll Table -->
-    <div id="rollTable" style="margin-top:20px;"></div>
+        <!-- Loading state -->
+        <div id="loadingState" class="loading-state" style="display:none;">
+            <div class="spinner"></div>
+            <p style="font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">
+                Loading electoral roll…
+            </p>
+        </div>
 
+        <!-- Roll header (hidden initially) -->
+        <div id="rollHeader" style="display:none;" class="roll-header">
+            <div class="roll-header-left">
+                <div class="roll-election-name" id="rollElectionName"></div>
+                <div id="rollTypeBadge"></div>
+            </div>
+            <div class="export-actions">
+                <button class="btn-export" onclick="exportToExcel()">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                    Export Excel
+                </button>
+                <button class="btn-export" onclick="exportToPDF()">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    Export PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Table section (hidden initially) -->
+        <div id="tableSection" class="table-section" style="display:none;">
+            <div class="table-header">
+                <span class="table-title">Voter List</span>
+                <span class="voter-count">
+                    Showing <strong id="visibleCount">0</strong> of <strong id="totalCount">0</strong> voters
+                </span>
+                <div class="table-controls">
+                    <!-- Search -->
+                    <div class="table-search">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input
+                            type="text"
+                            id="voterSearch"
+                            placeholder="Search voters…"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <!-- Booth filter -->
+                    <div class="booth-filter-wrap">
+                        <button class="booth-filter-btn" id="boothFilterBtn">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            <span id="boothFilterLabel">All Booths</span>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div class="booth-dropdown" id="boothDropdown">
+                            <button class="booth-opt active" data-booth="">All Booths</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="roll-table" id="rollTable">
+                <thead>
+                    <tr>
+                        <th style="width:3rem;">#</th>
+                        <th>Name</th>
+                        <th>Voter ID</th>
+                        <th>Booth No.</th>
+                        <th>Booth Name</th>
+                    </tr>
+                </thead>
+                <tbody id="rollTableBody">
+                    <!-- Populated via JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script>
+    const electionSelect = document.getElementById("electionSelect");
+    const constSelect = document.getElementById("constituencySelect");
+    const loadBtn = document.getElementById("loadRollBtn");
+    
+    const initialState = document.getElementById("initialState");
+    const loadingState = document.getElementById("loadingState");
+    const rollHeader = document.getElementById("rollHeader");
+    const tableSection = document.getElementById("tableSection");
+    
+    let currentRollData = null;
+    let allVoters = [];
+    let searchQuery = '';
+    let filterBooth = '';
 
-const electionSelect = document.getElementById("electionSelect");
-const constSelect = document.getElementById("constituencySelect");
-const btn = document.getElementById("loadRollBtn");
-const tableDiv = document.getElementById("rollTable");
-const headerDiv = document.getElementById("rollHeader");
+    // ── Fetch constituencies ──────────────────────────────────
+    electionSelect.addEventListener("change", async () => {
+        const electionId = electionSelect.value;
+        
+        constSelect.innerHTML = "<option value=''>Select constituency…</option>";
+        constSelect.disabled = true;
+        loadBtn.disabled = true;
 
+        if (!electionId) return;
 
-// Fetch constituencies for election
-electionSelect.addEventListener("change", async () => {
+        try {
+            const res = await fetch(`/commission/api/constituencies/${electionId}`);
+            const data = await res.json();
 
-    const electionId = electionSelect.value;
-    if (!electionId) return;
+            data.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c.id;
+                opt.textContent = c.constituency_name;
+                constSelect.appendChild(opt);
+            });
 
-    const res = await fetch(`/commission/api/constituencies/${electionId}`);
-    const data = await res.json();
-
-    constSelect.innerHTML = "<option value=''>Select Constituency</option>";
-
-    data.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = c.constituency_name;
-        constSelect.appendChild(opt);
+            constSelect.disabled = false;
+        } catch (error) {
+            console.error('Error fetching constituencies:', error);
+        }
     });
 
-    constSelect.disabled = false;
-});
+    constSelect.addEventListener("change", () => {
+        loadBtn.disabled = !constSelect.value;
+    });
 
-constSelect.addEventListener("change", () => {
-    btn.disabled = !constSelect.value;
-});
+    // ── Load electoral roll ───────────────────────────────────
+    loadBtn.addEventListener("click", async () => {
+        const electionId = electionSelect.value;
+        const constId = constSelect.value;
 
+        // Show loading
+        initialState.style.display = "none";
+        rollHeader.style.display = "none";
+        tableSection.style.display = "none";
+        loadingState.style.display = "block";
 
-// Load roll via API
-btn.addEventListener("click", async () => {
+        try {
+            const res = await fetch(`/commission/api/public-roll/${electionId}/${constId}`);
+            const data = await res.json();
 
-    const electionId = electionSelect.value;
-    const constId = constSelect.value;
+            loadingState.style.display = "none";
 
-    const res = await fetch(`/commission/api/public-roll/${electionId}/${constId}`);
-    const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+                initialState.style.display = "block";
+                return;
+            }
 
-    if (data.error) {
-        headerDiv.innerHTML = `<p style="color:red">${data.error}</p>`;
-        tableDiv.innerHTML = "";
-        return;
+            currentRollData = data;
+            allVoters = data.voters || [];
+            
+            // Render header
+            document.getElementById("rollElectionName").textContent = data.election_name || "Electoral Roll";
+            
+            const badgeHTML = data.is_final 
+                ? `<span class="roll-type-badge final">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Final Electoral Roll
+                   </span>`
+                : `<span class="roll-type-badge draft">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    Draft Electoral Roll
+                   </span>`;
+            
+            document.getElementById("rollTypeBadge").innerHTML = badgeHTML;
+
+            // Build booth filter
+            buildBoothFilter();
+
+            // Render table
+            renderTable();
+
+            // Show UI
+            rollHeader.style.display = "flex";
+            tableSection.style.display = "block";
+
+        } catch (error) {
+            console.error('Error loading roll:', error);
+            loadingState.style.display = "none";
+            alert('Error loading electoral roll. Please try again.');
+            initialState.style.display = "block";
+        }
+    });
+
+    // ── Build booth filter dropdown ───────────────────────────
+    function buildBoothFilter() {
+        const boothDropdown = document.getElementById("boothDropdown");
+        const booths = [...new Set(allVoters.map(v => `${v.booth_number}:${v.booth_name}`))].sort();
+        
+        boothDropdown.innerHTML = '<button class="booth-opt active" data-booth="">All Booths</button>';
+        
+        booths.forEach(b => {
+            const [num, name] = b.split(':');
+            const btn = document.createElement('button');
+            btn.className = 'booth-opt';
+            btn.dataset.booth = num;
+            btn.textContent = `${num} - ${name}`;
+            boothDropdown.appendChild(btn);
+        });
+
+        // Re-attach event listeners
+        document.querySelectorAll('.booth-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                filterBooth = opt.dataset.booth;
+                document.getElementById('boothFilterLabel').textContent = opt.textContent.trim();
+                
+                document.querySelectorAll('.booth-opt').forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                
+                document.getElementById('boothDropdown').classList.remove('visible');
+                document.getElementById('boothFilterBtn').classList.remove('open');
+                
+                applyFilters();
+            });
+        });
     }
 
-    // Header
-    headerDiv.innerHTML = `
-        <h3>${data.election_name}</h3>
-        <p style="font-weight:600;color:${data.is_final ? "green":"orange"}">
-            ${data.is_final ? "FINAL ELECTORAL ROLL" : "DRAFT ELECTORAL ROLL"}
-        </p>
-    `;
+    // ── Render table ──────────────────────────────────────────
+    function renderTable() {
+        const tbody = document.getElementById("rollTableBody");
+        tbody.innerHTML = '';
 
-    // Table
-    let rows = data.voters.map(v => `
-        <tr>
-            <td>${v.full_name}</td>
-            <td>${v.voter_id_number}</td>
-            <td>${v.booth_id}</td>
-        </tr>
-    `).join("");
+        if (allVoters.length === 0) {
+            tbody.innerHTML = '<tr class="no-results-row"><td colspan="5">No voters found in this roll.</td></tr>';
+            document.getElementById("totalCount").textContent = '0';
+            document.getElementById("visibleCount").textContent = '0';
+            return;
+        }
 
-    tableDiv.innerHTML = `
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Voter ID</th>
-                    <th>Booth</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-        </table>
-    `;
-});
+        allVoters.forEach((v, index) => {
+            const tr = document.createElement('tr');
+            tr.dataset.name = (v.full_name || '').toLowerCase();
+            tr.dataset.voterId = (v.voter_id_number || '').toLowerCase();
+            tr.dataset.booth = v.booth_number || '';
 
+            tr.innerHTML = `
+                <td class="td-num">${String(index + 1).padStart(3, '0')}</td>
+                <td class="td-name">${v.full_name || 'N/A'}</td>
+                <td class="td-voter-id">${v.voter_id_number || 'N/A'}</td>
+                <td class="td-booth-num">${v.booth_number || 'N/A'}</td>
+                <td class="td-booth-name">${v.booth_name || 'N/A'}</td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById("totalCount").textContent = allVoters.length;
+        applyFilters();
+    }
+
+    // ── Apply filters ─────────────────────────────────────────
+    function applyFilters() {
+        const rows = document.querySelectorAll('#rollTableBody tr:not(.no-results-row)');
+        let visible = 0;
+
+        rows.forEach(row => {
+            const name = row.dataset.name || '';
+            const voterId = row.dataset.voterId || '';
+            const booth = row.dataset.booth || '';
+
+            const matchSearch = !searchQuery || name.includes(searchQuery) || voterId.includes(searchQuery);
+            const matchBooth = !filterBooth || booth === filterBooth;
+
+            const show = matchSearch && matchBooth;
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        document.getElementById("visibleCount").textContent = visible;
+    }
+
+    // ── Search ────────────────────────────────────────────────
+    document.getElementById('voterSearch')?.addEventListener('input', e => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        applyFilters();
+    });
+
+    // ── Booth dropdown ────────────────────────────────────────
+    document.getElementById('boothFilterBtn')?.addEventListener('click', () => {
+        const dropdown = document.getElementById('boothDropdown');
+        const btn = document.getElementById('boothFilterBtn');
+        dropdown.classList.toggle('visible');
+        btn.classList.toggle('open');
+    });
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.booth-filter-wrap')) {
+            document.getElementById('boothDropdown')?.classList.remove('visible');
+            document.getElementById('boothFilterBtn')?.classList.remove('open');
+        }
+    });
+
+    // ── Export to Excel ───────────────────────────────────────
+    function exportToExcel() {
+        if (!allVoters || allVoters.length === 0) {
+            alert('No data to export');
+            return;
+        }
+
+        // Get visible voters after filters
+        const rows = document.querySelectorAll('#rollTableBody tr:not(.no-results-row)');
+        const visibleVoters = [];
+        
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cells = row.querySelectorAll('td');
+                visibleVoters.push({
+                    'Sr. No.': cells[0].textContent.trim(),
+                    'Name': cells[1].textContent.trim(),
+                    'Voter ID': cells[2].textContent.trim(),
+                    'Booth No.': cells[3].textContent.trim(),
+                    'Booth Name': cells[4].textContent.trim()
+                });
+            }
+        });
+
+        if (visibleVoters.length === 0) {
+            alert('No visible data to export');
+            return;
+        }
+
+        const ws = XLSX.utils.json_to_sheet(visibleVoters);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Electoral Roll");
+        
+        const filename = `electoral-roll-${currentRollData.election_name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, filename);
+    }
+
+    // ── Export to PDF ─────────────────────────────────────────
+    function exportToPDF() {
+        if (!allVoters || allVoters.length === 0) {
+            alert('No data to export');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+
+        // Title
+        doc.setFontSize(18);
+        doc.text(currentRollData.election_name || 'Electoral Roll', 14, 20);
+        
+        doc.setFontSize(12);
+        doc.text(currentRollData.is_final ? 'Final Electoral Roll' : 'Draft Electoral Roll', 14, 28);
+
+        // Get visible voters after filters
+        const rows = document.querySelectorAll('#rollTableBody tr:not(.no-results-row)');
+        const tableData = [];
+        
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cells = row.querySelectorAll('td');
+                tableData.push([
+                    cells[0].textContent.trim(),
+                    cells[1].textContent.trim(),
+                    cells[2].textContent.trim(),
+                    cells[3].textContent.trim(),
+                    cells[4].textContent.trim()
+                ]);
+            }
+        });
+
+        if (tableData.length === 0) {
+            alert('No visible data to export');
+            return;
+        }
+
+        doc.autoTable({
+            startY: 35,
+            head: [['#', 'Name', 'Voter ID', 'Booth No.', 'Booth Name']],
+            body: tableData,
+            theme: 'grid',
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [79, 70, 229] }
+        });
+
+        const filename = `electoral-roll-${currentRollData.election_name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
+    }
 </script>
 {% endblock %}

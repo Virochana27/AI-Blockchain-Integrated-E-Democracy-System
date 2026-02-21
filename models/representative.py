@@ -163,9 +163,16 @@ VOTERS_TABLE = "voters"
 
 
 def get_representatives_with_photo(constituency_id: str):
+    """
+    Returns only ACTIVE representatives with voter photo
+    """
+
     reps = fetch_all(
         REPRESENTATIVES_TABLE,
-        {"constituency_id": constituency_id}
+        {
+            "constituency_id": constituency_id,
+            "status": "ACTIVE"
+        }
     )
 
     if not reps:
@@ -174,7 +181,7 @@ def get_representatives_with_photo(constituency_id: str):
     for rep in reps:
         photo_url = None
 
-        # 🔎 Step 1 — find voter id mapped to this user
+        # Step 1 — find voter id mapped to this user
         voter_map = fetch_one(
             VOTER_MAP_TABLE,
             {"user_id": rep.get("user_id")}
@@ -306,6 +313,7 @@ def get_current_representative_by_constituency(constituency_id: str):
 
 def get_current_representatives_by_constituency(constituency_id: str):
     reps = get_representatives_by_constituency(constituency_id)
+    print(reps)
 
     if not reps:
         return None
@@ -333,6 +341,7 @@ def get_current_representatives_by_constituency(constituency_id: str):
 
     return None
 
+
 def get_terminated_representatives(today: date):
     reps = fetch_all(REPRESENTATIVES_TABLE)
 
@@ -342,3 +351,17 @@ def get_terminated_representatives(today: date):
             terminated.append(r)
 
     return terminated
+
+def get_elected_active_representative_by_constituency(constituency_id: str):
+    """
+    Returns the ACTIVE ELECTED_REP for a given constituency.
+    """
+
+    return fetch_one(
+        REPRESENTATIVES_TABLE,
+        {
+            "constituency_id": constituency_id,
+            "type": "ELECTED_REP",
+            "status": "ACTIVE"
+        }
+    )

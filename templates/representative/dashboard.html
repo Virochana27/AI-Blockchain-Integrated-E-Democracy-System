@@ -389,15 +389,22 @@
         </div>
 
         <div class="topbar-actions">
-
+     <a href="{{ url_for('rep_policy.policy_feed') }}" class="btn-action">
+        Policy Feed
+    </a>
     <a href="{{ url_for('representative.my_posts') }}" class="btn-action">
         My Posts
     </a>
-
+    {% if role == "ELECTED_REP" %}                    
     <a href="{{ url_for('accountability.view_rep_accountability',rep_user_id=session.get('user_id')) }}" class="btn-action">
         Performance Score
     </a>
-
+    {% endif %}
+    {% if role == "OPPOSITION_REP" %}                    
+    <a href="{{ url_for('citizen.dashboard') }}" class="btn-action">
+        Citizen Dashboard
+    </a>
+    {% endif %}
     <!--{% if role == "ELECTED_REP" %}
         <a href="{{ url_for('representative.issue_management') }}" class="btn-action">
             All Issues
@@ -609,10 +616,12 @@
                             My Posts
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
+                        {% if role == "ELECTED_REP" %}
                         <a href="{{ url_for('accountability.view_rep_accountability',rep_user_id=session.get('user_id')) }}" class="quick-link">
                             Performance Score
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         </a>
+                        {% endif %}
                         <!--{% if role == "ELECTED_REP" %}
                         <a href="{{ url_for('representative.issue_management') }}" class="quick-link">
                             Full Issue List
@@ -653,6 +662,10 @@
                         <div class="legend-row">
                             <span class="status-pill rejected">Rejected</span>
                             <span class="legend-desc">Deemed out of scope</span>
+                        </div>
+                        <div class="legend-row">
+                            <span class="status-pill closed">Closed</span>
+                            <span class="legend-desc">Citizen confirmed</span>
                         </div>
                     </div>
                 </div>

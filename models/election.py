@@ -340,3 +340,92 @@ def mark_election_active(election_id: str):
         use_admin=True
     )
 
+def get_approved_elections():
+    """
+    Returns all elections whose status is 'Approved'
+    """
+
+    elections = fetch_all(ELECTIONS_TABLE, {"status": "Approved"})
+
+    for election in elections:
+        # Add state name (like in get_all_elections)
+        state = get_state_name_by_state_id(election["state_id"])
+        if state:
+            election["state_name"] = state["state_name"]
+
+        # Format datetime fields
+        election["start_time"] = format_datetime(election["start_time"])
+        election["end_time"] = format_datetime(election["end_time"])
+
+    return elections
+
+def get_approved_elections_by_state(state_id: str):
+    """
+    Returns all APPROVED elections for a given state_id.
+    """
+
+    elections = fetch_all(
+        ELECTIONS_TABLE,
+        {
+            "state_id": state_id,
+            "status": "Approved"
+        }
+    )
+
+    if not elections:
+        return []
+
+    for election in elections:
+        election["start_time"] = format_datetime(election["start_time"])
+        election["end_time"] = format_datetime(election["end_time"])
+
+    return elections
+
+def get_candidates_by_constituency_and_election(constituency_id: str, election_id: str):
+    """
+    Returns candidates for a given constituency + election
+    with resolved display name
+    """
+
+    # Step 1: Fetch candidates matching both filters
+    candidates = fetch_all(
+        "candidates",
+        {
+            "constituency_id": constituency_id,
+            "election_id": election_id
+        }
+    )
+
+    if not candidates:
+        return []
+
+    result = []
+
+    for c in candidates:
+        # Step 2: map user_id → voter_id
+        voter_map = fetch_one(
+            "voter_user_map",
+            {"user_id": c["user_id"]}
+        )
+
+        if not voter_map:
+            continue
+
+        # Step 3: voter_id → voter full name
+        voter = fetch_one(
+            "voters",
+            {"id": voter_map["voter_id"]}
+        )
+
+        if not voter:
+            continue
+
+        result.append({
+            "id": c["id"],
+            "candidate_name": voter["full_name"],
+            "party_name": c["party_name"],
+            "created_at": format_datetime(c["created_at"]),
+            "election_id": c["election_id"]
+        })
+
+    return result

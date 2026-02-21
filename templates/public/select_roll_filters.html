@@ -1,77 +1,458 @@
 {% extends "base.html" %}
 {% set title = "View Electoral Roll" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   VIEW ELECTORAL ROLL - SELECTION PAGE
+═══════════════════════════════════════════════════════════ */
+
+.roll-select-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* ── SELECTION CARD ───────────────────────────────────────── */
+.selection-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    max-width: 600px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Card header with gradient */
+.card-header {
+    background: var(--indigo-dark);
+    padding: 2.5rem 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.card-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 30%, transparent 70%);
+}
+.card-header::after {
+    content: '';
+    position: absolute; top: -20%; right: -10%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 60%);
+}
+.header-inner {
+    position: relative; z-index: 2;
+}
+.header-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--warm-light); margin-bottom: 0.75rem;
+}
+.header-eyebrow svg { animation: blink 1.4s ease-in-out infinite; }
+.header-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    line-height: 0.95; color: #fff; margin-bottom: 0.5rem;
+}
+.header-title em { font-style: normal; color: var(--warm-light); }
+.header-sub {
+    font-size: 0.85rem; color: rgba(255,255,255,0.5);
+    line-height: 1.65;
+}
+
+/* Card body */
+.card-body {
+    padding: 2.5rem;
+}
+
+/* Form groups */
+.form-group {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    margin-bottom: 1.5rem;
+}
+.form-label {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); display: flex; align-items: center; gap: 0.5rem;
+}
+.form-label svg { opacity: 0.5; }
+.form-select {
+    font-family: var(--font-body); font-size: 0.88rem;
+    color: var(--text); background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.85rem 1rem; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+.form-select:focus {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+.form-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--ink-3);
+}
+
+/* Selection status indicator */
+.selection-status {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--ink-2);
+    border-left: 3px solid var(--border);
+    transition: border-color 0.3s;
+}
+.selection-status.complete {
+    border-color: var(--teal);
+    background: var(--teal-dim);
+}
+.status-icon {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--border);
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+.selection-status.complete .status-icon {
+    background: var(--teal);
+    color: #fff;
+}
+.status-text {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    letter-spacing: 0.08em; color: var(--muted);
+    line-height: 1.5;
+}
+.selection-status.complete .status-text {
+    color: var(--teal);
+}
+
+/* View button */
+.btn-view {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+    background: var(--indigo); color: #fff; border: none;
+    padding: 0.9rem 1.5rem; cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+}
+.btn-view:hover {
+    background: var(--indigo-dark);
+    transform: translateY(-2px);
+}
+.btn-view:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+.btn-view svg {
+    transition: transform 0.2s;
+}
+.btn-view:hover:not(:disabled) svg {
+    transform: translateX(3px);
+}
+
+/* Card footer */
+.card-footer {
+    padding: 1.5rem 2.5rem;
+    border-top: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.footer-note {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+}
+.footer-note-icon {
+    width: 24px; height: 24px;
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    display: grid; place-items: center;
+    color: var(--indigo);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.footer-note-text {
+    font-size: 0.78rem; color: var(--muted);
+    line-height: 1.6;
+}
+.footer-note-text strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* Info cards grid */
+.info-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+.info-card {
+    padding: 1rem 1.25rem;
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--indigo);
+    transition: border-color 0.2s, background 0.2s;
+}
+.info-card:hover {
+    background: var(--ink);
+    border-left-color: var(--teal);
+}
+.info-card-title {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--indigo); font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+.info-card-desc {
+    font-size: 0.78rem; color: var(--muted);
+    line-height: 1.55;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .roll-select-page { padding: 1rem; }
+    .card-header { padding: 2rem 1.5rem 1.5rem; }
+    .card-body { padding: 1.5rem; }
+    .card-footer { padding: 1.25rem 1.5rem; }
+    .info-cards { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="public-roll-select">
+<div class="roll-select-page">
 
-    <h2>View Electoral Roll</h2>
+    <div class="selection-card">
 
-    <div class="form-group">
-        <label>Select Election</label>
-        <select id="electionSelect">
-            <option value="">Select Election</option>
-            {% for e in elections %}
-                {% if e.draft_roll_released or e.final_roll_released %}
-                <option value="{{ e.id }}" data-state="{{ e.state_id }}">
-                    {{ e.election_name }}
-                </option>
-                {% endif %}
-            {% endfor %}
-        </select>
+        <!-- ── Card Header ─────────────────────────────────── -->
+        <div class="card-header">
+            <div class="header-inner">
+                <div class="header-eyebrow">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Public Electoral Roll
+                </div>
+                <h1 class="header-title">
+                    View <em>Electoral</em> Roll
+                </h1>
+                <p class="header-sub">
+                    Access published electoral rolls for approved elections.
+                    Select an election and constituency to continue.
+                </p>
+            </div>
+        </div>
+
+        <!-- ── Card Body ───────────────────────────────────── -->
+        <div class="card-body">
+
+            <!-- Selection status -->
+            <div class="selection-status" id="selectionStatus">
+                <div class="status-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                </div>
+                <div class="status-text" id="statusText">
+                    Please select an election and constituency to proceed.
+                </div>
+            </div>
+
+            <!-- Election selection -->
+            <div class="form-group">
+                <label class="form-label" for="electionSelect">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    Select Election
+                </label>
+                <select id="electionSelect" class="form-select">
+                    <option value="">Choose an election…</option>
+                    {% for e in elections %}
+                        {% if e.draft_roll_released or e.final_roll_released %}
+                            <option value="{{ e.id }}" data-state="{{ e.state_id }}">
+                                {{ e.election_name }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Constituency selection -->
+            <div class="form-group">
+                <label class="form-label" for="constituencySelect">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    Select Constituency
+                </label>
+                <select id="constituencySelect" class="form-select" disabled>
+                    <option>Select election first…</option>
+                </select>
+            </div>
+
+            <!-- View button -->
+            <button id="viewRollBtn" class="btn-view" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                View Electoral Roll
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </button>
+
+            <!-- Info cards -->
+            <div class="info-cards">
+                <div class="info-card">
+                    <div class="info-card-title">Draft Roll</div>
+                    <p class="info-card-desc">
+                        Provisional voter list subject to objections and corrections.
+                    </p>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-title">Final Roll</div>
+                    <p class="info-card-desc">
+                        Official approved list used for the actual voting process.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Card Footer ─────────────────────────────────── -->
+        <div class="card-footer">
+            <div class="footer-note">
+                <div class="footer-note-icon">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                </div>
+                <p class="footer-note-text">
+                    <strong>Note:</strong> Only elections with published electoral rolls are shown.
+                    All rolls are officially approved and publicly auditable on the blockchain.
+                </p>
+            </div>
+        </div>
+
     </div>
-
-    <div class="form-group">
-        <label>Select Constituency</label>
-        <select id="constituencySelect" disabled>
-            <option>Select election first</option>
-        </select>
-    </div>
-
-    <button id="viewRollBtn" class="btn-primary" disabled>
-        View Roll
-    </button>
 
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
 <script>
+    const electionSelect = document.getElementById("electionSelect");
+    const constSelect = document.getElementById("constituencySelect");
+    const viewBtn = document.getElementById("viewRollBtn");
+    const selectionStatus = document.getElementById("selectionStatus");
+    const statusText = document.getElementById("statusText");
 
-const electionSelect = document.getElementById("electionSelect");
-const constSelect = document.getElementById("constituencySelect");
-const btn = document.getElementById("viewRollBtn");
+    let selectedElection = null;
+    let selectedConstituency = null;
 
-// Fetch constituencies dynamically
-electionSelect.addEventListener("change", async () => {
+    // Update status display
+    function updateStatus() {
+        if (selectedElection && selectedConstituency) {
+            selectionStatus.classList.add('complete');
+            statusText.textContent = 'Ready to view electoral roll. Click the button below to proceed.';
+            statusText.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:0.4rem;">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Ready to view electoral roll. Click the button below to proceed.
+            `;
+        } else if (selectedElection) {
+            selectionStatus.classList.remove('complete');
+            statusText.textContent = 'Election selected. Please choose a constituency.';
+        } else {
+            selectionStatus.classList.remove('complete');
+            statusText.textContent = 'Please select an election and constituency to proceed.';
+        }
+    }
 
-    const electionId = electionSelect.value;
+    // Fetch constituencies dynamically
+    electionSelect.addEventListener("change", async () => {
+        const electionId = electionSelect.value;
+        
+        selectedElection = electionId || null;
+        selectedConstituency = null;
+        
+        constSelect.innerHTML = "<option value=''>Loading…</option>";
+        constSelect.disabled = true;
+        viewBtn.disabled = true;
 
-    if (!electionId) return;
+        updateStatus();
 
-    const res = await fetch(`/commission/api/constituencies/${electionId}`);
-    const data = await res.json();
+        if (!electionId) {
+            constSelect.innerHTML = "<option>Select election first…</option>";
+            return;
+        }
 
-    constSelect.innerHTML = "<option value=''>Select Constituency</option>";
+        try {
+            const res = await fetch(`/commission/api/constituencies/${electionId}`);
+            const data = await res.json();
 
-    data.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = c.constituency_name;
-        constSelect.appendChild(opt);
+            constSelect.innerHTML = "<option value=''>Choose a constituency…</option>";
+
+            data.forEach(c => {
+                const opt = document.createElement("option");
+                opt.value = c.id;
+                opt.textContent = c.constituency_name;
+                constSelect.appendChild(opt);
+            });
+
+            constSelect.disabled = false;
+
+        } catch (error) {
+            console.error('Error fetching constituencies:', error);
+            constSelect.innerHTML = "<option>Error loading constituencies</option>";
+        }
     });
 
-    constSelect.disabled = false;
-});
+    // Constituency selection
+    constSelect.addEventListener("change", () => {
+        selectedConstituency = constSelect.value || null;
+        viewBtn.disabled = !selectedConstituency;
+        updateStatus();
+    });
 
-constSelect.addEventListener("change", () => {
-    btn.disabled = !constSelect.value;
-});
+    // View roll button
+    viewBtn.addEventListener("click", () => {
+        const e = electionSelect.value;
+        const c = constSelect.value;
+        
+        if (e && c) {
+            window.location.href = `/commission/public/roll/${e}/${c}`;
+        }
+    });
 
-btn.addEventListener("click", () => {
-    const e = electionSelect.value;
-    const c = constSelect.value;
-    window.location.href = `/commission/public/roll/${e}/${c}`;
-});
-
+    // Initialize status
+    updateStatus();
 </script>
 {% endblock %}

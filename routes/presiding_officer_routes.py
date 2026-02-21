@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, session, flash, redirect, url_for
 from utils.decorators import login_required, role_required
 
-from models.voter import get_voter_by_user_id
+from models.voter import get_voter_by_user_id,get_user_id_by_voter_id_number
 from models.user import get_user_by_id
 from models.election import get_active_elections_by_constituency
 
@@ -65,13 +65,14 @@ def dashboard():
 @login_required
 @role_required("PO")
 def authorize_voter():
-    voter_user_id = request.form.get("voter_user_id")
+    voter_id_number = request.form.get("voter_user_id")
     otp_input = request.form.get("otp")
     action = request.form.get("action")
 
     # -----------------------------
     # Validate voter user
     # -----------------------------
+    voter_user_id=get_user_id_by_voter_id_number(voter_id_number)
     voter_user = get_user_by_id(voter_user_id)
     if not voter_user:
         flash("Invalid voter user ID", "error")

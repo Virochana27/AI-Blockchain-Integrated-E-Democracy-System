@@ -64,3 +64,31 @@ def get_state_id_by_constituency_id(constituency_id: str):
         return None
 
     return district.get("state_id")
+
+def get_constituencies_by_election_id(election_id: str):
+    """
+    Returns all constituencies mapped to a given election_id
+    """
+
+    # Step 1: Fetch mapping rows
+    mappings = fetch_all(
+        "election_constituencies",
+        {"election_id": election_id}
+    )
+
+    if not mappings:
+        return []
+
+    results = []
+
+    # Step 2: Fetch full constituency details
+    for m in mappings:
+        constituency = fetch_one(
+            CONSTITUENCIES_TABLE,
+            {"id": m["constituency_id"]}
+        )
+
+        if constituency:
+            results.append(constituency)
+
+    return results

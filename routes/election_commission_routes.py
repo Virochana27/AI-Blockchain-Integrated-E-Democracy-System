@@ -5,19 +5,20 @@ from services.election_service import (
     create_state_election,
     approve_state_election
 )
-from models.election import get_all_elections, get_elections_by_state,get_district_name_by_district_id
+from models.election import get_all_elections, get_elections_by_state,get_district_name_by_district_id,get_approved_elections, get_approved_elections_by_state,get_candidates_by_constituency_and_election
 from models.voter import (
     get_voters_by_constituency,
     get_voters_by_booth,
     create_voter,
     update_voter_details,
-    deactivate_voter
+    deactivate_voter,
+    get_user_id_by_voter_id_number
 )
 from models.user import get_users_by_role
 from models.candidate import get_candidates_by_constituency, create_candidate
 from datetime import datetime
 from models.election import add_constituency_to_election,is_roll_locked
-from models.constituency import get_constituencies_by_state
+from models.constituency import get_constituencies_by_state,get_constituencies_by_election_id
 from services.election_finalizer import finalize_election_if_needed
 from services.election_activation_service import activate_election_if_needed
 from models.election import get_state_name_by_state_id,get_election_by_id, get_elections_by_constituency
@@ -75,12 +76,11 @@ def dashboard():
         return render_template("election_commission/ro/nomination_management.html", candidates=candidates,elections=elections)
 
     if role == "ERO":
-        elections = get_elections_by_state(session.get("state_id"))
+        elections =  get_approved_elections_by_state(session.get("state_id"))
         for election in elections:
             activate_election_if_needed(election)
             finalize_election_if_needed(election)
         voters = get_voters_by_constituency(session.get("constituency_id"))
-        elections = get_elections_by_state(session.get("state_id"))
         booths = get_booths_by_constituency(session.get("constituency_id"))
         return render_template("election_commission/ero/voter_management.html", voters=voters,elections=elections,booths=booths)
 
@@ -219,8 +219,16 @@ def manage_ro():
 @login_required
 @role_required("RO")
 def nomination_management():
-    elections = get_elections_by_state(session.get("state_id"))
-    candidates = get_candidates_by_constituency(session.get("constituency_id"))
+    elections = get_approved_elections_by_state(session.get("state_id"))
+
+    all_candidates = []
+
+    for election in elections:
+        candidates = get_candidates_by_constituency_and_election(
+            session.get("constituency_id"),
+            election["id"]
+        )
+        all_candidates.extend(candidates)
     return render_template(
         "election_commission/ro/nomination_management.html",
         candidates=candidates,
@@ -250,9 +258,12 @@ def add_candidate():
                 flash("Nomination deadline has passed. No more candidates can be added.", "error")
                 return redirect(url_for("election_commission.nomination_management"))
 
+
+        voter_id_num=request.form.get("user_id")
+        user_id=get_user_id_by_voter_id_number(voter_id_num)
         # Create candidate if deadline not crossed
         create_candidate(
-            user_id=request.form.get("user_id"),
+            user_id=user_id,
             election_id=election_id,
             constituency_id=session.get("constituency_id"),
             party_name=request.form.get("party_name")
@@ -517,9 +528,7 @@ def view_public_roll(election_id, constituency_id):
 @bp.route("/public/roll")
 def public_roll_page():
 
-    from models.election import get_all_elections
-
-    elections = get_all_elections()
+    elections = get_approved_elections()
 
     return render_template(
         "public/electoral_roll.html",
@@ -560,7 +569,7 @@ def api_constituencies_for_election(election_id):
     if not election:
         return {"error": "Invalid election"}, 404
 
-    constituencies = get_constituencies_by_state(election["state_id"])
+    constituencies = get_constituencies_by_election_id(election["id"])
 
     return constituencies
 

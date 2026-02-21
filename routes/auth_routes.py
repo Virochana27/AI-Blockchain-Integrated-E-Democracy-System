@@ -142,4 +142,3 @@ def reset_password():
         return redirect(url_for("auth.login"))
 
     return render_template("auth/reset_password.html")
-

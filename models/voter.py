@@ -56,7 +56,43 @@ def get_voter_by_voter_id_number(voter_id_number: str):
 
 
 def get_voters_by_constituency(constituency_id: str):
-    return fetch_all(VOTERS_TABLE, {"constituency_id": constituency_id})
+    """
+    Returns voters with booth_name and booth_number instead of booth_id
+    """
+
+    voters = fetch_all(
+        VOTERS_TABLE,
+        {"constituency_id": constituency_id}
+    )
+
+    if not voters:
+        return []
+
+    result = []
+
+    for voter in voters:
+        booth = None
+
+        if voter.get("booth_id"):
+            booth = fetch_one(
+                "booths",
+                {"id": voter["booth_id"]}
+            )
+
+        result.append({
+            "id": voter["id"],
+            "voter_id_number": voter["voter_id_number"],
+            "full_name": voter["full_name"],
+            "guardian_name": voter["guardian_name"],
+            "gender": voter["gender"],
+            "date_of_birth": voter["date_of_birth"],
+            "address": voter["address"],
+            "booth_name": booth["booth_name"] if booth else None,
+            "booth_number": booth["booth_number"] if booth else None,
+            "is_active": voter["is_active"]
+        })
+
+    return result
 
 
 def update_voter_details(voter_id, data,use_admin=True):
@@ -131,3 +167,19 @@ def get_user_id_by_voter_id(voter_id: str):
         return None
 
     return record.get("user_id")
+
+def get_user_id_by_voter_id_number(voter_id_number: str):
+    """
+    Using voter_id_number:
+    1. Fetch voter
+    2. Get mapped user_id
+    """
+
+    # Step 1: Get voter using voter_id_number
+    voter = get_voter_by_voter_id_number(voter_id_number)
+
+    if not voter:
+        return None
+
+    # Step 2: Get user_id using voter_id
+    return get_user_id_by_voter_id(voter["id"])

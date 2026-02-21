@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+{% set title = "Election Insights" %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ELECTION ANALYTICS DASHBOARD
+═══════════════════════════════════════════════════════════ */
+
+.insights-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3rem 4rem 5rem;
+}
+
+/* ── PAGE HEADER ──────────────────────────────────────────── */
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 2rem; flex-wrap: wrap;
+}
+.page-header-left {}
+.page-header-tag {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--indigo); margin-bottom: 0.5rem;
+}
+.page-header-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 0.95; color: var(--text); margin-bottom: 0.4rem;
+}
+.page-title em { font-style: normal; color: var(--indigo); }
+.page-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+/* ── ELECTION SELECTOR ────────────────────────────────────── */
+.selector-card {
+    background: var(--ink); border: 1px solid var(--border);
+    padding: 1.5rem 2rem; margin-bottom: 2rem;
+    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+}
+.selector-label {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap;
+}
+.selector-select {
+    font-family: var(--font-body); font-size: 0.88rem;
+    color: var(--text); background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.7rem 1rem; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 320px; flex: 1;
+}
+.selector-select:focus {
+    border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+
+/* ── STATS GRID ───────────────────────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+}
+.stat-card {
+    background: var(--ink); padding: 1.75rem 1.5rem;
+    position: relative; overflow: hidden;
+    transition: background 0.2s;
+}
+.stat-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    transform: scaleX(0); transform-origin: left; transition: transform 0.35s;
+}
+.stat-card:hover { background: #fafafe; }
+.stat-card:hover::after { transform: scaleX(1); }
+.stat-card.total::after    { background: var(--indigo); }
+.stat-card.first::after    { background: var(--teal); }
+.stat-card.male::after     { background: #3b82f6; }
+.stat-card.female::after   { background: #ec4899; }
+.stat-icon {
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    border-radius: 4px; margin-bottom: 0.75rem;
+}
+.stat-card.total .stat-icon    { background: var(--indigo-dim); color: var(--indigo); }
+.stat-card.first .stat-icon    { background: var(--teal-dim);   color: var(--teal); }
+.stat-card.male .stat-icon     { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.stat-card.female .stat-icon   { background: rgba(236,72,153,0.1); color: #ec4899; }
+.stat-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.35rem;
+}
+.stat-value {
+    font-family: var(--font-disp); font-size: 2.2rem;
+    line-height: 1; margin-bottom: 0.2rem;
+}
+.stat-card.total .stat-value  { color: var(--indigo); }
+.stat-card.first .stat-value  { color: var(--teal); }
+.stat-card.male .stat-value   { color: #3b82f6; }
+.stat-card.female .stat-value { color: #ec4899; }
+.stat-sub {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: var(--muted); letter-spacing: 0.04em;
+}
+
+/* ── SECTION CARDS ────────────────────────────────────────── */
+.section-card {
+    background: var(--ink); border: 1px solid var(--border);
+    margin-bottom: 1.5rem; overflow: hidden;
+}
+.section-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.section-title {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.section-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+.section-body { padding: 1.5rem; }
+
+/* ── DATA TABLES ──────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead tr { border-bottom: 1px solid var(--border); }
+.data-table th {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+    padding: 0.7rem 1rem; text-align: left;
+    background: var(--ink-2);
+}
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: #f8f8fd; }
+.data-table td { padding: 0.85rem 1rem; vertical-align: middle; }
+
+.td-constituency { font-size: 0.88rem; font-weight: 500; color: var(--text); }
+.td-number {
+    font-family: var(--font-mono); font-size: 0.8rem;
+    color: var(--indigo); letter-spacing: 0.04em;
+}
+.td-percent {
+    font-family: var(--font-disp); font-size: 1.1rem;
+    color: var(--teal); font-weight: 600;
+}
+.td-party {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* Turnout bar */
+.turnout-bar-wrap {
+    width: 100%; height: 8px;
+    background: var(--ink-2); border-radius: 4px;
+    overflow: hidden; margin-top: 0.3rem;
+}
+.turnout-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--indigo));
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+/* Score badge */
+.score-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    font-family: var(--font-disp); font-size: 1rem;
+    font-weight: 700;
+    border-radius: 4px;
+}
+.score-badge.high   { background: var(--teal-dim);   color: var(--teal); }
+.score-badge.medium { background: var(--warm-dim);   color: var(--warm); }
+.score-badge.low    { background: var(--ink-3);      color: var(--muted); }
+
+/* Rank badge */
+.rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    font-family: var(--font-mono); font-size: 0.7rem;
+    font-weight: 700; border-radius: 50%;
+}
+.rank-badge.first  { background: #fbbf24; color: #78350f; }
+.rank-badge.second { background: #94a3b8; color: #1e293b; }
+.rank-badge.third  { background: #fb923c; color: #7c2d12; }
+.rank-badge.other  { background: var(--ink-3); color: var(--muted); }
+
+/* ── LIST ITEMS ───────────────────────────────────────────── */
+.data-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.data-list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--ink-2);
+    border-left: 3px solid var(--border);
+    transition: border-color 0.2s, background 0.2s;
+}
+.data-list-item:hover {
+    background: var(--ink);
+    border-left-color: var(--indigo);
+}
+.list-item-label {
+    font-size: 0.88rem; color: var(--text); font-weight: 500;
+}
+.list-item-value {
+    font-family: var(--font-disp); font-size: 1.3rem;
+    color: var(--indigo); font-weight: 600;
+}
+
+/* ── GRID LAYOUT ──────────────────────────────────────────── */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+/* ── EMPTY STATE ──────────────────────────────────────────── */
+.empty-state {
+    padding: 5rem 2rem; text-align: center;
+}
+.empty-icon {
+    font-size: 4rem; margin-bottom: 1rem; opacity: 0.2;
+}
+.empty-text {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1200px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1024px) {
+    .insights-page { padding: 2rem 2rem 4rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .data-table thead { display: none; }
+    .data-table td { display: block; padding: 0.4rem 1rem; }
+    .data-table tbody tr { display: block; padding: 0.75rem 0; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="insights-page">
+
+    <!-- ── Page Header ─────────────────────────────────────── -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="page-header-tag">Election Commission Analytics</div>
+            <h1 class="page-title">Election <em>Insights</em></h1>
+            <p class="page-sub">
+                Comprehensive analytics dashboard for election data, turnout metrics, and constituency performance.
+            </p>
+        </div>
+    </div>
+
+    <!-- ── Election Selector ───────────────────────────────── -->
+    <div class="selector-card">
+        <label class="selector-label" for="electionSelect">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:0.3rem;">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Select Election
+        </label>
+        <select id="electionSelect" class="selector-select">
+            <option value="">Choose an election to view analytics…</option>
+            {% for e in elections %}
+                <option value="{{ e.id }}">{{ e.election_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- ── Empty State ─────────────────────────────────────── -->
+    <div id="emptyState" class="section-card">
+        <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <p class="empty-text">Select an election above to view detailed analytics</p>
+        </div>
+    </div>
+
+    <!-- ── Content Area (hidden initially) ─────────────────── -->
+    <div id="contentArea" style="display:none;">
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card total">
+                <div class="stat-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <div class="stat-label">Total Votes</div>
+                <div class="stat-value" id="totalVotes">0</div>
+            </div>
+            <div class="stat-card first">
+                <div class="stat-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="7"/>
+                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+                    </svg>
+                </div>
+                <div class="stat-label">First-Time Voters</div>
+                <div class="stat-value" id="firstTime">0</div>
+                <div class="stat-sub" id="firstTimeSub"></div>
+            </div>
+            <div class="stat-card male">
+                <div class="stat-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="10" cy="14" r="6"/>
+                        <line x1="21" y1="3" x2="14" y2="10"/>
+                        <line x1="15" y1="3" x2="21" y2="3"/>
+                        <line x1="21" y1="3" x2="21" y2="9"/>
+                    </svg>
+                </div>
+                <div class="stat-label">Male Voters</div>
+                <div class="stat-value" id="maleCount">0</div>
+            </div>
+            <div class="stat-card female">
+                <div class="stat-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="6"/>
+                        <line x1="12" y1="14" x2="12" y2="22"/>
+                        <line x1="8" y1="18" x2="16" y2="18"/>
+                    </svg>
+                </div>
+                <div class="stat-label">Female Voters</div>
+                <div class="stat-value" id="femaleCount">0</div>
+            </div>
+        </div>
+
+        <!-- Two column grid -->
+        <div class="grid-2">
+            <!-- Party Seats -->
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title">Party Seat Distribution</span>
+                </div>
+                <div class="section-body">
+                    <div class="data-list" id="partySeats"></div>
+                </div>
+            </div>
+
+            <!-- Party Vote Share -->
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title">Party Vote Share</span>
+                </div>
+                <div class="section-body">
+                    <div class="data-list" id="partyVoteShare"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Constituency Turnout -->
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title">Constituency Turnout</span>
+            </div>
+            <div class="section-body" style="padding:0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Constituency</th>
+                            <th>Registered</th>
+                            <th>Turnout</th>
+                        </tr>
+                    </thead>
+                    <tbody id="turnoutTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Victory Margins -->
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title">Victory Margins</span>
+            </div>
+            <div class="section-body" style="padding:0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Constituency</th>
+                            <th>Winner</th>
+                            <th>Party</th>
+                            <th>Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marginTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Two column grid -->
+        <div class="grid-2">
+            <!-- Turnout Leaderboard -->
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title">Turnout Leaderboard</span>
+                </div>
+                <div class="section-body" style="padding:0;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:3rem;">Rank</th>
+                                <th>Constituency</th>
+                                <th>Turnout</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Age Demographics -->
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title">Age Demographics</span>
+                </div>
+                <div class="section-body">
+                    <div class="data-list" id="ageStats"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Constituency Engagement -->
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title">Constituency Engagement Ranking</span>
+            </div>
+            <div class="section-body" style="padding:0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Constituency</th>
+                            <th>Score</th>
+                            <th>Total Votes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="heatmapTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    document.getElementById("electionSelect").addEventListener("change", async function() {
+        const electionId = this.value;
+        
+        const emptyState = document.getElementById("emptyState");
+        const contentArea = document.getElementById("contentArea");
+
+        if (!electionId) {
+            emptyState.style.display = "block";
+            contentArea.style.display = "none";
+            return;
+        }
+
+        try {
+            const res = await fetch(`/insights/${electionId}`);
+            const json = await res.json();
+            const data = json.data;
+
+            // Hide empty, show content
+            emptyState.style.display = "none";
+            contentArea.style.display = "block";
+
+            // ── Stats cards ────────────────────────────────────────
+            document.getElementById("totalVotes").textContent = data.total_votes || 0;
+            document.getElementById("firstTime").textContent = data.first_time_voters.count || 0;
+            document.getElementById("firstTimeSub").textContent = `${data.first_time_voters.percentage || 0}% of total`;
+            document.getElementById("maleCount").textContent = data.gender_split.Male || 0;
+            document.getElementById("femaleCount").textContent = data.gender_split.Female || 0;
+
+            // ── Party seats ────────────────────────────────────────
+            const partySeats = document.getElementById("partySeats");
+            partySeats.innerHTML = "";
+            Object.entries(data.party_seat_share || {}).forEach(([party, seats]) => {
+                partySeats.innerHTML += `
+                    <div class="data-list-item">
+                        <span class="list-item-label">${party}</span>
+                        <span class="list-item-value">${seats}</span>
+                    </div>
+                `;
+            });
+
+            // ── Party vote share ───────────────────────────────────
+            const partyVoteShare = document.getElementById("partyVoteShare");
+            partyVoteShare.innerHTML = "";
+            Object.entries(data.party_vote_share || {}).forEach(([party, share]) => {
+                partyVoteShare.innerHTML += `
+                    <div class="data-list-item">
+                        <span class="list-item-label">${party}</span>
+                        <span class="list-item-value">${share}%</span>
+                    </div>
+                `;
+            });
+
+            // ── Turnout table ──────────────────────────────────────
+            const turnoutTable = document.getElementById("turnoutTable");
+            turnoutTable.innerHTML = "";
+            (data.turnout_by_constituency || []).forEach(r => {
+                turnoutTable.innerHTML += `
+                    <tr>
+                        <td class="td-constituency">${r.constituency_id}</td>
+                        <td class="td-number">${r.registered_voters}</td>
+                        <td>
+                            <div class="td-percent">${r.turnout_percent}%</div>
+                            <div class="turnout-bar-wrap">
+                                <div class="turnout-bar" style="width:${r.turnout_percent}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // ── Victory margins ────────────────────────────────────
+            const marginTable = document.getElementById("marginTable");
+            marginTable.innerHTML = "";
+            (data.victory_margins || []).forEach(m => {
+                marginTable.innerHTML += `
+                    <tr>
+                        <td class="td-constituency">${m.constituency_id}</td>
+                        <td class="td-constituency">${m.winner}</td>
+                        <td class="td-party">${m.party}</td>
+                        <td class="td-number">${m.margin}</td>
+                    </tr>
+                `;
+            });
+
+            // ── Turnout leaderboard ────────────────────────────────
+            const leaderTable = document.getElementById("leaderTable");
+            leaderTable.innerHTML = "";
+            (data.turnout_leaderboard || []).forEach((t, index) => {
+                let rankClass = "other";
+                if (index === 0) rankClass = "first";
+                else if (index === 1) rankClass = "second";
+                else if (index === 2) rankClass = "third";
+
+                leaderTable.innerHTML += `
+                    <tr>
+                        <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
+                        <td class="td-constituency">${t.constituency_id}</td>
+                        <td class="td-percent">${t.turnout_percent}%</td>
+                    </tr>
+                `;
+            });
+
+            // ── Age demographics ───────────────────────────────────
+            const ageStats = document.getElementById("ageStats");
+            ageStats.innerHTML = "";
+            Object.entries(data.age_distribution || {}).forEach(([group, count]) => {
+                ageStats.innerHTML += `
+                    <div class="data-list-item">
+                        <span class="list-item-label">${group}</span>
+                        <span class="list-item-value">${count}</span>
+                    </div>
+                `;
+            });
+
+            // ── Constituency heatmap ───────────────────────────────
+            const heatmapTable = document.getElementById("heatmapTable");
+            heatmapTable.innerHTML = "";
+            (data.constituency_heatmap || []).forEach(h => {
+                let scoreClass = "low";
+                if (h.score >= 70) scoreClass = "high";
+                else if (h.score >= 40) scoreClass = "medium";
+
+                heatmapTable.innerHTML += `
+                    <tr>
+                        <td class="td-constituency">${h.constituency_id}</td>
+                        <td><span class="score-badge ${scoreClass}">${h.score}</span></td>
+                        <td class="td-number">${h.votes}</td>
+                    </tr>
+                `;
+            });
+
+        } catch (error) {
+            console.error('Error fetching insights:', error);
+            alert('Error loading election insights. Please try again.');
+        }
+    });
+</script>
+{% endblock %}
