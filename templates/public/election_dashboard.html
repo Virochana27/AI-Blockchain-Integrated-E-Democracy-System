@@ -10,54 +10,88 @@
 .insights-page {
     min-height: calc(100vh - var(--nav-h));
     background: var(--ink-2);
-    padding: 3rem 4rem 5rem;
 }
 
 /* ── PAGE HEADER ──────────────────────────────────────────── */
-.page-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1.75rem;
+.page-hero {
+    padding: 3.5rem 4rem 2.5rem;
+    background: var(--ink);
     border-bottom: 1px solid var(--border);
-    display: flex; align-items: flex-start; justify-content: space-between;
+    position: relative; overflow: hidden;
+}
+.page-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(79,70,229,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,70,229,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, black 20%, transparent 70%);
+    pointer-events: none;
+}
+.page-hero::after {
+    content: '';
+    position: absolute; top: 0; right: 0; bottom: 0; width: 40%;
+    background: radial-gradient(ellipse 80% 60% at 100% 50%, rgba(79,70,229,0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+.page-hero-inner {
+    position: relative; z-index: 1;
+    display: flex; align-items: flex-end; justify-content: space-between;
     gap: 2rem; flex-wrap: wrap;
 }
-.page-header-left {}
-.page-header-tag {
-    display: flex; align-items: center; gap: 0.5rem;
-    font-family: var(--font-mono); font-size: 0.65rem;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--indigo); margin-bottom: 0.5rem;
-}
-.page-header-tag::before { content: ''; width: 20px; height: 1px; background: var(--indigo); }
-.page-title {
+.page-hero-left .section-tag { margin-bottom: 0.75rem; }
+.page-hero h1 {
     font-family: var(--font-disp);
-    font-size: clamp(2rem, 3.5vw, 3.2rem);
-    line-height: 0.95; color: var(--text); margin-bottom: 0.4rem;
+    font-size: clamp(2.2rem, 4vw, 3.8rem);
+    line-height: 0.93; color: var(--text); margin-bottom: 0.5rem;
 }
-.page-title em { font-style: normal; color: var(--indigo); }
-.page-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+.page-hero h1 em { font-style: normal; color: var(--indigo); }
+.page-hero-sub {
+    font-size: 0.88rem; color: var(--muted); line-height: 1.65;
+    max-width: 480px;
+}
 
-/* ── ELECTION SELECTOR ────────────────────────────────────── */
-.selector-card {
-    background: var(--ink); border: 1px solid var(--border);
-    padding: 1.5rem 2rem; margin-bottom: 2rem;
-    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
-}
-.selector-label {
-    font-family: var(--font-mono); font-size: 0.62rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--muted); white-space: nowrap;
-}
-.selector-select {
-    font-family: var(--font-body); font-size: 0.88rem;
-    color: var(--text); background: var(--ink-2);
+/* Selector in header */
+.hero-selector {
+    display: flex; align-items: stretch; gap: 0;
     border: 1px solid var(--border);
-    padding: 0.7rem 1rem; outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    min-width: 320px; flex: 1;
+    background: var(--ink-2);
+    min-width: 340px; max-width: 420px; flex: 1;
+    align-self: center;
 }
-.selector-select:focus {
-    border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-dim);
+.hero-selector-label {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap;
+    padding: 0 1rem;
+    background: var(--ink-3);
+    border-right: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.hero-selector-wrap {
+    flex: 1; position: relative;
+}
+.hero-selector-wrap select {
+    width: 100%; height: 100%;
+    padding: 0.85rem 2.5rem 0.85rem 1rem;
+    font-family: var(--font-mono); font-size: 0.75rem;
+    letter-spacing: 0.04em; color: var(--text);
+    border: none; outline: none; background: transparent;
+    appearance: none; cursor: pointer; min-height: 48px;
+    transition: background 0.15s;
+}
+.hero-selector-wrap select:focus { background: var(--indigo-dim); }
+.hero-selector-wrap::after {
+    content: '▾'; position: absolute;
+    right: 0.85rem; top: 50%; transform: translateY(-50%);
+    font-size: 0.75rem; color: var(--muted); pointer-events: none;
+}
+
+/* ── MAIN LAYOUT ──────────────────────────────────────────── */
+.insights-body {
+    padding: 2rem 4rem 5rem;
+    display: flex; flex-direction: column; gap: 1.5rem;
 }
 
 /* ── STATS GRID ───────────────────────────────────────────── */
@@ -66,7 +100,6 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 1px; background: var(--border);
     border: 1px solid var(--border);
-    margin-bottom: 2rem;
 }
 .stat-card {
     background: var(--ink); padding: 1.75rem 1.5rem;
@@ -98,7 +131,7 @@
     color: var(--muted); margin-bottom: 0.35rem;
 }
 .stat-value {
-    font-family: var(--font-disp); font-size: 2.2rem;
+    font-family: var(--font-disp); font-size: 2.4rem;
     line-height: 1; margin-bottom: 0.2rem;
 }
 .stat-card.total .stat-value  { color: var(--indigo); }
@@ -110,34 +143,79 @@
     color: var(--muted); letter-spacing: 0.04em;
 }
 
-/* ── SECTION CARDS ────────────────────────────────────────── */
+/* ── SECTION CARD ─────────────────────────────────────────── */
 .section-card {
     background: var(--ink); border: 1px solid var(--border);
-    margin-bottom: 1.5rem; overflow: hidden;
+    overflow: hidden;
 }
 .section-header {
-    padding: 1rem 1.5rem;
+    padding: 0.85rem 1.5rem;
     border-bottom: 1px solid var(--border);
     background: var(--ink-2);
     display: flex; align-items: center; justify-content: space-between;
 }
-.section-title {
-    font-family: var(--font-mono); font-size: 0.65rem;
+.section-title-mono {
+    font-family: var(--font-mono); font-size: 0.62rem;
     letter-spacing: 0.18em; text-transform: uppercase;
     color: var(--indigo);
     display: flex; align-items: center; gap: 0.5rem;
 }
-.section-title::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
-.section-body { padding: 1.5rem; }
+.section-title-mono::before { content: ''; width: 14px; height: 1px; background: var(--indigo); }
+
+/* ── BENTO GRID: Party Cards ──────────────────────────────── */
+.bento-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+}
+.bento-cell {
+    background: var(--ink);
+}
+
+/* ── DATA LIST ────────────────────────────────────────────── */
+.data-list { display: flex; flex-direction: column; }
+.data-list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    position: relative;
+}
+.data-list-item:last-child { border-bottom: none; }
+.data-list-item::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--indigo); transform: scaleY(0); transform-origin: center;
+    transition: transform 0.2s;
+}
+.data-list-item:hover { background: var(--ink-2); }
+.data-list-item:hover::before { transform: scaleY(1); }
+.list-item-label {
+    font-size: 0.88rem; color: var(--text); font-weight: 500;
+}
+.list-item-bar-wrap {
+    flex: 1; height: 4px; background: var(--ink-3);
+    margin: 0 1rem; overflow: hidden;
+}
+.list-item-bar {
+    height: 100%; background: var(--indigo); transition: width 0.6s ease;
+}
+.bento-cell:last-child .list-item-bar { background: var(--teal); }
+.list-item-value {
+    font-family: var(--font-disp); font-size: 1.3rem;
+    color: var(--indigo); min-width: 3rem; text-align: right;
+}
+.bento-cell:last-child .list-item-value { color: var(--teal); }
 
 /* ── DATA TABLES ──────────────────────────────────────────── */
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table thead tr { border-bottom: 1px solid var(--border); }
+.data-table thead tr { border-bottom: 2px solid var(--border); }
 .data-table th {
-    font-family: var(--font-mono); font-size: 0.58rem;
-    letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.16em; text-transform: uppercase;
     color: var(--muted); font-weight: 400;
-    padding: 0.7rem 1rem; text-align: left;
+    padding: 0.75rem 1.25rem; text-align: left;
     background: var(--ink-2);
 }
 .data-table tbody tr {
@@ -146,99 +224,97 @@
 }
 .data-table tbody tr:last-child { border-bottom: none; }
 .data-table tbody tr:hover { background: #f8f8fd; }
-.data-table td { padding: 0.85rem 1rem; vertical-align: middle; }
+.data-table td { padding: 0.9rem 1.25rem; vertical-align: middle; }
 
 .td-constituency { font-size: 0.88rem; font-weight: 500; color: var(--text); }
 .td-number {
     font-family: var(--font-mono); font-size: 0.8rem;
-    color: var(--indigo); letter-spacing: 0.04em;
+    color: var(--text); letter-spacing: 0.04em;
 }
 .td-percent {
-    font-family: var(--font-disp); font-size: 1.1rem;
-    color: var(--teal); font-weight: 600;
+    font-family: var(--font-disp); font-size: 1.15rem;
+    color: var(--teal);
 }
 .td-party {
-    font-family: var(--font-mono); font-size: 0.68rem;
+    font-family: var(--font-mono); font-size: 0.65rem;
     letter-spacing: 0.06em; text-transform: uppercase;
     color: var(--muted);
 }
 
 /* Turnout bar */
 .turnout-bar-wrap {
-    width: 100%; height: 8px;
-    background: var(--ink-2); border-radius: 4px;
-    overflow: hidden; margin-top: 0.3rem;
+    width: 100%; height: 6px;
+    background: var(--ink-3); overflow: hidden; margin-top: 0.3rem;
 }
 .turnout-bar {
     height: 100%;
     background: linear-gradient(90deg, var(--teal), var(--indigo));
-    border-radius: 4px;
-    transition: width 0.6s ease;
+    transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
 }
 
 /* Score badge */
 .score-badge {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px;
-    font-family: var(--font-disp); font-size: 1rem;
-    font-weight: 700;
-    border-radius: 4px;
+    width: 40px; height: 28px;
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+    border-radius: 2px;
 }
-.score-badge.high   { background: var(--teal-dim);   color: var(--teal); }
-.score-badge.medium { background: var(--warm-dim);   color: var(--warm); }
-.score-badge.low    { background: var(--ink-3);      color: var(--muted); }
+.score-badge.high   { background: var(--teal-dim);   color: var(--teal); border: 1px solid rgba(13,148,136,0.2); }
+.score-badge.medium { background: var(--warm-dim);   color: var(--warm); border: 1px solid rgba(245,158,11,0.2); }
+.score-badge.low    { background: var(--ink-3);      color: var(--muted); border: 1px solid var(--border); }
 
 /* Rank badge */
 .rank-badge {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px;
-    font-family: var(--font-mono); font-size: 0.7rem;
-    font-weight: 700; border-radius: 50%;
+    width: 26px; height: 26px;
+    font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700;
+    border-radius: 50%;
 }
 .rank-badge.first  { background: #fbbf24; color: #78350f; }
 .rank-badge.second { background: #94a3b8; color: #1e293b; }
 .rank-badge.third  { background: #fb923c; color: #7c2d12; }
 .rank-badge.other  { background: var(--ink-3); color: var(--muted); }
 
-/* ── LIST ITEMS ───────────────────────────────────────────── */
-.data-list { display: flex; flex-direction: column; gap: 0.75rem; }
-.data-list-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0.75rem 1rem;
-    background: var(--ink-2);
-    border-left: 3px solid var(--border);
-    transition: border-color 0.2s, background 0.2s;
-}
-.data-list-item:hover {
-    background: var(--ink);
-    border-left-color: var(--indigo);
-}
-.list-item-label {
-    font-size: 0.88rem; color: var(--text); font-weight: 500;
-}
-.list-item-value {
-    font-family: var(--font-disp); font-size: 1.3rem;
-    color: var(--indigo); font-weight: 600;
-}
-
-/* ── GRID LAYOUT ──────────────────────────────────────────── */
+/* ── GRID LAYOUTS ─────────────────────────────────────────── */
 .grid-2 {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
 }
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+}
+.grid-cell {
+    background: var(--ink);
+}
+
+/* Full-width section (no gap wrapper needed) */
+.full-card { border: 1px solid var(--border); background: var(--ink); overflow: hidden; }
 
 /* ── EMPTY STATE ──────────────────────────────────────────── */
 .empty-state {
-    padding: 5rem 2rem; text-align: center;
+    padding: 6rem 2rem; text-align: center;
+    border: 1px solid var(--border);
+    background: var(--ink);
 }
-.empty-icon {
-    font-size: 4rem; margin-bottom: 1rem; opacity: 0.2;
-}
+.empty-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.15; }
 .empty-text {
-    font-family: var(--font-mono); font-size: 0.68rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--font-mono); font-size: 0.65rem;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+}
+.empty-hint {
+    font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem; opacity: 0.7;
+}
+
+/* ── INLINE GRID BORDERS ──────────────────────────────────── */
+/* For grid-2/grid-3 wrapped sections, remove outer border since wrapper provides it */
+.grid-2 .section-card,
+.grid-3 .section-card {
+    border: none;
 }
 
 /* ── RESPONSIVE ───────────────────────────────────────────── */
@@ -246,14 +322,17 @@
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 1024px) {
-    .insights-page { padding: 2rem 2rem 4rem; }
-    .grid-2 { grid-template-columns: 1fr; }
+    .page-hero { padding: 2.5rem 2rem 2rem; }
+    .insights-body { padding: 1.5rem 2rem 4rem; }
+    .grid-2, .grid-3, .bento-row { grid-template-columns: 1fr; }
+    .hero-selector { min-width: unset; max-width: 100%; width: 100%; }
+    .page-hero-inner { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width: 768px) {
     .stats-grid { grid-template-columns: 1fr; }
     .data-table thead { display: none; }
     .data-table td { display: block; padding: 0.4rem 1rem; }
-    .data-table tbody tr { display: block; padding: 0.75rem 0; }
+    .data-table tbody tr { display: block; padding: 0.5rem 0; }
 }
 </style>
 {% endblock %}
@@ -262,145 +341,144 @@
 {% block content %}
 <div class="insights-page">
 
-    <!-- ── Page Header ─────────────────────────────────────── -->
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="page-header-tag">Election Commission Analytics</div>
-            <h1 class="page-title">Election <em>Insights</em></h1>
-            <p class="page-sub">
-                Comprehensive analytics dashboard for election data, turnout metrics, and constituency performance.
-            </p>
+    <!-- ── Page Hero ───────────────────────────────────────── -->
+    <div class="page-hero">
+        <div class="page-hero-inner">
+            <div class="page-hero-left">
+                <div class="section-tag">Election Commission · Analytics</div>
+                <h1>Election <em>Insights</em></h1>
+                <p class="page-hero-sub">
+                    Comprehensive analytics for turnout metrics, demographic data, and constituency performance.
+                </p>
+            </div>
+
+            <!-- Selector moved into header -->
+            <div class="hero-selector">
+                <span class="hero-selector-label">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    Election
+                </span>
+                <div class="hero-selector-wrap">
+                    <select id="electionSelect">
+                        <option value="">Choose an election…</option>
+                        {% for e in elections %}
+                            <option value="{{ e.id }}">{{ e.election_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- ── Election Selector ───────────────────────────────── -->
-    <div class="selector-card">
-        <label class="selector-label" for="electionSelect">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:0.3rem;">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            Select Election
-        </label>
-        <select id="electionSelect" class="selector-select">
-            <option value="">Choose an election to view analytics…</option>
-            {% for e in elections %}
-                <option value="{{ e.id }}">{{ e.election_name }}</option>
-            {% endfor %}
-        </select>
-    </div>
+    <!-- ── Body ────────────────────────────────────────────── -->
+    <div class="insights-body">
 
-    <!-- ── Empty State ─────────────────────────────────────── -->
-    <div id="emptyState" class="section-card">
-        <div class="empty-state">
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state">
             <div class="empty-icon">📊</div>
-            <p class="empty-text">Select an election above to view detailed analytics</p>
-        </div>
-    </div>
-
-    <!-- ── Content Area (hidden initially) ─────────────────── -->
-    <div id="contentArea" style="display:none;">
-
-        <!-- Stats Grid -->
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card total">
-                <div class="stat-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                    </svg>
-                </div>
-                <div class="stat-label">Total Votes</div>
-                <div class="stat-value" id="totalVotes">0</div>
-            </div>
-            <div class="stat-card first">
-                <div class="stat-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="8" r="7"/>
-                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
-                    </svg>
-                </div>
-                <div class="stat-label">First-Time Voters</div>
-                <div class="stat-value" id="firstTime">0</div>
-                <div class="stat-sub" id="firstTimeSub"></div>
-            </div>
-            <div class="stat-card male">
-                <div class="stat-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="10" cy="14" r="6"/>
-                        <line x1="21" y1="3" x2="14" y2="10"/>
-                        <line x1="15" y1="3" x2="21" y2="3"/>
-                        <line x1="21" y1="3" x2="21" y2="9"/>
-                    </svg>
-                </div>
-                <div class="stat-label">Male Voters</div>
-                <div class="stat-value" id="maleCount">0</div>
-            </div>
-            <div class="stat-card female">
-                <div class="stat-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="8" r="6"/>
-                        <line x1="12" y1="14" x2="12" y2="22"/>
-                        <line x1="8" y1="18" x2="16" y2="18"/>
-                    </svg>
-                </div>
-                <div class="stat-label">Female Voters</div>
-                <div class="stat-value" id="femaleCount">0</div>
-            </div>
+            <p class="empty-text">No election selected</p>
+            <p class="empty-hint">Choose an election above to view detailed analytics</p>
         </div>
 
-        <!-- Two column grid -->
-        <div class="grid-2">
-            <!-- Party Seats -->
-            <div class="section-card">
-                <div class="section-header">
-                    <span class="section-title">Party Seat Distribution</span>
+        <!-- Content (hidden initially) -->
+        <div id="contentArea" style="display:none;">
+
+            <!-- ① Stats Row -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card total">
+                    <div class="stat-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <div class="stat-label">Total Votes</div>
+                    <div class="stat-value" id="totalVotes">0</div>
                 </div>
-                <div class="section-body">
+                <div class="stat-card first">
+                    <div class="stat-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="7"/>
+                            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+                        </svg>
+                    </div>
+                    <div class="stat-label">First-Time Voters</div>
+                    <div class="stat-value" id="firstTime">0</div>
+                    <div class="stat-sub" id="firstTimeSub"></div>
+                </div>
+                <div class="stat-card male">
+                    <div class="stat-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="10" cy="14" r="6"/>
+                            <line x1="21" y1="3" x2="14" y2="10"/>
+                            <line x1="15" y1="3" x2="21" y2="3"/>
+                            <line x1="21" y1="3" x2="21" y2="9"/>
+                        </svg>
+                    </div>
+                    <div class="stat-label">Male Voters</div>
+                    <div class="stat-value" id="maleCount">0</div>
+                    <div class="stat-sub" id="malePct"></div>
+                </div>
+                <div class="stat-card female">
+                    <div class="stat-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="6"/>
+                            <line x1="12" y1="14" x2="12" y2="22"/>
+                            <line x1="8" y1="18" x2="16" y2="18"/>
+                        </svg>
+                    </div>
+                    <div class="stat-label">Female Voters</div>
+                    <div class="stat-value" id="femaleCount">0</div>
+                    <div class="stat-sub" id="femalePct"></div>
+                </div>
+            </div>
+
+            <!-- ② Party Seat + Vote Share (side-by-side bento) -->
+            <div class="bento-row">
+                <div class="bento-cell">
+                    <div class="section-header">
+                        <span class="section-title-mono">Party Seat Distribution</span>
+                    </div>
                     <div class="data-list" id="partySeats"></div>
                 </div>
-            </div>
-
-            <!-- Party Vote Share -->
-            <div class="section-card">
-                <div class="section-header">
-                    <span class="section-title">Party Vote Share</span>
-                </div>
-                <div class="section-body">
+                <div class="bento-cell">
+                    <div class="section-header">
+                        <span class="section-title-mono">Party Vote Share</span>
+                    </div>
                     <div class="data-list" id="partyVoteShare"></div>
                 </div>
             </div>
-        </div>
 
-        <!-- Constituency Turnout -->
-        <div class="section-card">
-            <div class="section-header">
-                <span class="section-title">Constituency Turnout</span>
-            </div>
-            <div class="section-body" style="padding:0;">
+            <!-- ③ Constituency Turnout (full width) -->
+            <div class="full-card">
+                <div class="section-header">
+                    <span class="section-title-mono">Constituency Turnout</span>
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Constituency</th>
                             <th>Registered</th>
+                            <th>Voted</th>
                             <th>Turnout</th>
                         </tr>
                     </thead>
                     <tbody id="turnoutTable"></tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- Victory Margins -->
-        <div class="section-card">
-            <div class="section-header">
-                <span class="section-title">Victory Margins</span>
-            </div>
-            <div class="section-body" style="padding:0;">
+            <!-- ④ Victory Margins (full width) -->
+            <div class="full-card">
+                <div class="section-header">
+                    <span class="section-title-mono">Victory Margins</span>
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -413,46 +491,86 @@
                     <tbody id="marginTable"></tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- Two column grid -->
-        <div class="grid-2">
-            <!-- Turnout Leaderboard -->
-            <div class="section-card">
-                <div class="section-header">
-                    <span class="section-title">Turnout Leaderboard</span>
-                </div>
-                <div class="section-body" style="padding:0;">
+            <!-- ⑤ Leaderboard + Age Turnout (side-by-side) -->
+            <div class="grid-2">
+                <div class="section-card grid-cell">
+                    <div class="section-header">
+                        <span class="section-title-mono">Turnout Leaderboard</span>
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th style="width:3rem;">Rank</th>
+                                <th style="width:3rem;">#</th>
                                 <th>Constituency</th>
+                                <th>Registered</th>
+                                <th>Voted</th>
                                 <th>Turnout</th>
                             </tr>
                         </thead>
                         <tbody id="leaderTable"></tbody>
                     </table>
                 </div>
+                <div class="section-card grid-cell">
+                    <div class="section-header">
+                        <span class="section-title-mono">Age Turnout %</span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Age Group</th>
+                                <th>Registered</th>
+                                <th>Voted</th>
+                                <th>Turnout</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ageTurnoutTable"></tbody>
+                    </table>
+                </div>
             </div>
 
-            <!-- Age Demographics -->
-            <div class="section-card">
+            <!-- ⑥ Gender by Age + Demographic Heatmap (side-by-side) -->
+            <div class="grid-2">
+                <div class="section-card grid-cell">
+                    <div class="section-header">
+                        <span class="section-title-mono">Gender Turnout by Age</span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Age Group</th>
+                                <th>Male</th>
+                                <th>Female</th>
+                                <th>Other</th>
+                            </tr>
+                        </thead>
+                        <tbody id="genderAgeTable"></tbody>
+                    </table>
+                </div>
+                <div class="section-card grid-cell">
+                    <div class="section-header">
+                        <span class="section-title-mono">Demographic Heatmap</span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Constituency</th>
+                                <th>Total</th>
+                                <th>Male</th>
+                                <th>Female</th>
+                                <th>Other</th>
+                            </tr>
+                        </thead>
+                        <tbody id="demoHeatmapTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ⑦ Constituency Engagement (full width) -->
+            <div class="full-card">
                 <div class="section-header">
-                    <span class="section-title">Age Demographics</span>
+                    <span class="section-title-mono">Constituency Engagement Ranking</span>
                 </div>
-                <div class="section-body">
-                    <div class="data-list" id="ageStats"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Constituency Engagement -->
-        <div class="section-card">
-            <div class="section-header">
-                <span class="section-title">Constituency Engagement Ranking</span>
-            </div>
-            <div class="section-body" style="padding:0;">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -464,10 +582,9 @@
                     <tbody id="heatmapTable"></tbody>
                 </table>
             </div>
-        </div>
 
-    </div>
-
+        </div><!-- /contentArea -->
+    </div><!-- /insights-body -->
 </div>
 {% endblock %}
 
@@ -476,54 +593,68 @@
 <script>
     document.getElementById("electionSelect").addEventListener("change", async function() {
         const electionId = this.value;
-        
-        const emptyState = document.getElementById("emptyState");
+
+        const emptyState  = document.getElementById("emptyState");
         const contentArea = document.getElementById("contentArea");
 
         if (!electionId) {
-            emptyState.style.display = "block";
+            emptyState.style.display  = "block";
             contentArea.style.display = "none";
             return;
         }
 
         try {
-            const res = await fetch(`/insights/${electionId}`);
+            const res  = await fetch(`/insights/${electionId}`);
             const json = await res.json();
             const data = json.data;
 
-            // Hide empty, show content
-            emptyState.style.display = "none";
+            emptyState.style.display  = "none";
             contentArea.style.display = "block";
 
-            // ── Stats cards ────────────────────────────────────────
-            document.getElementById("totalVotes").textContent = data.total_votes || 0;
-            document.getElementById("firstTime").textContent = data.first_time_voters.count || 0;
-            document.getElementById("firstTimeSub").textContent = `${data.first_time_voters.percentage || 0}% of total`;
-            document.getElementById("maleCount").textContent = data.gender_split.Male || 0;
-            document.getElementById("femaleCount").textContent = data.gender_split.Female || 0;
+            // ── Stats ──────────────────────────────────────────────
+            document.getElementById("totalVotes").textContent  = (data.total_votes || 0).toLocaleString();
+            document.getElementById("firstTime").textContent   = (data.first_time_voters.count || 0).toLocaleString();
+            document.getElementById("firstTimeSub").textContent= `${data.first_time_voters.percentage || 0}% of total`;
+            document.getElementById("maleCount").textContent   = (data.gender_split.Male || 0).toLocaleString();
+            document.getElementById("femaleCount").textContent = (data.gender_split.Female || 0).toLocaleString();
+            document.getElementById("malePct").textContent     = `${data.gender_split.Male_pct || 0}% of voters`;
+            document.getElementById("femalePct").textContent   = `${data.gender_split.Female_pct || 0}% of voters`;
+
+            // Helper: compute max value for bar normalisation
+            function maxVal(obj) {
+                return Math.max(...Object.values(obj).map(Number).filter(n => !isNaN(n)), 1);
+            }
 
             // ── Party seats ────────────────────────────────────────
             const partySeats = document.getElementById("partySeats");
             partySeats.innerHTML = "";
-            Object.entries(data.party_seat_share || {}).forEach(([party, seats]) => {
+            const seatsData = data.party_seat_share || {};
+            const seatsMax  = maxVal(seatsData);
+            Object.entries(seatsData).forEach(([party, seats]) => {
                 partySeats.innerHTML += `
                     <div class="data-list-item">
                         <span class="list-item-label">${party}</span>
+                        <div class="list-item-bar-wrap">
+                            <div class="list-item-bar" style="width:${(seats/seatsMax*100).toFixed(1)}%"></div>
+                        </div>
                         <span class="list-item-value">${seats}</span>
-                    </div>
-                `;
+                    </div>`;
             });
 
             // ── Party vote share ───────────────────────────────────
             const partyVoteShare = document.getElementById("partyVoteShare");
             partyVoteShare.innerHTML = "";
-            Object.entries(data.party_vote_share || {}).forEach(([party, share]) => {
+            const shareData = data.party_vote_share || {};
+            const shareMax  = maxVal(shareData);
+            Object.entries(shareData).forEach(([party, share]) => {
                 partyVoteShare.innerHTML += `
                     <div class="data-list-item">
                         <span class="list-item-label">${party}</span>
+                        <div class="list-item-bar-wrap">
+                            <div class="list-item-bar" style="width:${(share/shareMax*100).toFixed(1)}%"></div>
+                        </div>
                         <span class="list-item-value">${share}%</span>
-                    </div>
-                `;
+                    </div>`;
             });
 
             // ── Turnout table ──────────────────────────────────────
@@ -532,16 +663,16 @@
             (data.turnout_by_constituency || []).forEach(r => {
                 turnoutTable.innerHTML += `
                     <tr>
-                        <td class="td-constituency">${r.constituency_id}</td>
-                        <td class="td-number">${r.registered_voters}</td>
+                        <td class="td-constituency">${r.constituency_name}</td>
+                        <td class="td-number">${r.registered_voters.toLocaleString()}</td>
+                        <td class="td-number">${r.votes_cast.toLocaleString()}</td>
                         <td>
                             <div class="td-percent">${r.turnout_percent}%</div>
                             <div class="turnout-bar-wrap">
                                 <div class="turnout-bar" style="width:${r.turnout_percent}%"></div>
                             </div>
                         </td>
-                    </tr>
-                `;
+                    </tr>`;
             });
 
             // ── Victory margins ────────────────────────────────────
@@ -550,59 +681,88 @@
             (data.victory_margins || []).forEach(m => {
                 marginTable.innerHTML += `
                     <tr>
-                        <td class="td-constituency">${m.constituency_id}</td>
+                        <td class="td-constituency">${m.constituency_name}</td>
                         <td class="td-constituency">${m.winner}</td>
                         <td class="td-party">${m.party}</td>
-                        <td class="td-number">${m.margin}</td>
-                    </tr>
-                `;
+                        <td class="td-number">${m.margin.toLocaleString()}</td>
+                    </tr>`;
             });
 
             // ── Turnout leaderboard ────────────────────────────────
             const leaderTable = document.getElementById("leaderTable");
             leaderTable.innerHTML = "";
-            (data.turnout_leaderboard || []).forEach((t, index) => {
-                let rankClass = "other";
-                if (index === 0) rankClass = "first";
-                else if (index === 1) rankClass = "second";
-                else if (index === 2) rankClass = "third";
-
+            (data.turnout_leaderboard || []).forEach((t, i) => {
+                const rc = i === 0 ? 'first' : i === 1 ? 'second' : i === 2 ? 'third' : 'other';
                 leaderTable.innerHTML += `
                     <tr>
-                        <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
-                        <td class="td-constituency">${t.constituency_id}</td>
+                        <td><span class="rank-badge ${rc}">${i + 1}</span></td>
+                        <td class="td-constituency">${t.constituency_name}</td>
+                        <td class="td-number">${t.registered_voters.toLocaleString()}</td>
+                        <td class="td-number">${t.votes_cast.toLocaleString()}</td>
                         <td class="td-percent">${t.turnout_percent}%</td>
-                    </tr>
-                `;
+                    </tr>`;
             });
 
-            // ── Age demographics ───────────────────────────────────
-            const ageStats = document.getElementById("ageStats");
-            ageStats.innerHTML = "";
-            Object.entries(data.age_distribution || {}).forEach(([group, count]) => {
-                ageStats.innerHTML += `
-                    <div class="data-list-item">
-                        <span class="list-item-label">${group}</span>
-                        <span class="list-item-value">${count}</span>
-                    </div>
-                `;
-            });
+            // ── Age turnout ────────────────────────────────────────
+            const ageTurnoutTable = document.getElementById("ageTurnoutTable");
+            ageTurnoutTable.innerHTML = "";
+            if (data.age_turnout) {
+                for (const group in data.age_turnout) {
+                    const s = data.age_turnout[group] || {};
+                    ageTurnoutTable.innerHTML += `
+                        <tr>
+                            <td class="td-constituency">${group}</td>
+                            <td class="td-number">${(s.registered ?? 0).toLocaleString()}</td>
+                            <td class="td-number">${(s.voted ?? 0).toLocaleString()}</td>
+                            <td class="td-percent">${s.turnout_pct ?? 0}%</td>
+                        </tr>`;
+                }
+            }
 
-            // ── Constituency heatmap ───────────────────────────────
+            // ── Gender × age ───────────────────────────────────────
+            const genderAgeTable = document.getElementById("genderAgeTable");
+            genderAgeTable.innerHTML = "";
+            if (data.gender_turnout_by_age) {
+                for (const group in data.gender_turnout_by_age) {
+                    const s = data.gender_turnout_by_age[group] || {};
+                    genderAgeTable.innerHTML += `
+                        <tr>
+                            <td class="td-constituency">${group}</td>
+                            <td class="td-number">${s.Male ?? 0}</td>
+                            <td class="td-number">${s.Female ?? 0}</td>
+                            <td class="td-number">${s.Other ?? 0}</td>
+                        </tr>`;
+                }
+            }
+
+            // ── Demographic heatmap ────────────────────────────────
+            const demoHeatmapTable = document.getElementById("demoHeatmapTable");
+            demoHeatmapTable.innerHTML = "";
+            if (data.demographic_heatmap) {
+                for (const name in data.demographic_heatmap) {
+                    const s = data.demographic_heatmap[name] || {};
+                    demoHeatmapTable.innerHTML += `
+                        <tr>
+                            <td class="td-constituency">${name}</td>
+                            <td class="td-number">${s.total ?? 0}</td>
+                            <td class="td-number">${s.Male ?? 0}</td>
+                            <td class="td-number">${s.Female ?? 0}</td>
+                            <td class="td-number">${s.Other ?? 0}</td>
+                        </tr>`;
+                }
+            }
+
+            // ── Engagement heatmap ─────────────────────────────────
             const heatmapTable = document.getElementById("heatmapTable");
             heatmapTable.innerHTML = "";
             (data.constituency_heatmap || []).forEach(h => {
-                let scoreClass = "low";
-                if (h.score >= 70) scoreClass = "high";
-                else if (h.score >= 40) scoreClass = "medium";
-
+                const sc = h.score >= 70 ? 'high' : h.score >= 40 ? 'medium' : 'low';
                 heatmapTable.innerHTML += `
                     <tr>
-                        <td class="td-constituency">${h.constituency_id}</td>
-                        <td><span class="score-badge ${scoreClass}">${h.score}</span></td>
-                        <td class="td-number">${h.votes}</td>
-                    </tr>
-                `;
+                        <td class="td-constituency">${h.constituency_name}</td>
+                        <td><span class="score-badge ${sc}">${h.score}</span></td>
+                        <td class="td-number">${h.votes.toLocaleString()}</td>
+                    </tr>`;
             });
 
         } catch (error) {

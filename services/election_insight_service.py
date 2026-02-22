@@ -10,6 +10,15 @@ from services.result_service import (
     get_final_constituency_results,
     get_constituency_results
 )
+
+from models.election_insights import get_constituency_name
+
+from models.election_insights import (
+    turnout_by_age_group,
+    gender_turnout_by_age,
+    constituency_demographic_heatmap
+)
+
 import math
 
 ELECTIONS = "elections"
@@ -97,6 +106,7 @@ def compute_victory_margins(election_id):
 
         margins.append({
             "constituency_id": cid,
+            "constituency_name": get_constituency_name(cid),
             "margin": margin,
             "winner": winner["candidate_name"],
             "party": winner["party_name"]
@@ -129,12 +139,13 @@ def constituency_heatmap_score(election_id):
         turnout_pct = t["turnout_percent"]
 
         results = get_constituency_results(election_id, cid)
-        total_votes = sum(c["votes"] for c in results)
+        total_votes = t["votes_cast"]
 
         score = turnout_pct + math.log(total_votes + 1)
 
         scores.append({
             "constituency_id": cid,
+            "constituency_name": get_constituency_name(cid),
             "score": round(score, 2),
             "turnout": turnout_pct,
             "votes": total_votes
@@ -162,8 +173,11 @@ def get_election_dashboard(election_id):
         "total_votes": get_total_votes(election_id),
         "turnout_by_constituency": turnout_data,
         "first_time_voters": first_time_voters(election_start),
-        "gender_split": voter_gender_split(),
-        "age_distribution": age_distribution(election_start),
+        "gender_split": voter_gender_split(election_id),
+        "age_distribution": age_distribution(election_id, election_start),
+        "age_turnout": turnout_by_age_group(election_id, election_start),
+        "gender_turnout_by_age": gender_turnout_by_age(election_id, election_start),
+        "demographic_heatmap": constituency_demographic_heatmap(election_id, election_start),
 
         # Blockchain derived metrics
         "party_seat_share": compute_party_seat_share(election_id),
@@ -173,6 +187,7 @@ def get_election_dashboard(election_id):
         # Rankings
         "turnout_leaderboard": turnout_leaderboard(election_id),
         "constituency_heatmap": constituency_heatmap_score(election_id),
+        
     }
 
     return insights

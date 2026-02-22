@@ -34,3 +34,7 @@ def insights_api(election_id):
         return {"status": "error", "message": "Election not found"}, 404
 
     return {"status": "success", "data": data}
+
+@bp.route("/about")
+def about():
+    return render_template("public/about.html")

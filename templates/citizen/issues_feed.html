@@ -398,7 +398,7 @@
         {% if issues %}
             <div class="issue-list" id="issueList">
                 {% for issue in issues %}
-                    <div class="issue-card reveal" data-status="{{ issue.status|lower }}" data-score="{{ issue.score }}" data-time="{{ issue.time_ago }}">
+                    <div class="issue-card reveal" data-status="{{ issue.status|lower }}" data-score="{{ issue.score }}" data-time="{{ issue.created_at }}">
 
                         <!-- Vote column -->
                         <div class="vote-column">
@@ -570,13 +570,20 @@
             const cards  = [...list.querySelectorAll('.issue-card')];
 
             cards.sort((a, b) => {
-                if (sort === 'top') return parseInt(b.dataset.score) - parseInt(a.dataset.score);
-                if (sort === 'new') return 0; // preserve server order for "new"
+                if (sort === 'top') {
+                    return parseInt(b.dataset.score) - parseInt(a.dataset.score);
+                }
+
+                if (sort === 'new') {
+                    return new Date(b.dataset.time) - new Date(a.dataset.time);
+                }
+
                 if (sort === 'open') {
                     const aOpen = a.dataset.status === 'open' ? -1 : 1;
                     const bOpen = b.dataset.status === 'open' ? -1 : 1;
                     return aOpen - bOpen;
                 }
+
                 return 0;
             });
 

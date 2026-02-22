@@ -45,7 +45,7 @@
 /* ── STATS BAR ────────────────────────────────────────────── */
 .my-stats-bar {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     border: 1px solid var(--border);
     background: var(--border);
     gap: 1px;
@@ -289,6 +289,10 @@
                 <span class="my-stat-label">Total Raised</span>
             </div>
             <div class="my-stat">
+                <span class="my-stat-val teal">{{ issues|selectattr('status', 'equalto', 'Closed')|list|length }}</span>
+                <span class="my-stat-label">Closed</span>
+            </div>
+            <div class="my-stat">
                 <span class="my-stat-val teal">{{ issues|selectattr('status', 'equalto', 'Resolved')|list|length }}</span>
                 <span class="my-stat-label">Resolved</span>
             </div>
@@ -299,6 +303,10 @@
             <div class="my-stat">
                 <span class="my-stat-val warm">{{ issues|selectattr('status', 'equalto', 'Open')|list|length }}</span>
                 <span class="my-stat-label">Open</span>
+            </div>
+            <div class="my-stat">
+                <span class="my-stat-val teal">{{ issues|selectattr('status', 'equalto', 'Rejected')|list|length }}</span>
+                <span class="my-stat-label">Rejected</span>
             </div>
         </div>
 
