@@ -1,17 +1,448 @@
 {% extends "base.html" %}
-{% set title = "404 | Page Not Found" %}
+{% set title = "404 — Page Not Found" %}
+
+{% block extra_css %}
+<style>
+/* ═══ 404 PAGE NOT FOUND ═══ */
+.notfound-wrap {
+    min-height: calc(100vh - var(--nav-h));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Dot-grid background */
+.notfound-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(79,70,229,0.12) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 75%);
+    pointer-events: none;
+}
+
+/* Warm ambient glow — differentiates from the indigo-tinted 403 */
+.notfound-wrap::after {
+    content: '';
+    position: absolute;
+    width: 700px; height: 700px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+.notfound-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 620px;
+    width: 100%;
+}
+
+/* ── GIANT 404 ── */
+.nf-code-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: nf-up 0.75s 0.1s cubic-bezier(0.23,1,0.32,1) forwards;
+}
+
+.nf-code-text {
+    font-family: var(--font-disp);
+    font-size: clamp(9rem, 26vw, 19rem);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(245,158,11,0.1);
+    user-select: none;
+    pointer-events: none;
+    position: relative;
+}
+
+/* Glitch layers — same pattern as 500, warm-tinted */
+@keyframes nf-glitch-shift {
+    0%, 90%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+    91%  { clip-path: inset(20% 0 60% 0); transform: translate(-4px, 0); }
+    93%  { clip-path: inset(55% 0 25% 0); transform: translate( 4px, 0); }
+    95%  { clip-path: inset(80% 0  5% 0); transform: translate(-2px, 0); }
+    97%  { clip-path: inset(10% 0 80% 0); transform: translate( 3px, 0); }
+}
+
+.nf-code-glitch-a,
+.nf-code-glitch-b {
+    position: absolute;
+    inset: 0;
+    font-family: var(--font-disp);
+    font-size: clamp(9rem, 26vw, 19rem);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    user-select: none; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.nf-code-glitch-a {
+    color: rgba(245,158,11,0.18);
+    animation: nf-glitch-shift 6s 1s ease-in-out infinite;
+    transform: translate(-3px, 0);
+}
+
+.nf-code-glitch-b {
+    color: rgba(79,70,229,0.14);
+    animation: nf-glitch-shift 6s 1.3s ease-in-out infinite;
+    transform: translate(3px, 0);
+}
+
+
+/* ── CARD ── */
+.nf-card {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.08);
+    margin-top: -1.25rem;
+    opacity: 0;
+    animation: nf-up 0.7s 0.3s cubic-bezier(0.23,1,0.32,1) forwards;
+}
+
+/* Warm accent top bar */
+.nf-card::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, var(--warm), var(--warm-light), transparent);
+}
+
+.nf-card-inner {
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+}
+
+/* Status badge — warm palette */
+.nf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--warm);
+    background: var(--warm-dim);
+    border: 1px solid rgba(245,158,11,0.25);
+    padding: 0.35rem 0.9rem;
+    border-radius: 2px;
+}
+
+.nf-badge .badge-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--warm);
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+/* Heading */
+.nf-heading {
+    font-family: var(--font-disp);
+    font-size: 2.6rem;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    margin: 0;
+}
+
+/* Description */
+.nf-desc {
+    font-size: 1rem;
+    color: var(--text-2);
+    line-height: 1.75;
+    max-width: 400px;
+    margin: 0;
+}
+
+/* Divider */
+.nf-rule {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0.15rem 0;
+}
+
+/* Path chip — shows the broken URL */
+.nf-path-chip {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    overflow: hidden;
+}
+
+.nf-path-chip .pc-key {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.66rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.nf-path-chip .pc-val {
+    color: var(--text-2);
+    font-weight: 500;
+    flex: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+}
+
+.nf-path-chip .pc-badge {
+    flex-shrink: 0;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--warm);
+    background: var(--warm-dim);
+    border: 1px solid rgba(245,158,11,0.22);
+    padding: 0.2rem 0.55rem;
+}
+
+/* Suggestions row */
+.nf-suggestions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+}
+
+.nf-suggestion-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.45rem 0.85rem;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    border-radius: 2px;
+}
+
+.nf-suggestion-link:hover {
+    border-color: var(--indigo);
+    color: var(--indigo);
+    background: var(--indigo-dim);
+}
+
+.nf-suggestion-link svg {
+    width: 11px; height: 11px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round;
+}
+
+/* Suggestions label */
+.nf-suggest-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 100%;
+    text-align: center;
+}
+
+/* Actions */
+.nf-actions {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.nf-actions .btn-primary {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+}
+
+.nf-actions .nf-home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.95rem 1.4rem;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.nf-actions .nf-home-btn:hover {
+    border-color: var(--indigo);
+    color: var(--indigo);
+}
+
+.nf-actions .nf-home-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round;
+    transition: transform 0.2s;
+}
+
+.nf-actions .nf-home-btn:hover svg { transform: translateX(-3px); }
+
+/* ── BOTTOM META ── */
+.nf-meta {
+    position: relative; z-index: 2;
+    margin-top: 1.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    opacity: 0;
+    animation: nf-up 0.5s 0.55s ease forwards;
+}
+
+.nf-meta .sep { margin: 0 0.5rem; opacity: 0.4; }
+
+/* ── KEYFRAME ── */
+@keyframes nf-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .nf-card-inner { padding: 1.75rem 1.5rem; }
+    .nf-heading { font-size: 2rem; }
+    .nf-actions { flex-direction: column; }
+    .nf-actions .nf-home-btn { justify-content: center; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="error-page">
-    <h1>404</h1>
-    <h2>Page Not Found</h2>
+<div class="notfound-wrap">
+    <div class="notfound-inner">
 
-    <p>
-        The page you are looking for does not exist or has been moved.
-    </p>
+        <!-- Giant 404 with glitch -->
+        <div class="nf-code-wrap">
+            <div class="nf-code-glitch-a">404</div>
+            <div class="nf-code-glitch-b">404</div>
+            <div class="nf-code-text">404</div>
+        </div>
 
-    <a href="{{ url_for('auth.login') }}" class="btn-primary">
-        Go to Login
-    </a>
+        <!-- Card -->
+        <div class="nf-card">
+            <div class="nf-card-inner">
+
+                <div class="nf-badge">
+                    <span class="badge-dot"></span>
+                    Not Found
+                </div>
+
+                <h1 class="nf-heading">Page Not Found</h1>
+
+                <p class="nf-desc">
+                    The page you're looking for doesn't exist or may have been moved.
+                    Check the URL or navigate to a known destination below.
+                </p>
+
+                <div class="nf-rule"></div>
+
+                <!-- Path chip -->
+                <div class="nf-path-chip">
+                    <span class="pc-key">HTTP</span>
+                    <span class="pc-val">404 — Resource not found at requested path</span>
+                    <span class="pc-badge">Missing</span>
+                </div>
+
+                <!-- Quick nav suggestions -->
+                <p class="nf-suggest-label">Quick Navigation</p>
+                <div class="nf-suggestions">
+                    <a href="{{ url_for('public.election_schedule') }}" class="nf-suggestion-link">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Schedule
+                    </a>
+                    <a href="{{ url_for('public_results.dashboard') }}" class="nf-suggestion-link">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Results
+                    </a>
+                    <a href="{{ url_for('verify_vote.verify_vote_page') }}" class="nf-suggestion-link">
+                        <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        Verify Vote
+                    </a>
+                    <a href="{{ url_for('public.about') }}" class="nf-suggestion-link">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        About
+                    </a>
+                </div>
+
+                <div class="nf-rule"></div>
+
+                <!-- Actions -->
+                <div class="nf-actions">
+                    <a href="{{ url_for('auth.login') }}" class="btn-primary">
+                        Go to Login →
+                    </a>
+                    <a href="/" class="nf-home-btn">
+                        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                        Home
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Meta -->
+        <p class="nf-meta">
+            E-Democracy Platform
+            <span class="sep">·</span>
+            Blockchain Secured
+            <span class="sep">·</span>
+            This request was not recorded
+        </p>
+
+    </div>
 </div>
 {% endblock %}

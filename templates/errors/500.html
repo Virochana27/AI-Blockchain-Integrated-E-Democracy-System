@@ -1,18 +1,470 @@
 {% extends "base.html" %}
-{% set title = "500 | Server Error" %}
+{% set title = "500 — Server Error" %}
+
+{% block extra_css %}
+<style>
+/* ═══ 500 INTERNAL SERVER ERROR PAGE ═══ */
+.servererr-wrap {
+    min-height: calc(100vh - var(--nav-h));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Diagonal line grid — denser than 404 for a more "chaotic" feel */
+.servererr-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(135deg, rgba(13,148,136,0.05) 1px, transparent 1px),
+        linear-gradient(45deg,  rgba(13,148,136,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 10%, transparent 75%);
+    pointer-events: none;
+}
+
+/* Teal ambient glow — distinct from indigo (403) and amber (404) */
+.servererr-wrap::after {
+    content: '';
+    position: absolute;
+    width: 750px; height: 750px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(13,148,136,0.06) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+.servererr-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 620px;
+    width: 100%;
+}
+
+/* ── GIANT 500 ── */
+.se-code-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: se-up 0.75s 0.1s cubic-bezier(0.23,1,0.32,1) forwards;
+}
+
+.se-code-text {
+    font-family: var(--font-disp);
+    font-size: clamp(9rem, 26vw, 19rem);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(13,148,136,0.1);
+    user-select: none;
+    pointer-events: none;
+    position: relative;
+}
+
+/* Teal → indigo gradient tint */
+.se-code-text::after {
+    content: '500';
+    position: absolute;
+    inset: 0;
+    font-family: var(--font-disp);
+    font-size: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    background: linear-gradient(135deg, var(--teal) 0%, var(--indigo-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.13;
+}
+
+/* Glitch animation — unique to 500, implies system instability */
+@keyframes glitch-shift {
+    0%, 90%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+    91%  { clip-path: inset(20% 0 60% 0); transform: translate(-4px, 0); }
+    93%  { clip-path: inset(55% 0 25% 0); transform: translate( 4px, 0); }
+    95%  { clip-path: inset(80% 0  5% 0); transform: translate(-2px, 0); }
+    97%  { clip-path: inset(10% 0 80% 0); transform: translate( 3px, 0); }
+}
+
+.se-code-glitch-a,
+.se-code-glitch-b {
+    position: absolute;
+    inset: 0;
+    font-family: var(--font-disp);
+    font-size: clamp(9rem, 26vw, 19rem);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    user-select: none; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.se-code-glitch-a {
+    color: rgba(13,148,136,0.18);
+    animation: glitch-shift 6s 1s ease-in-out infinite;
+    transform: translate(-3px, 0);
+}
+
+.se-code-glitch-b {
+    color: rgba(79,70,229,0.14);
+    animation: glitch-shift 6s 1.3s ease-in-out infinite;
+    transform: translate(3px, 0);
+}
+
+
+/* ── CARD ── */
+.se-card {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.08);
+    margin-top: -1.25rem;
+    opacity: 0;
+    animation: se-up 0.7s 0.3s cubic-bezier(0.23,1,0.32,1) forwards;
+}
+
+/* Teal accent top bar */
+.se-card::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, var(--teal), rgba(13,148,136,0.4), transparent);
+}
+
+.se-card-inner {
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+}
+
+/* Badge */
+.se-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.25);
+    padding: 0.35rem 0.9rem;
+    border-radius: 2px;
+}
+
+.se-badge .badge-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--teal);
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+/* Heading */
+.se-heading {
+    font-family: var(--font-disp);
+    font-size: 2.6rem;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    margin: 0;
+}
+
+/* Description */
+.se-desc {
+    font-size: 1rem;
+    color: var(--text-2);
+    line-height: 1.75;
+    max-width: 400px;
+    margin: 0;
+}
+
+/* Divider */
+.se-rule {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0.15rem 0;
+}
+
+/* Error chip */
+.se-error-chip {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    overflow: hidden;
+}
+
+.se-error-chip .ec-key {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.66rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.se-error-chip .ec-val {
+    color: var(--text-2);
+    font-weight: 500;
+    flex: 1;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+}
+
+.se-error-chip .ec-badge {
+    flex-shrink: 0;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: var(--teal-dim);
+    border: 1px solid rgba(13,148,136,0.22);
+    padding: 0.2rem 0.55rem;
+}
+
+/* Status rows */
+.se-status-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.se-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    opacity: 0;
+    animation: se-up 0.5s cubic-bezier(0.23,1,0.32,1) both;
+}
+
+.se-status-row:nth-child(1) { animation-delay: 0.4s; }
+.se-status-row:nth-child(2) { animation-delay: 0.5s; }
+.se-status-row:nth-child(3) { animation-delay: 0.6s; }
+
+.se-status-row .sr-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.se-status-row .sr-label svg {
+    width: 12px; height: 12px;
+    stroke: var(--muted); fill: none;
+    stroke-width: 2; stroke-linecap: round;
+}
+
+.se-status-row .sr-value {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.55rem;
+}
+
+.sr-value.ok    { color: var(--teal);   background: var(--teal-dim);   border: 1px solid rgba(13,148,136,0.2); }
+.sr-value.error { color: #dc2626;       background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.2); }
+.sr-value.warn  { color: var(--warm);   background: var(--warm-dim);   border: 1px solid rgba(245,158,11,0.2); }
+
+/* Actions */
+.se-actions {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.se-actions .btn-primary {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+}
+
+.se-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.95rem 1.4rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+.se-retry-btn:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+}
+
+.se-retry-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.2; stroke-linecap: round;
+    transition: transform 0.4s cubic-bezier(0.23,1,0.32,1);
+}
+
+.se-retry-btn:hover svg { transform: rotate(180deg); }
+
+/* ── BOTTOM META ── */
+.se-meta {
+    position: relative; z-index: 2;
+    margin-top: 1.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    opacity: 0;
+    animation: se-up 0.5s 0.65s ease forwards;
+}
+
+.se-meta .sep { margin: 0 0.5rem; opacity: 0.4; }
+
+/* ── KEYFRAME ── */
+@keyframes se-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .se-card-inner { padding: 1.75rem 1.5rem; }
+    .se-heading { font-size: 2rem; }
+    .se-actions { flex-direction: column; }
+    .se-retry-btn { justify-content: center; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="error-page">
-    <h1>500</h1>
-    <h2>Internal Server Error</h2>
+<div class="servererr-wrap">
+    <div class="servererr-inner">
 
-    <p>
-        Something went wrong on our side.
-        Please try again later.
-    </p>
+        <!-- Giant 500 with glitch -->
+        <div class="se-code-wrap">
+            <div class="se-code-glitch-a">500</div>
+            <div class="se-code-glitch-b">500</div>
+            <div class="se-code-text">500</div>
+        </div>
 
-    <a href="{{ url_for('auth.login') }}" class="btn-primary">
-        Go to Login
-    </a>
+        <!-- Card -->
+        <div class="se-card">
+            <div class="se-card-inner">
+
+                <div class="se-badge">
+                    <span class="badge-dot"></span>
+                    Server Error
+                </div>
+
+                <h1 class="se-heading">Internal Server Error</h1>
+
+                <p class="se-desc">
+                    Something went wrong on our end. Our team has been notified.
+                    Please try again in a moment or return to the login page.
+                </p>
+
+                <div class="se-rule"></div>
+
+                <!-- Error chip -->
+                <div class="se-error-chip">
+                    <span class="ec-key">HTTP</span>
+                    <span class="ec-val">500 — Unhandled exception on the server</span>
+                    <span class="ec-badge">Server</span>
+                </div>
+
+                <!-- Live system status mini-panel -->
+                <div class="se-status-rows">
+                    <div class="se-status-row">
+                        <span class="sr-label">
+                            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+                            Application Server
+                        </span>
+                        <span class="sr-value error">Degraded</span>
+                    </div>
+                    <div class="se-status-row">
+                        <span class="sr-label">
+                            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                            Blockchain Node
+                        </span>
+                        <span class="sr-value ok">Online</span>
+                    </div>
+                    <div class="se-status-row">
+                        <span class="sr-label">
+                            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                            Database
+                        </span>
+                        <span class="sr-value warn">Checking</span>
+                    </div>
+                </div>
+
+                <div class="se-rule"></div>
+
+                <!-- Actions -->
+                <div class="se-actions">
+                    <a href="{{ url_for('auth.login') }}" class="btn-primary">
+                        Go to Login →
+                    </a>
+                    <button class="se-retry-btn" onclick="window.location.reload()">
+                        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Retry
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Meta -->
+        <p class="se-meta">
+            E-Democracy Platform
+            <span class="sep">·</span>
+            Error logged automatically
+            <span class="sep">·</span>
+            Blockchain unaffected
+        </p>
+
+    </div>
 </div>
 {% endblock %}

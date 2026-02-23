@@ -1,36 +1,533 @@
 {% extends "base.html" %}
 {% set title = "Create Forum Post" %}
 
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════════════════
+   CREATE FORUM POST PAGE
+═══════════════════════════════════════════════════════════ */
+
+.create-forum-page {
+    min-height: calc(100vh - var(--nav-h));
+    background: var(--ink-2);
+    padding: 3.5rem 4rem 5rem;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+/* ── LEFT: FORM COLUMN ────────────────────────────────────── */
+.form-column {}
+
+/* Page header */
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.page-header-tag {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin-bottom: 0.75rem;
+}
+.page-header-tag::before {
+    content: '';
+    width: 20px; height: 1px;
+    background: var(--indigo);
+}
+.page-title {
+    font-family: var(--font-disp);
+    font-size: clamp(2.2rem, 3.5vw, 3.5rem);
+    line-height: 0.95;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+}
+.page-title em { font-style: normal; color: var(--indigo); }
+
+.page-sub {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 500px;
+}
+
+/* Form card */
+.forum-form-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+}
+
+/* Form groups */
+.forum-form { display: flex; flex-direction: column; gap: 1.75rem; }
+
+.form-group { display: flex; flex-direction: column; gap: 0.45rem; }
+
+.form-group label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.label-required {
+    color: #dc2626;
+    font-size: 0.7rem;
+}
+
+/* Text inputs & textarea */
+.form-group input[type="text"],
+.form-group textarea {
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 0.85rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    border-radius: 0;
+    width: 100%;
+    -webkit-appearance: none;
+    resize: none;
+    line-height: 1.6;
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: rgba(107,114,128,0.45);
+    font-size: 0.85rem;
+}
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--indigo);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--indigo-dim);
+}
+
+/* Char counter / hint row */
+.input-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+}
+.hint {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    line-height: 1.5;
+}
+.char-count {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.char-count.warn { color: var(--warm); }
+.char-count.over { color: #dc2626; }
+
+/* File upload */
+.file-upload-wrap {
+    position: relative;
+    border: 1px dashed rgba(79,70,229,0.3);
+    background: var(--indigo-dim);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.file-upload-wrap:hover {
+    border-color: var(--indigo);
+    background: var(--indigo-mid);
+}
+.file-upload-wrap input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+}
+.file-upload-icon {
+    display: flex; justify-content: center;
+    margin-bottom: 0.75rem;
+    color: var(--indigo);
+    opacity: 0.6;
+}
+.file-upload-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin-bottom: 0.3rem;
+    display: block;
+}
+.file-upload-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+.file-preview-list {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+.file-preview-item {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--indigo);
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    padding: 0.2rem 0.6rem;
+    display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* Form divider */
+.form-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.25rem 0;
+}
+
+/* Form actions */
+.form-actions {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+.form-actions .btn-primary {
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+}
+.btn-cancel {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 0.85rem 1rem;
+}
+.btn-cancel:hover { color: var(--text); }
+
+/* ── RIGHT: SIDEBAR ───────────────────────────────────────── */
+.form-sidebar {
+    position: sticky;
+    top: calc(var(--nav-h) + 2rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Sidebar cards */
+.sidebar-card {
+    background: var(--ink);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.sidebar-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.sidebar-card-title {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.sidebar-card-title::before {
+    content: '';
+    width: 12px; height: 1px;
+    background: var(--indigo);
+}
+.sidebar-card-body { padding: 1.25rem; }
+
+/* Guidelines list */
+.guidelines-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 0.75rem;
+}
+.guidelines-list li {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.55;
+}
+.guideline-num {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--indigo);
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.2);
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Visibility card */
+.visibility-card {
+    background: var(--indigo-dark);
+    border-color: rgba(79,70,229,0.3);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.visibility-card::before {
+    content: '';
+    position: absolute; bottom: -20px; right: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(245,158,11,0.08);
+}
+.visibility-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    display: grid; place-items: center;
+    margin-bottom: 0.85rem;
+}
+.visibility-icon svg { color: var(--warm-light); }
+.visibility-title {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--warm-light);
+    margin-bottom: 0.5rem;
+}
+.visibility-text {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.65;
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .create-forum-page {
+        grid-template-columns: 1fr;
+        padding: 2rem 2rem 4rem;
+    }
+    .form-sidebar { position: static; }
+}
+@media (max-width: 640px) {
+    .create-forum-page { padding: 1.5rem 1rem 3rem; }
+    .forum-form-card { padding: 1.5rem; }
+}
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="create-policy">
+<div class="create-forum-page">
 
-    <h2>📝 Create Public Forum Post</h2>
+    <!-- ── LEFT: FORM COLUMN ──────────────────────────────── -->
+    <div class="form-column">
 
-<form method="POST" enctype="multipart/form-data">
+        <div class="page-header">
+            <div class="page-header-tag">Public Forum</div>
+            <h1 class="page-title">Start a<br><em>Discussion</em></h1>
+            <p class="page-sub">
+                Share a policy idea, community concern, or civic statement
+                with your constituency. Posts are visible to all citizens.
+            </p>
+        </div>
 
-    <label>Title</label>
-    <input type="text" name="title" required>
+        <div class="forum-form-card">
+            <form method="POST" enctype="multipart/form-data" class="forum-form" id="forumForm">
 
-    <label>Statement</label>
-    <textarea name="content" rows="6" required></textarea>
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="title">
+                        Post Title <span class="label-required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="e.g. Proposal for improved street lighting on MG Road"
+                        maxlength="120"
+                        required
+                    >
+                    <div class="input-footer">
+                        <span class="hint">A clear title helps citizens find and engage with your post.</span>
+                        <span class="char-count" id="titleCount">0 / 120</span>
+                    </div>
+                </div>
 
-    <label>Upload Images</label>
-    <input type="file" name="images" multiple accept="image/*">
+                <!-- Statement -->
+                <div class="form-group">
+                    <label for="content">
+                        Statement <span class="label-required">*</span>
+                    </label>
+                    <textarea
+                        id="content"
+                        name="content"
+                        rows="8"
+                        placeholder="Write your statement, proposal, or civic concern. Include context, reasoning, and any supporting details that help citizens understand your position..."
+                        required
+                    ></textarea>
+                    <div class="input-footer">
+                        <span class="hint">Be clear, factual, and respectful of differing opinions.</span>
+                        <span class="char-count" id="contentCount">0 chars</span>
+                    </div>
+                </div>
 
-    <button type="submit" class="btn-primary">Publish</button>
+                <!-- File Upload -->
+                <div class="form-group">
+                    <label>Upload Images <span style="color:var(--muted); font-weight:400;">(Optional)</span></label>
+                    <div class="file-upload-wrap" id="dropZone">
+                        <input
+                            type="file"
+                            name="images"
+                            accept="image/*"
+                            multiple
+                            id="imageInput"
+                        >
+                        <div class="file-upload-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <span class="file-upload-label">Click to upload or drag & drop</span>
+                        <span class="file-upload-sub">PNG, JPG, WEBP up to 10MB each</span>
+                        <div class="file-preview-list" id="filePreview"></div>
+                    </div>
+                </div>
 
-</form>
+                <div class="form-divider"></div>
 
+                <!-- Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        Publish Post →
+                    </button>
+                    <a href="{{ url_for('rep_policy.policy_feed') }}" class="btn-cancel">
+                        ← Cancel
+                    </a>
+                </div>
 
-        <button type="submit" class="btn-primary">
-            Publish
-        </button>
+            </form>
+        </div>
+    </div>
 
-        <a href="{{ url_for('rep_policy.policy_feed') }}" class="btn-secondary">
-            Cancel
-        </a>
+    <!-- ── RIGHT: SIDEBAR ────────────────────────────────── -->
+    <div class="form-sidebar">
 
-    </form>
+        <!-- Guidelines -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-header">
+                <span class="sidebar-card-title">Posting Guidelines</span>
+            </div>
+            <div class="sidebar-card-body">
+                <ul class="guidelines-list">
+                    <li>
+                        <span class="guideline-num">01</span>
+                        Posts must relate to civic, policy, or community matters.
+                    </li>
+                    <li>
+                        <span class="guideline-num">02</span>
+                        No personal attacks, hate speech, or misinformation.
+                    </li>
+                    <li>
+                        <span class="guideline-num">03</span>
+                        Keep statements factual and constructive.
+                    </li>
+                    <li>
+                        <span class="guideline-num">04</span>
+                        Posts may be moderated or removed if they violate guidelines.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Visibility notice -->
+        <div class="sidebar-card visibility-card">
+            <div class="visibility-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </div>
+            <div class="visibility-title">Publicly Visible</div>
+            <p class="visibility-text">
+                Forum posts are visible to all citizens and representatives
+                in your constituency. Your name will appear alongside your post.
+            </p>
+        </div>
+
+    </div>
 
 </div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // Title character counter
+    const titleInput = document.getElementById('title');
+    const titleCount = document.getElementById('titleCount');
+    titleInput.addEventListener('input', () => {
+        const len = titleInput.value.length;
+        const max = 120;
+        titleCount.textContent = `${len} / ${max}`;
+        titleCount.className = 'char-count' + (len > max * 0.9 ? (len >= max ? ' over' : ' warn') : '');
+    });
+
+    // Content character counter
+    const contentInput = document.getElementById('content');
+    const contentCount = document.getElementById('contentCount');
+    contentInput.addEventListener('input', () => {
+        contentCount.textContent = `${contentInput.value.length} chars`;
+    });
+
+    // File upload preview
+    const imageInput  = document.getElementById('imageInput');
+    const filePreview = document.getElementById('filePreview');
+    const dropZone    = document.getElementById('dropZone');
+
+    function renderFiles(files) {
+        filePreview.innerHTML = '';
+        Array.from(files).forEach(f => {
+            const item = document.createElement('span');
+            item.className = 'file-preview-item';
+            item.innerHTML = `
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                    <polyline points="13 2 13 9 20 9"/>
+                </svg>
+                ${f.name}
+            `;
+            filePreview.appendChild(item);
+        });
+    }
+
+    imageInput.addEventListener('change', () => renderFiles(imageInput.files));
+
+    // Drag & drop
+    dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--indigo)';
+        dropZone.style.background  = 'var(--indigo-mid)';
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '';
+        dropZone.style.background  = '';
+    });
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.style.borderColor = '';
+        dropZone.style.background  = '';
+        imageInput.files = e.dataTransfer.files;
+        renderFiles(e.dataTransfer.files);
+    });
+</script>
 {% endblock %}

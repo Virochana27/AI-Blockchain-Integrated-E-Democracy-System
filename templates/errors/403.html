@@ -1,17 +1,372 @@
 {% extends "base.html" %}
-{% set title = "403 | Access Denied" %}
+{% set title = "403 — Access Denied" %}
+
+{% block extra_css %}
+<style>
+/* ═══ 403 ACCESS DENIED PAGE ═══ */
+.error-wrap {
+    min-height: calc(100vh - var(--nav-h));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Diagonal grid bg */
+.error-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(79,70,229,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,70,229,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 20%, transparent 80%);
+    pointer-events: none;
+}
+
+/* Big ambient glow behind the 403 */
+.error-wrap::after {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(79,70,229,0.06) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+.error-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 600px;
+    width: 100%;
+}
+
+/* ── BIG 403 ── */
+.error-code-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: err-up 0.75s 0.1s cubic-bezier(0.23,1,0.32,1) forwards;
+}
+
+.error-code-text {
+    font-family: var(--font-disp);
+    font-size: clamp(9rem, 26vw, 19rem);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(79,70,229,0.1);
+    user-select: none;
+    pointer-events: none;
+    position: relative;
+}
+
+/* Glitch layers — indigo-tinted to match 403 palette */
+@keyframes err-glitch-shift {
+    0%, 90%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+    91%  { clip-path: inset(20% 0 60% 0); transform: translate(-4px, 0); }
+    93%  { clip-path: inset(55% 0 25% 0); transform: translate( 4px, 0); }
+    95%  { clip-path: inset(80% 0  5% 0); transform: translate(-2px, 0); }
+    97%  { clip-path: inset(10% 0 80% 0); transform: translate( 3px, 0); }
+}
+
+.error-code-glitch-a,
+.error-code-glitch-b {
+    position: absolute;
+    inset: 0;
+    font-family: var(--font-disp);
+    font-size: clamp(9rem, 26vw, 19rem);
+    letter-spacing: -0.03em;
+    line-height: 0.85;
+    user-select: none; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.error-code-glitch-a {
+    color: rgba(79,70,229,0.18);
+    animation: err-glitch-shift 6s 1s ease-in-out infinite;
+    transform: translate(-3px, 0);
+}
+
+.error-code-glitch-b {
+    color: rgba(220,38,38,0.14);
+    animation: err-glitch-shift 6s 1.3s ease-in-out infinite;
+    transform: translate(3px, 0);
+}
+
+/* ── CARD ── */
+.error-card {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.08);
+    margin-top: -1.5rem; /* overlap slightly under the 403 */
+    opacity: 0;
+    animation: err-up 0.7s 0.3s cubic-bezier(0.23,1,0.32,1) forwards;
+}
+
+/* Indigo top accent line */
+.error-card::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, var(--indigo), var(--indigo-light), transparent);
+}
+
+.error-card-inner {
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+}
+
+/* Status tag */
+.error-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    background: var(--indigo-dim);
+    border: 1px solid rgba(79,70,229,0.22);
+    padding: 0.35rem 0.9rem;
+    border-radius: 2px;
+}
+
+.error-tag .tag-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--indigo);
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+/* Heading */
+.error-heading {
+    font-family: var(--font-disp);
+    font-size: 2.6rem;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    margin: 0;
+}
+
+/* Description */
+.error-desc {
+    font-size: 1rem;
+    color: var(--text-2);
+    line-height: 1.75;
+    max-width: 380px;
+    margin: 0;
+}
+
+/* Divider */
+.error-rule {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0.25rem 0;
+}
+
+/* Code chip */
+.error-code-chip {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.85rem 1.25rem;
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+}
+
+.error-code-chip .chip-key {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.error-code-chip .chip-val {
+    color: var(--text);
+    font-weight: 600;
+    flex: 1;
+}
+
+.error-code-chip .chip-status {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #dc2626;
+    background: rgba(220,38,38,0.08);
+    border: 1px solid rgba(220,38,38,0.2);
+    padding: 0.2rem 0.55rem;
+}
+
+/* Actions */
+.error-actions {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.error-actions .btn-primary {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+}
+
+.error-actions .btn-ghost-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--ink-2);
+    border: 1px solid var(--border);
+    padding: 0.95rem 1.4rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.error-actions .btn-ghost-sm:hover {
+    border-color: var(--indigo);
+    color: var(--indigo);
+}
+
+.error-actions .btn-ghost-sm svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round;
+    transition: transform 0.2s;
+}
+
+.error-actions .btn-ghost-sm:hover svg {
+    transform: translateX(-3px);
+}
+
+/* ── BOTTOM META ── */
+.error-meta {
+    position: relative;
+    z-index: 2;
+    margin-top: 1.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    opacity: 0;
+    animation: err-up 0.5s 0.55s ease forwards;
+}
+
+.error-meta .sep { margin: 0 0.5rem; opacity: 0.4; }
+
+/* ── KEYFRAME ── */
+@keyframes err-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+    .error-card-inner { padding: 1.75rem 1.5rem; }
+    .error-heading { font-size: 2rem; }
+    .error-actions { flex-direction: column; }
+    .error-actions .btn-ghost-sm { justify-content: center; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="error-page">
-    <h1>403</h1>
-    <h2>Access Denied</h2>
+<div class="error-wrap">
+    <div class="error-inner">
 
-    <p>
-        You do not have permission to access this page.
-    </p>
+        <!-- Big 403 with glitch -->
+        <div class="error-code-wrap">
+            <div class="error-code-glitch-a">403</div>
+            <div class="error-code-glitch-b">403</div>
+            <div class="error-code-text">403</div>
+        </div>
 
-    <a href="{{ url_for('auth.login') }}" class="btn-primary">
-        Go to Login
-    </a>
+        <!-- Card -->
+        <div class="error-card">
+            <div class="error-card-inner">
+
+                <div class="error-tag">
+                    <span class="tag-dot"></span>
+                    Forbidden
+                </div>
+
+                <h1 class="error-heading">Access Denied</h1>
+
+                <p class="error-desc">
+                    You don't have permission to view this page.
+                    Please log in with an authorised account to continue.
+                </p>
+
+                <div class="error-rule"></div>
+
+                <!-- HTTP info chip -->
+                <div class="error-code-chip">
+                    <span class="chip-key">HTTP</span>
+                    <span class="chip-val">403 Forbidden — Insufficient privileges</span>
+                    <span class="chip-status">Denied</span>
+                </div>
+
+                <!-- Actions -->
+                <div class="error-actions">
+                    <a href="{{ url_for('auth.login') }}" class="btn-primary">
+                        Go to Login →
+                    </a>
+                    <a href="/" class="btn-ghost-sm">
+                        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                        Home
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Meta -->
+        <p class="error-meta">
+            E-Democracy Platform
+            <span class="sep">·</span>
+            Blockchain Secured
+            <span class="sep">·</span>
+            Unauthorised access is logged
+        </p>
+
+    </div>
 </div>
 {% endblock %}
