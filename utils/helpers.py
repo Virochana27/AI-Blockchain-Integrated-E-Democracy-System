@@ -283,3 +283,28 @@ def _time_ago_issue(timestamp):
 def generate_temp_password(length=10):
     chars = string.ascii_letters + string.digits
     return ''.join(secrets.choice(chars) for _ in range(length))
+
+def parse_dt(value):
+    if not value:
+        return None
+
+    # Already datetime
+    if isinstance(value, datetime):
+        dt = value
+
+    # If it's a DATE → convert to datetime midnight
+    elif isinstance(value, date):
+        dt = datetime.combine(value, datetime.min.time())
+
+    # If string → parse ISO
+    else:
+        try:
+            dt = datetime.fromisoformat(str(value))
+        except Exception:
+            return None
+
+    # Ensure timezone awareness
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+
+    return dt
