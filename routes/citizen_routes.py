@@ -55,15 +55,37 @@ bp = Blueprint("citizen", __name__, url_prefix="/citizen")
 def dashboard():
     constituency_id = session.get("constituency_id")
     user_id = session.get("user_id")
-
+     
     all_issues = get_constituency_issues(constituency_id)
     my_issues = get_my_issues(user_id)
 
-    trending_issues = all_issues[:5]
-    resolved_issues = [
-        i for i in all_issues
-        if i["status"] in ("Resolved", "Closed")
-    ][:5]
+
+    from models.issue_timeline import get_issue_timeline
+    from utils.helpers import parse_dt
+    from services.citizen_service import get_resolution_time_from_timeline
+
+    now = utc_now()
+
+    trending_issues = []
+    resolved_issues = []
+
+    for i in all_issues:
+        created = parse_dt(i.get("created_at"))
+
+        # 🔥 Trending = created in last 48 hours
+        if created and (now - created).total_seconds() <= 172800:
+            trending_issues.append(i)
+
+        # ✅ Recently resolved = check timeline table
+        if i.get("status") in ("Resolved", "Closed"):
+            timeline = get_issue_timeline(i["id"])
+            resolved_time = get_resolution_time_from_timeline(timeline, parse_dt)
+
+            if resolved_time and (now - resolved_time).total_seconds() <= 604800:
+                resolved_issues.append(i)
+
+    trending_issues = trending_issues[:5]
+    resolved_issues = resolved_issues[:5]
 
     policy_posts = get_policy_feed(constituency_id)[:5]
 

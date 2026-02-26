@@ -56,3 +56,15 @@ def ensure_citizen_alias(user_id: str):
             break
 
     return create_citizen_alias(user_id, username)[0]
+
+from utils.helpers import parse_dt
+
+def get_resolution_time_from_timeline(timeline, parse_dt):
+    """Return latest resolved timestamp from timeline entries."""
+    resolved_times = [
+        parse_dt(t["created_at"])
+        for t in timeline
+        if t.get("status") in ("Resolved", "Closed")
+    ]
+    resolved_times = [t for t in resolved_times if t]
+    return max(resolved_times) if resolved_times else None
