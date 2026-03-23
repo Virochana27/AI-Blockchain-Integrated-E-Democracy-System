@@ -71,6 +71,9 @@
     padding: 4rem;
     background: var(--ink);
     position: relative;
+    /* FIX: prevent right panel from overflowing its column */
+    min-width: 0;
+    overflow: hidden;
 }
 .login-right::before {
     content: '';
@@ -81,7 +84,15 @@
     background-size: 40px 40px;
     opacity: 0.5;
 }
-.login-card { position: relative; z-index: 2; width: 100%; max-width: 400px; }
+.login-card {
+    position: relative;
+    z-index: 2;
+    /* FIX: constrain card width so it never exceeds its container */
+    width: min(100%, 400px);
+    /* FIX: prevent children from pushing card wider */
+    min-width: 0;
+    box-sizing: border-box;
+}
 .login-card-header { margin-bottom: 2.5rem; }
 .login-card-tag {
     font-family: var(--font-mono);
@@ -122,6 +133,9 @@
     background: var(--indigo-dim);
     border: 1px solid rgba(79,70,229,0.18);
     margin-bottom: 0.25rem;
+    /* FIX: prevent this row from exceeding card width */
+    min-width: 0;
+    overflow: hidden;
 }
 .otp-destination-icon {
     width: 28px; height: 28px;
@@ -139,6 +153,9 @@
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
+    /* FIX: allow text to shrink and truncate */
+    min-width: 0;
+    overflow: hidden;
 }
 .otp-destination-label {
     font-family: var(--font-mono);
@@ -152,19 +169,33 @@
     font-size: 0.75rem;
     color: var(--text);
     letter-spacing: 0.04em;
+    /* FIX: truncate long email addresses */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* 6-box OTP input */
+/* ── FIX: 6-box OTP input ───────────────────── */
 .otp-boxes {
     display: flex;
-    gap: 0.6rem;
-    justify-content: space-between;
+    gap: clamp(0.3rem, 1.5vw, 0.6rem);
+    width: 100%;
+    box-sizing: border-box;
+    /* FIX: give focused box room to lift without clipping the top border/shadow */
+    padding-top: 4px;
+    margin-top: -4px;
 }
 .otp-box {
-    flex: 1;
-    height: 64px;
+    /* FIX: flex:1 with min-width:0 lets boxes shrink proportionally */
+    flex: 1 1 0;
+    min-width: 0;
+    /* FIX: cap max size so they don't go huge on wide screens */
+    max-width: 56px;
+    /* FIX: aspect-ratio keeps them square at any size */
+    aspect-ratio: 1 / 1;
+    height: auto;
     font-family: var(--font-disp);
-    font-size: 2rem;
+    font-size: clamp(1.2rem, 4vw, 2rem);  /* responsive font */
     text-align: center;
     background: var(--ink-2);
     border: 1px solid var(--border);
@@ -174,8 +205,10 @@
     caret-color: var(--indigo);
     border-radius: 0;
     -webkit-appearance: none;
-    /* hide number spinners */
     -moz-appearance: textfield;
+    /* FIX: ensure box-sizing is consistent */
+    box-sizing: border-box;
+    padding: 0;
 }
 .otp-box::-webkit-outer-spin-button,
 .otp-box::-webkit-inner-spin-button { -webkit-appearance: none; }
@@ -206,6 +239,9 @@
     align-items: center;
     justify-content: space-between;
     margin-top: -0.25rem;
+    /* FIX: prevent overflow */
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 .otp-timer {
     display: flex;
@@ -337,7 +373,12 @@
 @media (max-width: 768px) {
     .login-page { grid-template-columns: 1fr; }
     .login-left { display: none; }
-    .login-right { padding: 2.5rem 1.5rem; min-height: calc(100vh - var(--nav-h)); }
+    .login-right {
+        padding: 2.5rem 1.5rem;
+        min-height: calc(100vh - var(--nav-h));
+        /* FIX: ensure padding is included in width calculation */
+        box-sizing: border-box;
+    }
 }
 </style>
 {% endblock %}
@@ -435,7 +476,7 @@
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        Expires in <span class="otp-timer-count" id="timerCount">10:00</span>
+                        Expires in <span class="otp-timer-count" id="timerCount">05:00</span>
                     </span>
                     <button type="button" class="resend-btn" id="resendBtn" disabled>
                         Resend OTP
@@ -455,7 +496,7 @@
                 <p>
                     <strong>Do not share this code.</strong>
                     The Election Commission will never ask for your OTP.
-                    This code is valid for 10 minutes only.
+                    This code is valid for 5 minutes only.
                 </p>
             </div>
 
@@ -532,7 +573,7 @@
     boxes[0].focus();
 
     // ── Countdown timer ────────────────────────────
-    let seconds = 10 * 60; // 10 minutes
+    let seconds = 5 * 60; // 5 minutes
 
     function formatTime(s) {
         const m = Math.floor(s / 60);
