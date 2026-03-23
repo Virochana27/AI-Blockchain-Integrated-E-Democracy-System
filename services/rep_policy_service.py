@@ -297,8 +297,7 @@ def add_counter_statement(post_id, user_id, role, content, images=None):
                 user_id=user_id,
                 action="AI_POLICY_ANALYSIS_FAILED",
                 entity_type="REP_POLICY_POST",
-                entity_id=post_id,
-                metadata={"error": str(e)}
+                entity_id=post_id
             )
 
 def get_policy_feed_for_rep(constituency_id, rep_user_id):

@@ -672,17 +672,18 @@
             </div>
 
             <!-- Performance CTA -->
+             {% if role == "ELECTED_REP" %}
             <div class="sidebar-card perf-card">
                 <div class="perf-eyebrow">Accountability</div>
                 <div class="perf-headline">Your Score</div>
                 <p class="perf-body">
                     Track your resolution rate, response time, and citizen satisfaction ratings.
                 </p>
-                <a href="{{ url_for('representative.performance_score') }}" class="btn-action">
+                <a href="{{ url_for('accountability.view_rep_accountability',rep_user_id=session.get('user_id')) }}" class="btn-action">
                     View Performance →
                 </a>
             </div>
-
+            {% endif %}
         </div>
     </div>
 </div>

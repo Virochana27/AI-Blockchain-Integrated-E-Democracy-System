@@ -33,9 +33,9 @@ def create_election(
         "state_id": state_id,
         "start_time": start_time.isoformat() if hasattr(start_time, "isoformat") else start_time,
         "end_time": end_time.isoformat() if hasattr(end_time, "isoformat") else end_time,
-        "nomination_deadline": nomination_deadline.isoformat() if hasattr(start_time, "isoformat") else start_time,
-        "draft_roll_publish_at": draft_roll_publish_at.isoformat() if hasattr(end_time, "isoformat") else end_time,
-        "final_roll_publish_at": final_roll_publish_at.isoformat() if hasattr(start_time, "isoformat") else start_time,
+        "nomination_deadline": nomination_deadline.isoformat() if hasattr(nomination_deadline, "isoformat") else nomination_deadline,
+        "draft_roll_publish_at": draft_roll_publish_at.isoformat() if hasattr(draft_roll_publish_at, "isoformat") else draft_roll_publish_at,
+        "final_roll_publish_at": final_roll_publish_at.isoformat() if hasattr(final_roll_publish_at, "isoformat") else final_roll_publish_at,
         "status": "Draft",
         "created_by": created_by,
         "approved_by": None,
@@ -65,10 +65,11 @@ def get_all_elections():
     for election in elections:
         state=get_state_name_by_state_id(election['state_id'])
         election["state_name"]=state["state_name"]
-        election["_start_time"]=format_datetime(election["start_time"])
-        election["_end_time"]=election["end_time"]
-        election["start_time"]=format_datetime(election["start_time"])
-        election["end_time"]=format_datetime(election["end_time"])
+        election["_raw_start_time"] = election["start_time"]   # keep raw ISO for comparisons
+        election["_raw_end_time"] = election["end_time"]        # keep raw ISO for comparisons
+        election["_end_time"] = election["end_time"]            # for closure service
+        election["start_time"] = format_datetime(election["start_time"])
+        election["end_time"] = format_datetime(election["end_time"])
     return elections
 
 
@@ -263,23 +264,32 @@ def update_election(election_id, update_data):
 
 
 
+from datetime import datetime, timezone
+
 def parse_dt(value):
-    """
-    Accepts both ISO timestamps and human readable timestamps
-    """
     if not value:
         return None
 
-    # Try ISO first
+    value = str(value).strip()
+
+    # Handle Z (UTC) format
+    if value.endswith("Z"):
+        value = value.replace("Z", "+00:00")
+
+    # Try ISO
     try:
-        return datetime.fromisoformat(str(value))
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except Exception:
         pass
 
-    # Try your display format
+    # Try human-readable format
     try:
-        return datetime.strptime(str(value), "%d %b %Y, %I:%M %p")
+        return datetime.strptime(value, "%d %b %Y, %I:%M %p").replace(tzinfo=timezone.utc)
     except Exception:
+        print("Failed to parse:", value)
         return None
 
 
@@ -293,7 +303,7 @@ def is_roll_locked(election):
     if not final_dt or not end_dt:
         return False
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return final_dt <= now <= end_dt
 
 

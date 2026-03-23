@@ -235,12 +235,17 @@ def get_issues_for_elected_rep_term(constituency_id: str):
     if not term_start:
         return []
 
-    term_start_date = datetime.fromisoformat(str(term_start))
-    term_end_date = (
-        datetime.fromisoformat(str(term_end))
-        if term_end
-        else None
-    )
+    from datetime import timezone
+
+    def _to_aware(value):
+        """Parse any ISO datetime string into a UTC-aware datetime."""
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    term_start_date = _to_aware(term_start)
+    term_end_date = _to_aware(term_end) if term_end else None
 
     issues = fetch_all(ISSUES_TABLE, {"constituency_id": constituency_id})
 
@@ -250,11 +255,7 @@ def get_issues_for_elected_rep_term(constituency_id: str):
         created_at = issue.get("created_at")
         if not created_at:
             continue
-
-        created_date = datetime.fromisoformat(
-            created_at.replace("Z", "+00:00")
-        )
-
+        created_date = _to_aware(created_at)
         if created_date >= term_start_date:
             if term_end_date:
                 if created_date <= term_end_date:

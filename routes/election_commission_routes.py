@@ -108,15 +108,29 @@ def create_election():
 
     if request.method == "POST":
         try:
+            from utils.helpers import IST   # the pytz IST you already have
+            import pytz
+
+            def ist_form_to_utc_iso(value: str) -> str:
+                """Convert 'datetime-local' IST input to UTC ISO string for DB storage."""
+                if not value:
+                    return None
+                naive_dt = datetime.strptime(value, "%Y-%m-%dT%H:%M")
+                ist_dt = IST.localize(naive_dt)
+                utc_dt = ist_dt.astimezone(pytz.utc)
+                return utc_dt.isoformat()
+    
             election = create_state_election(
                 election_name=request.form.get("name"),
                 election_type=request.form.get("type"),
                 state_id=session.get("state_id"),
-                start_time=request.form.get("start_time"),
-                end_time=request.form.get("end_time"),
-                nomination_deadline=request.form.get("nomination_deadline"),
-                draft_roll_publish_at=request.form.get("draft_roll_publish_at"),
-                final_roll_publish_at=request.form.get("final_roll_publish_at"),
+                # CHANGE TO — add this helper at top of the route, then use it:
+                # Then in the route:
+                start_time=ist_form_to_utc_iso(request.form.get("start_time")),
+                end_time=ist_form_to_utc_iso(request.form.get("end_time")),
+                nomination_deadline=ist_form_to_utc_iso(request.form.get("nomination_deadline")),
+                draft_roll_publish_at=ist_form_to_utc_iso(request.form.get("draft_roll_publish_at")),
+                final_roll_publish_at=ist_form_to_utc_iso(request.form.get("final_roll_publish_at")),
                 created_by=session.get("user_id")
             )
 
@@ -253,9 +267,10 @@ def add_candidate():
         deadline = election.get("nomination_deadline")
 
         if deadline:
-            deadline_dt = datetime.fromisoformat(str(deadline))
-            if utc_now().isoformat() > str(deadline_dt):
-                flash("Nomination deadline has passed. No more candidates can be added.", "error")
+            from utils.helpers import parse_dt as _parse_dt
+            deadline_dt = _parse_dt(deadline)   # returns tz-aware UTC datetime (after your fix to parse_dt)
+            if deadline_dt and utc_now() > deadline_dt:
+                flash("Nomination deadline has passed...", "error")
                 return redirect(url_for("election_commission.nomination_management"))
 
 

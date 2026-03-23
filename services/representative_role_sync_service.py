@@ -15,6 +15,7 @@ def sync_user_roles_from_representatives():
     """
 
     today = today_ist()
+    print(f"Syncing representative roles - today: {today}")
 
     # 1️⃣ Active representatives
     active_reps = get_active_representatives(today)

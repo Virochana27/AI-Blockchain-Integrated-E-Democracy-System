@@ -252,7 +252,7 @@ def new_issue():
 
 @bp.route("/issues")
 @login_required
-@role_required("CITIZEN","OPPOSITION_REP")
+@role_required("CITIZEN","OPPOSITION_REP","ELECTED_REP")
 def issues_feed():
     from models.issue import (
         get_issue_score,

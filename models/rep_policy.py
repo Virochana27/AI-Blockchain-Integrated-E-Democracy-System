@@ -26,7 +26,7 @@ def create_policy_post(
     """
     
     # get representative record at time of posting
-    rep = fetch_one("representatives", {"user_id": user_id})
+    rep = fetch_one("representatives", {"user_id": user_id,"status": "ACTIVE"})
 
     payload = {
         "id": generate_uuid(),

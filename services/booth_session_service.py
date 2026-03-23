@@ -40,10 +40,11 @@ def is_valid_voting_terminal(booth_id, session_id):
 # =====================================================
 
 def start_voter_session(booth_id, voter_id):
+    from datetime import datetime, timezone
     BOOTH_SESSIONS[booth_id] = {
         "voter_id": voter_id,
         "status": "ACTIVE",
-        "started_at": datetime.utcnow().isoformat()
+        "started_at": datetime.now(timezone.utc).isoformat()
     }
 
 
