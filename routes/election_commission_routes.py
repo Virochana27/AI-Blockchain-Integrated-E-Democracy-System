@@ -24,6 +24,7 @@ from services.election_activation_service import activate_election_if_needed
 from models.election import get_state_name_by_state_id,get_election_by_id, get_elections_by_constituency
 from models.booth import get_booths_by_constituency
 from supabase_db.client import supabase_admin, supabase_public
+from services.email_service import send_voter_welcome_email
 import uuid
 
 
@@ -366,8 +367,14 @@ def add_voter():
         # --------------------------------------------------
         # 6️⃣ Success message
         # --------------------------------------------------
+        send_voter_welcome_email(
+            to_email=email,
+            full_name=request.form.get("full_name"),
+            voter_id_number=voter[0]["voter_id_number"],
+            temp_password=temp_password
+        )
         flash(
-            f"Voter created successfully. Temporary password: {temp_password}",
+            f"Voter created successfully.",
             "success"
         )
 
