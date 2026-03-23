@@ -604,7 +604,7 @@
                                             <circle cx="12" cy="12" r="10"/>
                                             <polyline points="12 6 12 12 16 14"/>
                                         </svg>
-                                        Estimated Start: {{ step.estimated_start_at }}
+                                        Estimated Start: {{ step.estimated_start_at[:11]  }}
                                     </div>
                                 {% endif %}
                                 {% if step.estimated_completion_at %}
@@ -614,7 +614,7 @@
                                             <circle cx="12" cy="12" r="10"/>
                                             <polyline points="12 6 12 12 16 14"/>
                                         </svg>
-                                        Estimated Completion: {{ step.estimated_completion_at }}
+                                        Estimated Completion: {{ step.estimated_completion_at[:11]  }}
                                     </div>
                                 {% endif %}
                             </div>

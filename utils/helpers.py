@@ -17,52 +17,56 @@ def utc_now():
 from datetime import datetime, timezone, timedelta
 
 def utc_now():
-    """Return current IST time (UTC +5:30)"""
-    return datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    """Return current UTC timestamp (timezone-aware)"""
+    return datetime.now(timezone.utc)
 
 from datetime import datetime
+
+# CHANGE TO:
+import pytz
+IST = pytz.timezone("Asia/Kolkata")
 
 def format_datetime(ts):
     if not ts:
         return ""
 
-    # If already formatted like "12 Feb 2026, 05:53 PM"
     if isinstance(ts, str):
-        # If it already matches your display format, return as-is
         try:
             datetime.strptime(ts, "%d %b %Y, %I:%M %p")
             return ts  # already formatted
         except ValueError:
             pass
-
-        # Try ISO (Supabase)
         try:
-            ts = ts.replace("Z", "")
+            ts = ts.replace("Z", "+00:00")
             dt = datetime.fromisoformat(ts)
         except ValueError:
-            # Try DB format with microseconds
             try:
                 dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f")
+                dt = dt.replace(tzinfo=timezone.utc)
             except ValueError:
-                # Try DB format without microseconds
                 dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+                dt = dt.replace(tzinfo=timezone.utc)
     else:
-        dt = ts  # already datetime object
+        dt = ts
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
 
-    return dt.strftime("%d %b %Y, %I:%M %p")
+    dt_ist = dt.astimezone(IST)
+    return dt_ist.strftime("%d %b %Y, %I:%M %p")
 
 
 
+# CHANGE TO:
 def _time_ago(ts):
-    """Return relative time string like '2h ago'."""
     if not ts:
         return ""
-    dt = datetime.fromisoformat(ts.replace("Z", ""))
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    ts_str = ts.replace("Z", "+00:00")
+    dt = datetime.fromisoformat(ts_str)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
     diff = now - dt
-
     seconds = diff.total_seconds()
-
     if seconds < 60:
         return "just now"
     if seconds < 3600:
@@ -71,8 +75,7 @@ def _time_ago(ts):
         return f"{int(seconds//3600)}h ago"
     if seconds < 604800:
         return f"{int(seconds//86400)}d ago"
-
-    return dt.strftime("%d %b %Y")
+    return dt.astimezone(IST).strftime("%d %b %Y")
 
 # -----------------------------
 # ID & Hash Helpers
@@ -213,9 +216,12 @@ def time_ago(timestamp):
         return ""
 
     if isinstance(timestamp, str):
-        timestamp = datetime.fromisoformat(timestamp.replace("Z", ""))
+        timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))  # keeps tz-aware
 
-    now = datetime.utcnow()
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=timezone.utc)  # fallback if still naive
+
+    now = datetime.now(timezone.utc)
     diff = now - timestamp
 
     seconds = diff.total_seconds()
@@ -232,41 +238,42 @@ def time_ago(timestamp):
         return timestamp.strftime("%d %b %Y")
     
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 def _time_ago_issue(timestamp):
     if not timestamp:
         return ""
 
     if isinstance(timestamp, str):
-        # Try ISO
         try:
             timestamp = datetime.fromisoformat(timestamp.replace("Z", ""))
         except ValueError:
             pass
 
-        # Try DB format with microseconds
         if isinstance(timestamp, str):
             try:
                 timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
             except ValueError:
                 pass
 
-        # Try DB format without microseconds
         if isinstance(timestamp, str):
             try:
                 timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
             except ValueError:
                 pass
 
-        # Try formatted display format
         if isinstance(timestamp, str):
             try:
                 timestamp = datetime.strptime(timestamp, "%d %b %Y, %I:%M %p")
             except ValueError:
-                return ""  # Avoid crashing
+                return ""
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
+
+    # 🔥 ADD THIS BLOCK 👇
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=timezone.utc)
+
     diff = now - timestamp
     seconds = diff.total_seconds()
 
@@ -278,7 +285,6 @@ def _time_ago_issue(timestamp):
         return f"{int(seconds // 3600)} hours ago"
     else:
         return f"{int(seconds // 86400)} days ago"
-
 
 def generate_temp_password(length=10):
     chars = string.ascii_letters + string.digits

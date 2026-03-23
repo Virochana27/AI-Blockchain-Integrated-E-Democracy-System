@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime,timezone
 from services.election_closure_service import close_election_and_assign_reps
 from utils.helpers import utc_now
 
@@ -11,16 +11,13 @@ def finalize_election_if_needed(election):
     """
     if election["status"] == "COMPLETED":
         return  # already done
-
-    end_dt = parse_dt(election.get("end_time"))
-
+    end_dt = parse_dt(election.get("_raw_end_time"))
     if not end_dt:
         return
 
-
-    end_dt_str = end_dt.isoformat() if hasattr(end_dt, "isoformat") else str(end_dt)
-    now = utc_now().isoformat()
-    if now <= end_dt_str:
+    if end_dt.tzinfo is None:
+        end_dt = end_dt.replace(tzinfo=timezone.utc)
+    if utc_now() <= end_dt:   # proper datetime comparison
         return
 
     # 1️⃣ Mark election completed

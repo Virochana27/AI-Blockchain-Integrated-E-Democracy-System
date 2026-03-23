@@ -1,4 +1,5 @@
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from models.representative import create_representative
 from services.result_service import get_constituency_results
 from models.election import get_constituencies_for_election
@@ -16,12 +17,12 @@ def close_election_and_assign_reps(election):
 
     election_id = election["id"]
     constituencies = get_constituencies_for_election(election_id)
-    print(constituencies)
 
     # Term dates
-    election_end = parse_iso_date(election["_end_time"])
-    term_start = parse_iso_date(election["_end_time"]) + timedelta(days=1)
-    term_end = term_start.replace(year=term_start.year + 5)
+    raw_end = election.get("_raw_end_time") or election.get("_end_time")
+    election_end = parse_iso_date(raw_end)
+    term_start = election_end + timedelta(days=1)
+    term_end = election_end + relativedelta(years=5)
 
 
     for c in constituencies:
