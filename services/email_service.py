@@ -243,6 +243,30 @@ def send_voter_welcome_email(to_email, full_name, voter_id_number, temp_password
 
     subject = "Registration Successful — E-Democracy System"
 
+    # ── Build steps HTML BEFORE the f-string (no backslashes in {} allowed in Python < 3.12) ──
+    steps_data = [
+        ("01", 'Go to the login page and click on <strong>"Forgot Password"</strong>'),
+        ("02", "Enter your registered email address"),
+        ("03", "Enter the OTP sent to this email"),
+        ("04", "Set your new secure password"),
+    ]
+
+    steps_html = "".join([f"""
+    <tr>
+      <td style="vertical-align:top; padding-bottom:12px;">
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="vertical-align:top; padding-right:14px;">
+              <div style="width:26px; height:26px; background: rgba(79,70,229,0.08); border:1.5px solid rgba(79,70,229,0.2); border-radius:2px; text-align:center; line-height:24px; font-family:'Courier New',monospace; font-size:0.75rem; font-weight:700; color:#4f46e5; flex-shrink:0;">{num}</div>
+            </td>
+            <td style="vertical-align:middle;">
+              <span style="font-size:0.9rem; color:#2d2d3a; line-height:1.5;">{step}</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>""" for num, step in steps_data])
+
     html_body = f"""
     <html>
     <body style="margin:0; padding:0; background-color:#f5f5f7; font-family: 'DM Sans', Arial, sans-serif;">
@@ -258,7 +282,6 @@ def send_voter_welcome_email(to_email, full_name, voter_id_number, temp_password
                   <table cellpadding="0" cellspacing="0">
                     <tr>
                       <td style="vertical-align: middle; padding-right: 12px;">
-                        <!-- Logo mark approximation using HTML -->
                         <div style="width:40px; height:40px; background: rgba(79,70,229,0.08); border: 1.5px solid rgba(79,70,229,0.2); border-radius:4px; display:inline-block; text-align:center; line-height:40px; font-size:18px;">🗳️</div>
                       </td>
                       <td style="vertical-align: middle;">
@@ -330,28 +353,8 @@ def send_voter_welcome_email(to_email, full_name, voter_id_number, temp_password
               <tr>
                 <td style="padding: 0 40px 36px 40px;">
                   <p style="margin:0 0 16px 0; font-family:'Courier New',monospace; font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; color:#4f46e5; font-weight:700;">How to Change Your Password</p>
-
                   <table width="100%" cellpadding="0" cellspacing="0">
-                    {"".join([f'''
-                    <tr>
-                      <td style="vertical-align:top; padding-bottom:12px;">
-                        <table cellpadding="0" cellspacing="0">
-                          <tr>
-                            <td style="vertical-align:top; padding-right:14px;">
-                              <div style="width:26px; height:26px; background: rgba(79,70,229,0.08); border:1.5px solid rgba(79,70,229,0.2); border-radius:2px; text-align:center; line-height:24px; font-family:\'Courier New\',monospace; font-size:0.75rem; font-weight:700; color:#4f46e5; flex-shrink:0;">{num}</div>
-                            </td>
-                            <td style="vertical-align:middle;">
-                              <span style="font-size:0.9rem; color:#2d2d3a; line-height:1.5;">{step}</span>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>''' for num, step in [
-                        ("01", "Go to the login page and click on <strong>\"Forgot Password\"</strong>"),
-                        ("02", "Enter your registered email address"),
-                        ("03", "Enter the OTP sent to this email"),
-                        ("04", "Set your new secure password"),
-                    ]])}
+                    {steps_html}
                   </table>
                 </td>
               </tr>
